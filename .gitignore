@@ -1,0 +1,5 @@
+*.cm*
+*.o
+*test
+*.opt
+_build
