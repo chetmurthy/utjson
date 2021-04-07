@@ -41,6 +41,8 @@ utparse0.cmx : \
     utypes.cmx \
     utlexing.cmx
 utprint.cmo : \
-    utypes.cmo
+    utypes.cmo \
+    utlexing.cmo
 utprint.cmx : \
-    utypes.cmx
+    utypes.cmx \
+    utlexing.cmx

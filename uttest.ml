@@ -301,6 +301,8 @@ let convert = "convert" >::: [
          "json-schema-samples/apibuilder-MODIFIED.json")
       ; ("json-schema-samples/apple-app-site-association.utj",
          "/home/chet/Hack/Github/SchemaStore/schemastore/src/schemas/json/apple-app-site-association.json")
+      ; ("json-schema-samples/appsettings-MODIFIED.utj",
+         "json-schema-samples/appsettings-MODIFIED.json")
       ]
       )
   ]

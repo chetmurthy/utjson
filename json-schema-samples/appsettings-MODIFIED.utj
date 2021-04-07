@@ -1,0 +1,354 @@
+local
+type rec webOptimizer = object && [
+    "enableCaching": boolean;
+    "enableTagHelperBundling": boolean && [ default true; ];
+]
+and cdn = object && [
+    "url": string && [ /^((\/\/|https?:\/\/).+|)$/ ];
+    "prefetch": boolean && [ default true; ];
+]
+and pwa = [
+    "cacheId": string && [ default "v1.0"; ];
+    "offlineRoute": string && [ default "/offline.html"; ];
+    "registerServiceWorker": boolean && [ default true; ];
+    "registerWebmanifest": boolean && [ default true; ];
+    "routesToPreCache": string && [ default ""; ];
+    "strategy": [ enum "cacheFirst", "cacheFirstSafe", "minimal", "networkFirst"; ] && [ default "cacheFirstSafe"; ];
+]
+and _ElmahIo = [
+    "ApiKey": string && [ /^[0-9a-f]{32}$/ ];
+    "LogId": string && [ /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/ ];
+    "HeartbeatId": string && [ /^[0-9a-f]{32}$/ ];
+] && [ required "ApiKey",  "LogId"; ]
+and protocols = string && [
+    enum "None", "Http1", "Http2", "Http1AndHttp2", "Http3",
+    "Http1AndHttp2AndHttp3";
+]
+and certificate = object && [
+    "Path": string;
+    "KeyPath": string;
+    "Password": string;
+    "Subject": string;
+    "Store": string && [ default "My"; ];
+    "Location": string && [ enum "LocalMachine", "CurrentUser"; ] && [ default "CurrentUser"; ];
+    "AllowInvalid": boolean && [ default false; ];
+]
+and sslProtocols = array && [
+    of string && [ enum "None", "Tls", "Tls11", "Tls12", "Tls13"; ] && [ default "None"; ];
+]
+and clientCertificateMode = string && [ enum "NoCertificate", "AllowCertificate", "RequireCertificate"; ] && [ default "NoCertificate"; ]
+and kestrel = object && [
+    "Endpoints": object && [
+        orelse object && [
+            "Url": string && [ format "uri"; ];
+            "Protocols": protocols;
+            "SslProtocols": sslProtocols;
+            "Certificate": certificate;
+            "ClientCertificateMode": clientCertificateMode;
+            "Sni": object && [
+                orelse object && [
+                    "Protocols": protocols;
+                    "SslProtocols": sslProtocols;
+                    "Certificate": certificate;
+                    "ClientCertificateMode": clientCertificateMode;
+];
+];
+] && [ required "Url"; ];
+];
+    "EndpointDefaults": object && [
+        "Protocols": protocols;
+        "SslProtocols": sslProtocols;
+        "ClientCertificateMode": clientCertificateMode;
+];
+    "Certificates": object && [ orelse certificate; ];
+]
+and logLevelThreshold = string && [ enum "Trace", "Debug", "Information", "Warning", "Error", "Critical", "None";
+]
+and logLevel = object && [ orelse logLevelThreshold; ]
+and logging = object && [
+    "LogLevel": logLevel;
+    "Console": [
+        "LogLevel": logLevel;
+        "FormatterName": string && [ default "simple"; ];
+        "FormatterOptions": object && [
+            "IncludeScopes": boolean && [ default false; ];
+            "TimestampFormat": string;
+            "UseUtcTimestamp": boolean && [ default false; ];
+];
+        "LogToStandardErrorThreshold": logLevelThreshold;
+];
+    "EventSource": [ "LogLevel": logLevel; ];
+    "Debug": [ "LogLevel": logLevel; ];
+    "EventLog": [ "LogLevel": logLevel; ];
+] && [ orelse object && [ "LogLevel": logLevel; ]; ]
+and allowedHosts = string
+and connectionStrings = object && [ orelse string; ]
+and _NLog = object && [
+    "autoReload": boolean && [ default false; ];
+    "throwConfigExceptions": boolean && [ default false; ];
+    "throwExceptions": boolean && [ default false; ];
+    "internalLogLevel": string && [ enum "Trace", "Debug", "Info", "Warn", "Error", "Fatal", "Off"; ] && [ default "Off"; ];
+    "internalLogFile": string;
+    "internalLogToConsole": boolean && [ default "false"; ];
+    "internalLogToConsoleError": boolean && [ default "false"; ];
+    "globalThreshold": string && [ enum "Trace", "Debug", "Info", "Warn", "Error", "Fatal", "Off"; ] && [ default "Off"; ];
+    "autoShutdown": boolean && [ default "true"; ];
+    "extensions": array && [
+        of object && [
+            "assembly": string;
+            "prefix": string && [ default ""; ];
+            "assemblyFile": string && [ default ""; ];
+] && [ default {}; ];
+] && [ default []; ];
+    "variables": object && [ /.*/ : Predefined.scalar; ] && [ propertyNames [ /^[A-Za-z0-9_.-]+$/ ]; ];
+    "default-wrapper": object && [ "type": string; ] && [ required "type"; ] && [ default {}; ];
+    "targets": object && [ default {}; ];
+    "rules": array && [ of _NLogRulesItem; ] && [ default []; ] || object && [ /.*/ : _NLogRulesItem; ] && [ propertyNames [ /^[0-9]+$/ ]; ];
+] && [ default {}; ]
+and _NLogRulesItem = object && [
+    "logger": string;
+    "ruleName": string;
+    "level": string && [ enum "Trace", "Debug", "Info", "Warn", "Error", "Fatal"; ] || string;
+    "levels": string;
+    "minLevel": string && [ enum "Trace", "Debug", "Info", "Warn", "Error", "Fatal"; ] || string;
+    "maxLevel": string && [ enum "Trace", "Debug", "Info", "Warn", "Error", "Fatal"; ] || string;
+    "writeTo": string;
+    "final": boolean && [ default false; ];
+    "enabled": boolean && [ default true; ];
+    "filters": array && [
+        of object && [
+            "type": string;
+            "action": string && [ enum "Neutral", "Log", "Ignore", "LogFinal", "IgnoreFinal"; ] && [ default "Neutral"; ];
+] && [ required "type"; ] && [ default {}; ];
+] && [ default []; ] || object && [ default {}; ];
+    "filterDefaultAction": string && [ enum "Neutral", "Log", "Ignore", "LogFinal", "IgnoreFinal"; ] && [ default "Ignore"; ];
+] && [ required "logger"; ] && [ default {}; ]
+and umbraco = [
+    "CMS": object && [
+        "ActiveDirectory": umbracoActiveDirectory;
+        "Content": umbracoContent;
+        "Debug": umbracoDebug;
+        "Examine": [ "LuceneDirectoryFactory": string; ];
+        "ExceptionFilter": [ "Disabled": boolean && [ default false; ]; ];
+        "Global": umbracoGlobal;
+        "HealthChecks": umbracoHealthChecks;
+        "Hosting": umbracoHosting;
+        "Imaging": umbracoImaging;
+        "KeepAlive": umbracoKeepAlive;
+        "Logging": [ "MaxLogAge": string && [ default "1.00:00:00"; ]; ];
+        "NuCache": [ "BTreeBlockSize": Predefined.integer; ];
+        "Plugins": [ "BrowsableFileExtensions": string; ];
+        "RequestHandler": umbracoRequestHandler;
+        "RichTextEditor": umbracoRichTextEditor;
+        "Runtime": [
+            "MaxQueryStringLength": Predefined.integer;
+            "MaxRequestLength": Predefined.integer;
+];
+        "RuntimeMinification": umbracoRuntimeMinification;
+        "Security": umbracoSecurity;
+        "Tours": [ "EnableTours": boolean && [ default true; ]; ];
+        "TypeFinder": [ "AssembliesAcceptingLoadExceptions": string; ];
+        "WebRouting": umbracoWebRouting;
+        "Unattended": umbracoUnattended;
+];
+] && [ required "CMS"; ]
+and umbracoActiveDirectory = [ "Domain": string; ]
+and umbracoContent = [
+    "AllowedUploadFiles": string;
+    "DisallowedUploadFiles": string;
+    "Error404Collection": array && [ of umbracoContentErrorPage; ];
+    "Imaging": [
+        "AutoFillImageProperties": [
+            "Alias": [ default "umbracoFile"; ];
+            "ExtensionFieldAlias": [ default "umbracoExtension"; ];
+            "HeightFieldAlias": [ default "umbracoHeight"; ];
+            "LengthFieldAlias": [ default "umbracoBytes"; ];
+            "WidthFieldAlias": [ default "umbracoWidth"; ];
+];
+        "ImageFileTypes": string;
+];
+    "LoginBackgroundImage": string && [ default "assets/img/login.jpg"; ];
+    "LoginLogoImage": string && [ default "assets/img/application/umbraco_logo_white.svg"; ];
+    "MacroErrors": [ enum "Inline", "Silent", "Throw", "Content"; ];
+    "Notifications": [
+        "Email": string;
+        "DisableHtmlEmail": boolean && [ default false; ];
+];
+    "PreviewBadge": string;
+    "ResolveUrlsFromTextString": boolean && [ default false; ];
+    "ShowDeprecatedPropertyEditors": boolean && [ default false; ];
+]
+and umbracoContentErrorPage = [
+    "ContentId": Predefined.integer;
+    "ContentKey": string;
+    "ContentXPath": string;
+    "Culture": string;
+]
+and umbracoDebug = [
+    "LogIncompletedScopes": boolean && [ default false; ];
+    "DumpOnTimeoutThreadAbort": boolean && [ default false; ];
+]
+and umbracoGlobal = [
+    "ReservedUrls": string && [ default "~/config/splashes/noNodes.aspx,~/.well-known,"; ];
+    "ReservedPaths": string && [ default "~/app_plugins/,~/install/,~/mini-profiler-resources/,~/umbraco/,";
+];
+    "TimeOut": string && [ default "00:20:00"; ];
+    "DefaultUILanguage": string && [ default "en-US"; ];
+    "HideTopLevelNodeFromPath": boolean && [ default false; ];
+    "UseHttps": boolean && [ default false; ];
+    "VersionCheckPeriod": Predefined.integer && [ default 7; ];
+    "UmbracoPath": string && [ default "~/umbraco"; ];
+    "IconsPath": string && [ default "~/umbraco/assets/icons"; ];
+    "UmbracoCssPath": string && [ default "~/css"; ];
+    "UmbracoMediaPath": string && [ default "~/media"; ];
+    "InstallMissingDatabase": boolean && [ default false; ];
+    "DisableElectionForSingleServer": boolean && [ default false; ];
+    "NoNodesViewPath": string && [ default "~/umbraco/UmbracoWebsite/NoNodes.cshtml"; ];
+    "DatabaseServerRegistrar": [
+        "WaitTimeBetweenCalls": string && [ default "00:01:00"; ];
+        "StaleServerTimeout": string && [ default "00:02:00"; ];
+];
+    "DatabaseServerMessenger": [
+        "MaxProcessingInstructionCount": Predefined.integer && [ default 1000; ];
+        "TimeToRetainInstructions": string && [ default "2.00:00:00"; ];
+        "TimeBetweenSyncOperations": string && [ default "00:00:05"; ];
+        "TimeBetweenPruneOperations": string && [ default "00:01:00"; ];
+];
+    "Smtp": [
+        "From": string;
+        "Host": string;
+        "Port": Predefined.integer;
+        "SecureSocketOptions": [ enum "None", "Auto", "SslOnConnect", "StartTls", "StartTlsWhenAvailable";
+] && [ default "Auto"; ];
+        "PickupDirectoryLocation": string;
+        "DeliveryMethod": [ enum "Network", "SpecifiedPickupDirectory", "PickupDirectoryFromIis"; ] && [ default "Network"; ];
+        "Username": string;
+        "Password": string;
+];
+]
+and umbracoHealthChecks = [
+    "DisabledChecks": array && [ of umbracoDisabledHealthChecks; ];
+    "Notification": [
+        "Enabled": boolean && [ default false; ];
+        "FirstRunTime": string;
+        "Period": string && [ default "1.00:00:00"; ];
+        "NotificationMethods": object && [
+            orelse object && [
+                "Enabled": boolean;
+                "Verbosity": [ enum "Summary", "Detailed"; ] && [ default "Summary"; ];
+                "FailureOnly": boolean && [ default false; ];
+                "Settings": object;
+];
+];
+        "DisabledChecks": array && [ of umbracoDisabledHealthChecks; ];
+];
+]
+and umbracoDisabledHealthChecks = [ "Id": string; ]
+and umbracoHosting = [
+    "ApplicationVirtualPath": string;
+    "Debug": boolean && [ default false; ];
+    "LocalTempStorageLocation": [ enum "Default", "EnvironmentTemp"; ] && [ default "Default"; ];
+]
+and umbracoImaging = [
+    "Cache": [
+        "BrowserMaxAge": string && [ default "7.00:00:00"; ];
+        "CacheMaxAge": string && [ default "365.00:00:00"; ];
+        "CachedNameLength": Predefined.integer && [ default 8; ];
+        "CacheFolder": string && [ default "..\\umbraco\\mediacache"; ];
+];
+    "Resize": [
+        "MaxWidth": Predefined.integer && [ default 5000; ];
+        "MaxHeight": Predefined.integer && [ default 5000; ];
+];
+]
+and umbracoKeepAlive = [
+    "DisableKeepAliveTask": boolean && [ default false; ];
+    "KeepAlivePingUrl": string && [ default "{umbracoApplicationUrl}/api/keepalive/ping"; ];
+]
+and umbracoRichTextEditor = [
+    "Commands": array && [ of umbracoRichTextEditorCommands; ];
+    "Plugins": string;
+    "CustomConfig": object;
+    "ValidElements": string;
+    "InvalidElements": string;
+]
+and umbracoRichTextEditorCommands = [
+    "Name": string;
+    "Alias": string;
+    "Mode": [ enum "Insert", "Selection", "All"; ];
+]
+and umbracoRequestHandler = [
+    "AddTrailingSlash": boolean && [ default true; ];
+    "CharCollection": array && [ of umbracoCharCollection; ];
+    "ConvertUrlsToAscii": [ enum "try", "true", "false"; ] && [ default "try"; ];
+]
+and umbracoCharCollection = [
+    "Char": string && [ default "ä"; ];
+    "Replacement": string && [ default "ae"; ];
+] && [ required "Char",  "Replacement"; ]
+and umbracoRuntimeMinification = [
+    "UseInMemoryCache": boolean && [ default false; ];
+    "CacheBuster": [ enum "Version", "AppDomain", "Timestamp"; ] && [ default "Version"; ];
+]
+and umbracoSecurity = [
+    "AllowPasswordReset": boolean && [ default true; ];
+    "AuthCookieDomain": string;
+    "AuthCookieName": string && [ default "UMB_UCONTEXT"; ];
+    "HideDisabledUsersInBackOffice": boolean && [ default false; ];
+    "KeepUserLoggedIn": boolean && [ default false; ];
+    "MemberPassword": umbracoMemberPassword;
+    "UsernameIsEmail": boolean && [ default true; ];
+    "UserPassword": umbracoUserPassword;
+]
+and umbracoMemberPassword = [
+    "RequiredLength": Predefined.integer && [ default 10; ];
+    "RequireNonLetterOrDigit": boolean && [ default false; ];
+    "RequireDigit": boolean && [ default false; ];
+    "RequireLowercase": boolean && [ default false; ];
+    "RequireUppercase": boolean && [ default false; ];
+    "MaxFailedAccessAttemptsBeforeLockout": Predefined.integer && [ default 5; ];
+    "HashAlgorithmType": string && [ default "HMACSHA256"; ];
+]
+and umbracoUserPassword = [
+    "RequiredLength": Predefined.integer && [ default 10; ];
+    "RequireNonLetterOrDigit": boolean && [ default false; ];
+    "RequireDigit": boolean && [ default false; ];
+    "RequireLowercase": boolean && [ default false; ];
+    "RequireUppercase": boolean && [ default false; ];
+    "MaxFailedAccessAttemptsBeforeLockout": Predefined.integer && [ default 5; ];
+    "HashAlgorithmType": string && [ default "PBKDF2.ASPNETCORE.V3"; ];
+]
+and umbracoWebRouting = [
+    "TryMatchingEndpointsForAllPages": boolean && [ default false; ];
+    "TrySkipIisCustomErrors": boolean && [ default false; ];
+    "InternalRedirectPreservesTemplate": boolean && [ default false; ];
+    "DisableAlternativeTemplates": boolean && [ default false; ];
+    "ValidateAlternativeTemplates": boolean && [ default false; ];
+    "DisableFindContentByIdPath": boolean && [ default false; ];
+    "DisableRedirectUrlTracking": boolean && [ default false; ];
+    "UrlProviderMode": [ enum "Default", "Relative", "Absolute", "Auto"; ] && [ default "Auto"; ];
+    "UmbracoApplicationUrl": string;
+]
+and umbracoUnattended = [
+    "InstallUnattended": boolean && [ default false; ];
+    "UpgradeUnattended": boolean && [ default false; ];
+    "UnattendedUserName": string;
+    "UnattendedUserEmail": string;
+    "UnattendedUserPassword": string;
+]; in
+ type nonrec t = object && [
+    "Kestrel": kestrel;
+    "Logging": logging;
+    "AllowedHosts": allowedHosts;
+    "ConnectionStrings": connectionStrings;
+] && [
+    /^WebOptimizer$/ : webOptimizer;
+    /^webOptimizer$/ : webOptimizer;
+    /^weboptimizer$/ : webOptimizer;
+    /^(cdn|Cdn)$/ : cdn;
+    /^(pwa|PWA|Pwa)$/ : pwa;
+    /^(ElmahIo|Elmahio|elmahIo|elmahio)$/ : _ElmahIo;
+    /^(nlog|Nlog|NLog)$/ : _NLog;
+    /^(Umbraco|umbraco)$/ : umbraco;
+];
+end ;

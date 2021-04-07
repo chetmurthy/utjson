@@ -72,6 +72,7 @@ let andList l =
     | `String "object" -> [Simple JObject]
     | `String "integer" -> [Ref (["Predefined"], "integer")]
     | `String "json" -> [Ref (["Predefined"], "json")]
+    | `String "scalar" -> [Ref (["Predefined"], "scalar")]
     | v -> Fmt.(failwithf "conv_type: malformed type member: %a" pp_json v)
 
   let known_keys = [
@@ -81,7 +82,8 @@ let andList l =
     "items"; "additionalProperties"; "minItems"; "uniqueItems";
     "id";
     "definitions";
-    "enum"; "default";"pattern";"format"
+    "enum"; "default";"pattern";"format";"propertyNames";
+    "anyOf"
   ]
 
   let rec conv_type_l (j : json) = match j with
@@ -201,6 +203,11 @@ let andList l =
       (match assoc_opt "format" l with
          Some (`String s)  -> [Atomic[Format s]]
        | Some v -> Fmt.(failwithf "conv_type: format did not have string payload: %a" pp_json v)
+       | None -> []
+      )@
+      (match assoc_opt "propertyNames" l with
+         Some t ->
+         [Atomic [PropertyNames (conv_type0 t)]]
        | None -> []
       )
 

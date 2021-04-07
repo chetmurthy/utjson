@@ -33,6 +33,7 @@ type atomic_utype_t =
   | Enum of Yojson.Basic.t list
   | Default of Yojson.Basic.t
   | Format of string
+  | PropertyNames of utype_t
 
 and utype_t =
     Simple of base_type_t

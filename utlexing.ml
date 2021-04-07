@@ -63,7 +63,7 @@ let keywords = [
     ;"null";"string";"boolean";"number";"array";"object"
     ;"sealed";"unsealed";"bounds";"enum";"default"
     ;"true";"false";"not";"max";"min"
-    ;"import";"open";"as";"multipleOf";"format"
+    ;"import";"open";"as";"multipleOf";"format";"propertyNames";"orelse"
   ]
 
 let rec rawtoken buf =
@@ -172,4 +172,13 @@ and unrec2 hi =
 
   in unrec0 ()
 
+let regexp s =
+  let esc_slash_re = Str.regexp ("\\\\/") in
+  Str.global_replace esc_slash_re "/" s
+end
+
+module Escape = struct
+  let slash_re = Str.regexp ("/")
+  let regexp s =
+    Str.global_replace slash_re "\\/" s
 end

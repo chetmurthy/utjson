@@ -1,3 +1,4 @@
 type integer = number && [ multipleOf 1.0 ; ]
 ;
-type json = null || boolean || number || string || array ;
+type scalar = boolean || number || string ;
+type json = null || scalar || array || object ;

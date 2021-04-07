@@ -2,6 +2,7 @@ open Asttools ;
 open Pa_ppx_base.Pp_MLast ;
 open Pa_ppx_runtime.Exceptions ;
 open Utypes ;
+open Utlexing ;
 
 
 value plist_with sep f sh pc l =
@@ -88,21 +89,22 @@ EXTEND_PRINTER
     ] ] ;
   pr_atomic:
     [ [ Field s t -> pprintf pc "%p: %p;" qstring s print_utype t
-      | FieldRE re t -> pprintf pc "/%s/ : %p;" re print_utype t
+      | FieldRE re t -> pprintf pc "/%s/ : %p;" (Escape.regexp re) print_utype t
       | FieldRequired l -> pprintf pc "required %p;" (plist_with ", " qstring 0) l
       | ArrayOf t -> pprintf pc "of %p;" print_utype t
       | ArrayTuple l -> pprintf pc "%p;" (plist_with " * " print_utype 0) l
       | ArrayUnique -> pprintf pc "unique;"
       | ArrayIndex n t -> pprintf pc "%d: %p" n print_utype t
       | Size sc -> pprintf pc "size %p;" print_size_constraint sc
-      | StringRE re -> pprintf pc "/%s/" re
+      | StringRE re -> pprintf pc "/%s/" (Escape.regexp re)
       | NumberBound rc -> pprintf pc "bounds %p;" print_range_constraint rc
       | Sealed True -> pprintf pc "sealed;"
       | Sealed False -> pprintf pc "unsealed;"
       | OrElse t -> pprintf pc "orelse %p;" print_utype t
       | Enum l -> pprintf pc "enum %p;" (plist_with "," print_json 0) l
       | Default j -> pprintf pc "default %p;" print_json j
-      | Format s -> pprintf pc "format %s;" s
+      | Format s -> pprintf pc "format %p;" qstring s
+      | PropertyNames t -> pprintf pc "propertyNames %p;" print_utype t
     ] ] ;
 
 END;

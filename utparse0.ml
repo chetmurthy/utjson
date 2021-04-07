@@ -27,7 +27,7 @@ value convert_token (tok, pos) =
   | Lident s -> ("LIDENT",s)
   | Integer n -> ("INT",n)
   | Float n -> ("FLOAT",n)
-  | Regexp n -> ("REGEXP",n)
+  | Regexp n -> ("REGEXP",Unescape.regexp n)
   | String s -> ("STRING", Unescape.jsonstring s)
   | EOF -> ("EOI","")
   ]
@@ -130,6 +130,7 @@ EXTEND
       | "enum" ; l = LIST1 json SEP "," ; ";" -> Enum l
       | "default" ; j=json ; ";" -> Default j
       | "format" ; s=STRING ; ";" -> Format s
+      | "propertyNames" ; t = utype ; ";" -> PropertyNames t
       ] ]
     ;
 
@@ -181,6 +182,7 @@ EXTEND
   scalar:
     [ [ n = INT -> `Int (int_of_string n)
       | n = FLOAT -> `Float (float_of_string n)
+      | s = STRING -> `String s
       | "null" -> `Null
       | "true" -> `Bool True
       | "false" -> `Bool False
