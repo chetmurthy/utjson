@@ -5,6 +5,7 @@ open Pa_ppx_testutils
 open Utypes
 open Utparse0
 open Utprint
+open Utconv
 
 Pa_ppx_base.Pp_MLast.Ploc.pp_loc_verbose := true ;;
 
@@ -275,10 +276,39 @@ end ;
       )
   ]
 
+let item_of_string_exn s = s |> parse_string parse_utype_structure_item_eoi
+let item_to_string t = print_utype_structure_item Pprintf.empty_pc t
+let item_printer x = "<<"^(show_struct_item_t x)^">>"
+let item_cmp = equal_struct_item_t
+
+let success (expect, f) =
+  assert_equal ~msg:f ~printer:item_printer ~cmp:item_cmp
+    (item_of_string_exn expect)
+    (load_file f)
+
+let successf (expectf, f) =
+  assert_equal ~msg:f ~printer:item_printer ~cmp:item_cmp
+    (load_file expectf)
+    (load_file f)
+
+let convert = "convert" >::: [
+    "convert" >:: (fun ctxt -> List.iter successf [
+        ("json-schema-samples/product-schema-MODIFIED.utj",
+         "json-schema-samples/product-schema-MODIFIED.json")
+      ; ("json-schema-samples/ansible-inventory-MODIFIED.utj",
+         "json-schema-samples/ansible-inventory-MODIFIED.json")
+      ; ("json-schema-samples/apibuilder-MODIFIED.utj",
+         "json-schema-samples/apibuilder-MODIFIED.json")
+      ]
+      )
+  ]
+
+
 let tests = "all" >::: [
     simple
   ; parsing
   ; printing
+  ; convert
 ]
 
 if not !Sys.interactive then

@@ -9,11 +9,13 @@ utconv.cmx : \
 uttest.cmo : \
     utypes.cmo \
     utprint.cmo \
-    utparse0.cmo
+    utparse0.cmo \
+    utconv.cmo
 uttest.cmx : \
     utypes.cmx \
     utprint.cmx \
-    utparse0.cmx
+    utparse0.cmx \
+    utconv.cmx
 ututil.cmo :
 ututil.cmx :
 utvalid0.cmo : \

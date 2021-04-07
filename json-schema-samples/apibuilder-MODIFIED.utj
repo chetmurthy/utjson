@@ -1,0 +1,161 @@
+local type rec apidoc = object && [ "version": string; ] && [ sealed; ] && [ required "version"; ]
+and info = object && [
+    "contact": contact;
+    "license": license;
+] && [ sealed; ]
+and contact = object && [
+    "name": string;
+    "url": string;
+    "email": string;
+] && [ sealed; ]
+and license = object && [
+    "name": string;
+    "url": string;
+] && [ sealed; ] && [ required "name"; ]
+and import_ = object && [ "uri": string; ] && [ sealed; ] && [ required "uri"; ]
+and header = object && [
+    "name": string;
+    "type": string;
+    "required": boolean && [ default true ; ];
+    "default": string;
+    "description": string;
+    "attributes": array && [ of attribute; ];
+    "deprecation": deprecation;
+] && [ sealed; ] && [ required "name",  "type"; ]
+and attribute = object && [
+    "name": string;
+    "value": object;
+] && [ sealed; ] && [ required "name",  "value"; ]
+and deprecation = object && [ "description": string; ] && [ sealed; ]
+and enum_ = object && [
+    /^[a-zA-Z0-9_]*$/ : object && [
+        "plural": string;
+        "description": string;
+        "values": array && [ of enumvalues; ];
+        "attributes": array && [ of attribute; ];
+        "deprecation": deprecation;
+] && [ sealed; ] && [ required "values"; ];
+]
+and enumvalues = object && [
+    "name": string;
+    "value": string;
+    "description": string;
+    "attributes": array && [ of attribute; ];
+    "deprecation": deprecation;
+] && [ sealed; ] && [ required "name"; ]
+and interface = object && [
+    /^[a-zA-Z0-9_]*$/ : object && [
+        "plural": string;
+        "description": string;
+        "fields": array && [ of field; ];
+        "attributes": array && [ of attribute; ];
+        "deprecation": deprecation;
+] && [ sealed; ] && [ required "values"; ];
+]
+and field = object && [
+    "name": string && [ /^[a-zA-Z0-9_]*$/ ];
+    "type": string;
+    "description": string;
+    "required": boolean && [ default true ; ];
+    "default": Predefined.json;
+    "example": string;
+    "minimum": Predefined.integer;
+    "maximum": Predefined.integer;
+    "attributes": array && [ of attribute; ];
+    "deprecation": deprecation;
+    "annotations": array && [ of string; ];
+] && [ sealed; ] && [ required "name",  "type"; ]
+and model = object && [
+    /^[a-zA-Z0-9_]*$/ : object && [
+        "description": string;
+        "plural": string;
+        "interfaces": interface;
+        "fields": array && [ of field; ];
+        "attributes": array && [ of attribute; ];
+        "deprecation": deprecation;
+];
+] && [ sealed; ]
+and union = object && [
+    /^[a-zA-Z0-9_]*$/ : object && [
+        "plural": string;
+        "discriminator": string;
+        "description": string;
+        "interfaces": interface;
+        "types": array && [ of uniontype; ];
+        "attributes": array && [ of attribute; ];
+        "deprecation": deprecation;
+] && [ sealed; ] && [ required "types"; ];
+] && [ sealed; ]
+and uniontype = object && [
+    "type": string;
+    "description": string;
+    "default": boolean;
+    "discriminator_value": string;
+    "attributes": array && [ of attribute; ];
+    "deprecation": deprecation;
+] && [ sealed; ] && [ required "type"; ]
+and resource = object && [
+    /^[a-zA-Z0-9_.]*$/ : object && [
+        "path": string;
+        "description": string;
+        "operations": array && [ of operation; ];
+        "attributes": array && [ of attribute; ];
+        "deprecation": deprecation;
+] && [ sealed; ] && [ required "operations"; ];
+] && [ sealed; ]
+and operation = object && [
+    "method": string;
+    "path": string;
+    "description": string;
+    "body": body;
+    "parameters": array && [ of parameter; ];
+    "responses": response;
+    "attributes": array && [ of attribute; ];
+    "deprecation": deprecation;
+] && [ sealed; ] && [ required "method"; ]
+and parameter = object && [
+    "name": string && [ /^[a-zA-Z0-9_]*$/ ];
+    "type": string;
+    "location": string;
+    "description": string;
+    "required": boolean && [ default true ; ];
+    "default": Predefined.json;
+    "example": string;
+    "minimum": Predefined.integer;
+    "maximum": Predefined.integer;
+    "attributes": array && [ of attribute; ];
+    "deprecation": deprecation;
+] && [ sealed; ] && [ required "name",  "type"; ]
+and response = object && [
+    /^[0-9]*$/ : object && [
+        "type": string;
+        "headers": array && [ of header; ];
+        "description": string;
+        "attributes": array && [ of attribute; ];
+        "deprecation": deprecation;
+] && [ sealed; ] && [ required "type"; ];
+] && [ sealed; ]
+and body = object && [
+    "type": string;
+    "description": string;
+    "attributes": array && [ of attribute; ];
+    "deprecation": deprecation;
+] && [ sealed; ] && [ required "type"; ]; in
+type nonrec t = [
+    "name": string;
+    "apidoc": apidoc;
+    "info": info;
+    "namespace": string;
+    "base_url": string;
+    "description": string;
+    "imports": array && [ of import_; ];
+    "headers": array && [ of header; ];
+    "enums": enum_;
+    "interfaces": interface;
+    "models": model;
+    "unions": union;
+    "resources": resource;
+    "attributes": array && [ of attribute; ];
+    "annotations": array && [ of string; ];
+] && [ sealed; ] && [ required "name"; ]; end
+;

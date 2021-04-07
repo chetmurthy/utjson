@@ -128,6 +128,7 @@ EXTEND
       | "orelse" ; t=utype ; ";" -> OrElse t
       | "multipleOf" ; n = FLOAT ; ";" -> MultipleOf (float_of_string n)
       | "enum" ; l = LIST1 json SEP "," ; ";" -> Enum l
+      | "default" ; j=json ; ";" -> Default j
       ] ]
     ;
 
