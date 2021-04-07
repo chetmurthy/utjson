@@ -53,6 +53,13 @@ let parsing = "parsing" >::: [
     "utype" >:: (fun ctxt -> List.iter success [
         (Simple JString, "string")
       ; (Simple JString, "string")
+      ; ((And ((Simple JObject),
+               (Atomic
+                  [(Field ("productid", (Ref ([], "integer"))));
+                   (FieldRequired ["productid"])])
+              )), {|
+         object && [ "productid" : integer ; required "productid" ; ]
+|})
       ]
       )
   ; "item" >:: (fun ctxt -> List.iter success_item [
