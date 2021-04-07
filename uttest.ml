@@ -34,7 +34,7 @@ let item_to_string t = print_utype_structure_item Pprintf.empty_pc t
 
 let printer = show_utype_t
 let cmp = equal_utype_t
-let item_printer = show_struct_item_t
+let item_printer x = "<<"^(show_struct_item_t x)^">>"
 let item_cmp = equal_struct_item_t
 
 let success (expect, arg) =
@@ -180,25 +180,32 @@ end ;
 
 let success (expect, arg) =
   let msg = Fmt.(str "printing test for code << %s >>" arg) in
-  assert_equal ~msg ~printer:(fun x -> x) expect (to_string (of_string_exn arg))
+  assert_equal ~msg ~printer:(fun x -> "<<"^x^">>") expect (to_string (of_string_exn arg))
 
 let success_item (expect, arg) =
   let msg = Fmt.(str "printing test for code << %s >>" arg) in
-  assert_equal ~msg ~printer:(fun x -> x) expect (item_to_string (item_of_string_exn arg))
+  assert_equal ~msg ~printer:(fun x -> "<<"^x^">>") expect (item_to_string (item_of_string_exn arg))
 
 let printing = "printing" >::: [
     "utype" >:: (fun ctxt -> List.iter success [
         ("string", "string")
       ; ("M.t", "M.t")
       ; ({|object && [
-  "productid": integer; "productName": string;
-  "price": number && [ bounds (0.,max]; ];
-  "tags": array && [ of string; size [1,max); unique; ];
-  "dimensions": object && [
-    "length": number; "width": number; "height": number;
-    required "length",  "width",  "height";
+    "productid": integer;
+    "productName": string;
+    "price": number && [ bounds (0.,max]; ];
+    "tags": array && [
+        of string;
+        size [1,max);
+        unique;
 ];
-  required "productid",  "productName",  "price",  "tags";
+    "dimensions": object && [
+        "length": number;
+        "width": number;
+        "height": number;
+        required "length",  "width",  "height";
+];
+    required "productid",  "productName",  "price",  "tags";
 ]|}, {|
          object && [ "productid" : integer ;
                      "productName" : string ;
@@ -213,13 +220,33 @@ let printing = "printing" >::: [
       )
   ; "item" >:: (fun ctxt -> List.iter success_item [
         ("type nonrec x = string;", "type x = string ;")
-      ; ("type nonrec x = string and y = number;",
-         "type x = string and y = number ;")
-      ; ("type rec x = string and y = number;",
+      ; ({|type nonrec x = string
+and y = number;|},
+         {|type nonrec x = string and y = number;|})
+      ; ({|type rec x = string
+and y = number;|},
                   "type rec x = string and y = number ;")
-      ; ("type nonrec x = string and y = number;",
+      ; ({|type nonrec x = string
+and y = number;|},
          "type nonrec x = string and y = number ;")
-      ; ("",
+      ; ({|local import GeoLoc as "https://example.com/geographical-location.schema.json"; in type nonrec product = object && [
+    "productid": integer;
+    "productName": string;
+    "price": number && [ bounds (0.,max]; ];
+    "tags": array && [
+        of string;
+        size [1,max);
+        unique;
+];
+    "dimensions": object && [
+        "length": number;
+        "width": number;
+        "height": number;
+        required "length",  "width",  "height";
+];
+    required "productid",  "productName",  "price",  "tags";
+    "warehouseLocation": GeoLoc.latlong;
+]; end|},
          {|
 local
 import "https://example.com/geographical-location.schema.json" as GeoLoc ;

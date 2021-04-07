@@ -41,6 +41,8 @@ open Utlexing ;;
 open Utparse0 ;;
 #load "utprint.cmo";;
 open Utprint ;;
+#load "utconv.cmo";;
+open Utconv ;;
 #load "uttest.cmo";;
 open Uttest ;;
 

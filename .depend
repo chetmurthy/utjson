@@ -1,3 +1,7 @@
+utconv.cmo : \
+    utypes.cmo
+utconv.cmx : \
+    utypes.cmx
 uttest.cmo : \
     utypes.cmo \
     utprint.cmo \
