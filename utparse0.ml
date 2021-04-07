@@ -126,6 +126,7 @@ EXTEND
       | "sealed" ; ";" -> Sealed True
       | "unsealed" ; ";" -> Sealed False
       | "orelse" ; t=utype ; ";" -> OrElse t
+      | "multipleOf" ; n = FLOAT ; ";" -> MultipleOf (float_of_string n)
       ] ]
     ;
 

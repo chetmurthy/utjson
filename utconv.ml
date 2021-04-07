@@ -14,17 +14,18 @@ type json =
 
 type json_list = json list [@@deriving show,eq]
 
-  let counter = ref 0
+let conv_type t =
+  let counter = ref 0 in
   let newmid () =
     let mid = Printf.sprintf "M%d" !counter in
     counter := 1 + !counter ;
-    mid
+    mid in
 
-  let uri2type = ref [] 
-  let add_uri2type s r = uri2type := (s,r) :: !uri2type
+  let uri2type = ref [] in
+  let add_uri2type s r = uri2type := (s,r) :: !uri2type in
 
-  let imports = ref [] 
-  let add_imports s mid = imports := (s, mid):: !imports 
+  let imports = ref [] in
+  let add_imports s mid = imports := (s, mid):: !imports  in
 
   let lookup_ref s =
     match List.assoc s !uri2type with
@@ -34,13 +35,13 @@ type json_list = json list [@@deriving show,eq]
       let r = Ref([mid],"t") in
       add_imports s mid ;
       add_uri2type s r ;
-      r 
+      r in
 
-  let locals = ref [] 
+  let locals = ref []  in
   let register_local s t =
     locals := (s, t) :: !locals ;
     add_uri2type (Printf.sprintf "#/definitions/%s" s) (Ref([], s)) ;
-    () 
+    () in
 
   let conv_simple = function
       `String "null" -> [Simple JNull]
@@ -50,7 +51,7 @@ type json_list = json list [@@deriving show,eq]
     | `String "array" -> [Simple JArray]
     | `String "object" -> [Simple JObject]
     | `String "integer" -> [Ref (["Predefined"], "integer")]
-    | v -> Fmt.(failwithf "conv_type: malformed type member: %a" pp_json v) 
+    | v -> Fmt.(failwithf "conv_type: malformed type member: %a" pp_json v) in
 
   let rec conv_type_l (j : json) = match j with
       `Assoc l ->
@@ -91,10 +92,8 @@ type json_list = json list [@@deriving show,eq]
     match conv_type_l t with
       [] -> Fmt.(failwithf "conv_type: conversion produced no result: %a" pp_json t)
     | l ->
-      List.fold_left (fun a b -> And(a,b)) (List.hd l) (List.tl l)
+      List.fold_left (fun a b -> And(a,b)) (List.hd l) (List.tl l) in
   
-let conv_type t =
-  uri2type := [] ; imports := [] ; locals := [] ;
   let t = conv_type0 t in
   let l = List.map (fun (mid, id) -> Import(mid, id)) !imports in
   let l = if !locals = [] then l else
@@ -102,3 +101,12 @@ let conv_type t =
   if l = [] then Decls(false, [("t", t)])
   else 
     Local(l, [Decls(false, [("t", t)])])
+
+let load_file s =
+  if Str.(string_match (regexp ".*\\.json$") s 0) then
+    let j = Yojson.Basic.from_file s in
+    conv_type j
+  else if Str.(string_match (regexp ".*\\.utj$") s 0) then
+    let l = Utparse0.(parse_file parse_utype_structure) s in
+    Local([], l)
+  else Fmt.(failwithf "load_file: format not recognized: %s" s)

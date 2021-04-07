@@ -1,0 +1,2 @@
+type integer = number && [ multipleOf 1.0 ; ]
+;

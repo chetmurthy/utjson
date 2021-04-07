@@ -63,7 +63,7 @@ let keywords = [
     ;"null";"string";"bool";"number";"array";"object"
     ;"sealed";"unsealed";"bounds"
     ;"true";"false";"not";"max";"min"
-    ;"import";"open";"as"
+    ;"import";"open";"as";"multipleOf"
   ]
 
 let rec rawtoken buf =

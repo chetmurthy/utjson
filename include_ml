@@ -43,6 +43,9 @@ open Utparse0 ;;
 open Utprint ;;
 #load "utconv.cmo";;
 open Utconv ;;
+#load "utvalid0.cmo";;
+open Utvalid0.Env ;;
+open Utvalid0 ;;
 #load "uttest.cmo";;
 open Uttest ;;
 

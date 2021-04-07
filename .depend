@@ -1,7 +1,11 @@
 utconv.cmo : \
-    utypes.cmo
+    utypes.cmo \
+    ututil.cmo \
+    utparse0.cmo
 utconv.cmx : \
-    utypes.cmx
+    utypes.cmx \
+    ututil.cmx \
+    utparse0.cmx
 uttest.cmo : \
     utypes.cmo \
     utprint.cmo \
@@ -12,6 +16,14 @@ uttest.cmx : \
     utparse0.cmx
 ututil.cmo :
 ututil.cmx :
+utvalid0.cmo : \
+    utypes.cmo \
+    ututil.cmo \
+    utconv.cmo
+utvalid0.cmx : \
+    utypes.cmx \
+    ututil.cmx \
+    utconv.cmx
 utypes.cmo :
 utypes.cmx :
 utlexing.cmo : \

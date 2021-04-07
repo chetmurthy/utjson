@@ -110,6 +110,9 @@ let parsing = "parsing" >::: [
          "type rec x = string and y = number ;")
       ; ((Decls (false, [("x", (Simple JString)); ("y", (Simple JNumber))])),
          "type nonrec x = string and y = number ;")
+      ; ((Decls (false,
+                 [("integer", (And ((Simple JNumber), (Atomic [(MultipleOf 1.)]))))])),
+         "type integer = number && [ multipleOf 1.0 ; ] ;")
       ; ((Local (
           [(Import ("GeoLoc",
                     "https://example.com/geographical-location.schema.json"))

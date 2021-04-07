@@ -29,6 +29,7 @@ type atomic_utype_t =
   | NumberBound of range_constraint_t
   | Sealed of bool
   | OrElse of utype_t
+  | MultipleOf of float
 
 and utype_t =
     Simple of base_type_t
