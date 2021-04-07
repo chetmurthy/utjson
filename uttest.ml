@@ -4,6 +4,7 @@ open Pa_ppx_testutils
 
 open Utypes
 open Utparse0
+open Utprint
 
 Pa_ppx_base.Pp_MLast.Ploc.pp_loc_verbose := true ;;
 
@@ -27,6 +28,7 @@ let assert_raises_exn_pattern ?msg pattern f =
     f
 
 let of_string_exn s = s |> parse_string parse_utype_eoi
+let to_string t = print_utype Pprintf.empty_pc t
 let item_of_string_exn s = s |> parse_string parse_utype_structure_item_eoi
 
 let printer = show_utype_t
@@ -175,11 +177,41 @@ end ;
   ]
 
 
+let success (expect, arg) =
+  let msg = Fmt.(str "printing test for code << %s >>" arg) in
+  assert_equal ~msg ~printer:(fun x -> x) expect (to_string (of_string_exn arg))
 
+let printing = "printing" >::: [
+    "utype" >:: (fun ctxt -> List.iter success [
+        ("string", "string")
+      ; ("M.t", "M.t")
+      ; ({|object && [
+  "productid": integer; "productName": string;
+  "price": number && [ bounds (0.,max]; ];
+  "tags": array && [ of string; size [1,max); unique; ];
+  "dimensions": object && [
+    "length": number; "width": number; "height": number;
+    required "length",  "width",  "height";
+];
+  required "productid",  "productName",  "price",  "tags";
+]|}, {|
+         object && [ "productid" : integer ;
+                     "productName" : string ;
+                     "price" : number && [ bounds (0, max] ; ] ;
+                     "tags" : array && [ of string ; size [1,max) ; unique ; ] ;
+                     "dimensions" : object && [ "length" : number ; "width" : number ; "height" : number ;
+                                                 required "length", "width", "height" ; ] ;
+                     required "productid", "productName", "price", "tags" ;
+                   ]
+|})
+      ]
+      )
+  ]
 
 let tests = "all" >::: [
     simple
   ; parsing
+  ; printing
 ]
 
 if not !Sys.interactive then

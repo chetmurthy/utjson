@@ -1,8 +1,10 @@
 uttest.cmo : \
     utypes.cmo \
+    utprint.cmo \
     utparse0.cmo
 uttest.cmx : \
     utypes.cmx \
+    utprint.cmx \
     utparse0.cmx
 ututil.cmo :
 ututil.cmx :

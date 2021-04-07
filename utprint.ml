@@ -38,6 +38,8 @@ value print_range_constraint pc (lo,hi) =
     (if hi.inclusive then "]" else ")")
 ;
 
+value print_id pc id = pprintf pc "%s" id ;
+
 EXTEND_PRINTER
   pr_utype:
     [ "||"
@@ -49,6 +51,8 @@ EXTEND_PRINTER
     | "simple"
       [ Simple x -> pprintf pc "%p" print_base_type x
       | Atomic l -> pprintf pc "[@[@;%p@;]@]" (plist_with "" print_atomic 0) l
+      | Ref [] id -> pprintf pc "%p" print_id id
+      | Ref l id -> pprintf pc "%p.%p" (plist_with "." print_id 0) l print_id id
       | x -> pprintf pc "(%p)" print_utype x
       ]
     ] ;
