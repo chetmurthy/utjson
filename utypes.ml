@@ -16,14 +16,10 @@ type range_constraint_t =
   (float option Bound.t * float option Bound.t)
 [@@deriving show { with_path = false },eq]
 
-type utype_t =
-    And of utype_t * utype_t
-  | Or of utype_t * utype_t
-  | Not of utype_t
-  | Simple of base_type_t
-  | Field of string * utype_t
+type atomic_utype_t =
+    Field of string * utype_t
   | FieldRE of string * utype_t
-  | FieldRequired of string
+  | FieldRequired of string list
   | ArrayOf of utype_t
   | ArrayTuple of utype_t list
   | ArrayUnique
@@ -33,7 +29,14 @@ type utype_t =
   | NumberBound of range_constraint_t
   | Sealed of bool
   | OrElse of utype_t
-  | Ref of string list
+
+and utype_t =
+    Simple of base_type_t
+  | And of utype_t * utype_t
+  | Or of utype_t * utype_t
+  | Not of utype_t
+  | Atomic of atomic_utype_t list
+  | Ref of string list * string
 [@@deriving show { with_path = false },eq]
 
 type decl_t = string * utype_t
@@ -46,3 +49,14 @@ type struct_item_t =
 
 and structure = struct_item_t list
 [@@deriving show { with_path = false },eq]
+
+type token =
+    Lident of string
+  | Uident of string
+  | Spcl of string
+  | Keyw of string
+  | String of string
+  | Integer of string
+  | Float of string
+  | Regexp of string
+  | EOF

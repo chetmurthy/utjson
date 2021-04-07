@@ -1,4 +1,22 @@
+uttest.cmo : \
+    utypes.cmo \
+    utparse0.cmo
+uttest.cmx : \
+    utypes.cmx \
+    utparse0.cmx
+ututil.cmo :
+ututil.cmx :
+utypes.cmo :
+utypes.cmx :
+utlexing.cmo : \
+    utypes.cmo \
+    ututil.cmo
+utlexing.cmx : \
+    utypes.cmx \
+    ututil.cmx
 utparse0.cmo : \
-    utypes.cmo
+    utypes.cmo \
+    utlexing.cmo
 utparse0.cmx : \
-    utypes.cmx
+    utypes.cmx \
+    utlexing.cmx

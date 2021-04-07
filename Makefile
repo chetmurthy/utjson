@@ -4,9 +4,9 @@ NOT_OCAMLFIND=not-ocamlfind
 BASEPACKAGES=bos,uutf,fmt,camlp5.extprint,pcre,yaml
 PACKAGES=$(BASEPACKAGES),camlp5.extprint,camlp5.extend,camlp5.pprintf,pa_ppx.deriving_plugins.std,pa_ppx.base.link,pa_ppx.runtime,pa_ppx.testutils,sedlex
 
-OBJ=utypes.cmo utparse0.cmo
-OML=utypes.m
-LEXML=
+OBJ=ututil.cmo utypes.cmo utlexing.cmo utparse0.cmo
+OML=ututil.ml utypes.ml uttest.ml
+LEXML=utlexing.ml
 RML=utparse0.ml
 
 all: $(OBJ) uttest
@@ -20,6 +20,9 @@ uttest: $(OBJ) uttest.cmo
 
 utparse0.cmo: utparse0.ml
 	$(OCAMLFIND) ocamlc $(DEBUG) -package $(PACKAGES) -syntax camlp5r -c $<
+
+utlexing.cmo: utlexing.ml
+	$(OCAMLFIND) ocamlc $(DEBUG) -package $(BASEPACKAGES),sedlex.ppx -c $<
 
 .SUFFIXES: .mll .ml .cmo .cmx
 
