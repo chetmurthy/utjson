@@ -46,7 +46,10 @@ EXTEND_PRINTER
   pr_utype_structure_item: [ [
     Decls recflag l ->
     pprintf pc "type%s %p;" (if recflag then " rec" else " nonrec")
-      (plist_with " and" (fun pc (s,t) -> pprintf pc "%s = %p" s print_utype t) 0) l
+      (Prtools.vlist2
+         (fun pc (s,t) -> pprintf pc "%s = %p" s print_utype t)
+         (fun pc (s,t) -> pprintf pc "and %s = %p" s print_utype t)
+      ) l
   | Module id l ->
     pprintf pc "module %s = struct %p end;" id
       (plist_with "" print_utype_structure_item 0) l
@@ -67,7 +70,7 @@ EXTEND_PRINTER
       [ Not x -> pprintf pc "not %p" next x ]
     | "simple"
       [ Simple x -> pprintf pc "%p" print_base_type x
-      | Atomic l -> pprintf pc "[@[@;%p@;]@]" (plist_with "" print_atomic 0) l
+      | Atomic l -> pprintf pc "[@[<2>@;%p@;]@]" (Prtools.vlist print_atomic) l
       | Ref [] id -> pprintf pc "%p" print_id id
       | Ref l id -> pprintf pc "%p.%p" (plist_with "." print_id 0) l print_id id
       | x -> pprintf pc "(%p)" print_utype x
