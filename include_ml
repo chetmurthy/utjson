@@ -39,6 +39,8 @@ open Ututil ;;
 open Utlexing ;;
 #load "utparse0.cmo";;
 open Utparse0 ;;
+#load "utprint.cmo";;
+open Utprint ;;
 #load "uttest.cmo";;
 open Uttest ;;
 
