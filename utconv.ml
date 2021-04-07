@@ -14,18 +14,17 @@ type json =
 
 type json_list = json list [@@deriving show,eq]
 
-let conv_type t =
-  let counter = ref 0 in
+  let counter = ref 0
   let newmid () =
     let mid = Printf.sprintf "M%d" !counter in
     counter := 1 + !counter ;
-    mid in
+    mid
 
-  let uri2type = ref [] in
-  let add_uri2type s r = uri2type := (s,r) :: !uri2type in
+  let uri2type = ref []
+  let add_uri2type s r = uri2type := (s,r) :: !uri2type
 
-  let imports = ref [] in
-  let add_imports s mid = imports := (s, mid):: !imports  in
+  let imports = ref []
+  let add_imports s mid = imports := (s, mid):: !imports 
 
   let lookup_ref s =
     match List.assoc s !uri2type with
@@ -35,13 +34,21 @@ let conv_type t =
       let r = Ref([mid],"t") in
       add_imports s mid ;
       add_uri2type s r ;
-      r in
+      r
 
-  let locals = ref []  in
-  let register_local s t =
-    locals := (s, t) :: !locals ;
+  let locals = ref [] 
+  let forward_define_local s =
     add_uri2type (Printf.sprintf "#/definitions/%s" s) (Ref([], s)) ;
-    () in
+    ()
+  let register_local_definition s t =
+    locals := (s, t) :: !locals ;
+    ()
+
+  let reset () = 
+    counter := 0 ;
+    uri2type := [] ;
+    imports := [] ;
+    locals := []
 
   let conv_simple = function
       `String "null" -> [Simple JNull]
@@ -51,15 +58,17 @@ let conv_type t =
     | `String "array" -> [Simple JArray]
     | `String "object" -> [Simple JObject]
     | `String "integer" -> [Ref (["Predefined"], "integer")]
-    | v -> Fmt.(failwithf "conv_type: malformed type member: %a" pp_json v) in
+    | v -> Fmt.(failwithf "conv_type: malformed type member: %a" pp_json v)
 
   let rec conv_type_l (j : json) = match j with
       `Assoc l ->
       (match List.assoc "definitions" l with
          `Assoc l ->
          l |> List.iter (fun (name, t) ->
+             forward_define_local name ;
              let t = conv_type0 t in
-             register_local name t)
+             register_local_definition name t
+           )
 
        | v -> Fmt.(failwithf "conv_type: malformed definitions member: %a" pp_json v)
        | exception Not_found -> ()
@@ -92,10 +101,12 @@ let conv_type t =
     match conv_type_l t with
       [] -> Fmt.(failwithf "conv_type: conversion produced no result: %a" pp_json t)
     | l ->
-      List.fold_left (fun a b -> And(a,b)) (List.hd l) (List.tl l) in
+      List.fold_left (fun a b -> And(a,b)) (List.hd l) (List.tl l)
   
+let conv_type t =
+  reset () ;
   let t = conv_type0 t in
-  let l = List.map (fun (mid, id) -> Import(mid, id)) !imports in
+  let l = List.map (fun (mid, id) -> Import(id, mid)) !imports in
   let l = if !locals = [] then l else
       l@[Decls(true, !locals)] in
   if l = [] then Decls(false, [("t", t)])

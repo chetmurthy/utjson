@@ -156,7 +156,7 @@ EXTEND
       | "type" ; rflag = [ "rec" -> True | "nonrec" -> False | -> False ] ;
         l = LIST1 [ id = LIDENT ; "=" ; t = utype -> (id, t) ] SEP "and" ;
         ";" -> Decls rflag l
-      | "import" ; s=STRING ; "as"; uid=UIDENT ; ";" -> Import uid s
+      | "import" ; s=STRING ; "as"; uid=UIDENT ; ";" -> Import s uid
       | "open" ; l = LIST1 UIDENT SEP "." ; ";" -> Open l
       ] ]
     ;

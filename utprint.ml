@@ -53,8 +53,8 @@ EXTEND_PRINTER
   | Module id l ->
     pprintf pc "module %s = struct %p end;" id
       (plist_with "" print_utype_structure_item 0) l
-  | Import id url ->
-    pprintf pc "import %s as %p;" id qstring url
+  | Import url id ->
+    pprintf pc "import %p as %s;" qstring url id
   | Local l1 l2 ->
     pprintf pc "local %p in %p end" 
       (plist_with "" print_utype_structure_item 0) l1

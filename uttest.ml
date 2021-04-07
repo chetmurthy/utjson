@@ -114,8 +114,8 @@ let parsing = "parsing" >::: [
                  [("integer", (And ((Simple JNumber), (Atomic [(MultipleOf 1.)]))))])),
          "type integer = number && [ multipleOf 1.0 ; ] ;")
       ; ((Local (
-          [(Import ("GeoLoc",
-                    "https://example.com/geographical-location.schema.json"))
+          [(Import ("https://example.com/geographical-location.schema.json",
+                    "GeoLoc"))
           ],
           [(Decls (false,
                    [("product",
@@ -232,7 +232,7 @@ and y = number;|},
       ; ({|type nonrec x = string
 and y = number;|},
          "type nonrec x = string and y = number ;")
-      ; ({|local import GeoLoc as "https://example.com/geographical-location.schema.json"; in type nonrec product = object && [
+      ; ({|local import "https://example.com/geographical-location.schema.json" as GeoLoc; in type nonrec product = object && [
     "productid": integer;
     "productName": string;
     "price": number && [ bounds (0.,max]; ];
