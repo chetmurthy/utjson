@@ -151,10 +151,12 @@ EXTEND
     utype_structure_item: [ [
         "module" ; uid=UIDENT ; "=" ; "struct" ;
         l = utype_structure ; ";" -> Module uid l
-      | "local" ; l1 = utype_structure ; "in" ; l2 = utype_structure ; ";" -> Local l1 l2
+      | "local" ; l1 = utype_structure ; "in" ; l2 = utype_structure ; "end" ; ";" -> Local l1 l2
       | "type" ; rflag = [ "rec" -> True | "nonrec" -> False | -> False ] ;
         l = LIST1 [ id = LIDENT ; "=" ; t = utype -> (id, t) ] SEP "and" ;
         ";" -> Decls rflag l
+      | "import" ; s=STRING ; "as"; uid=UIDENT ; ";" -> Import uid s
+      | "open" ; l = LIST1 UIDENT SEP "." ; ";" -> Open l
       ] ]
     ;
 

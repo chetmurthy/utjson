@@ -52,6 +52,7 @@ let simple = "simple" >::: [
 let parsing = "parsing" >::: [
     "utype" >:: (fun ctxt -> List.iter success [
         (Simple JString, "string")
+      ; ((Ref (["M"], "t")), "M.t")
       ; ((And ((Simple JObject),
                (Atomic
                   [(Field ("productid", (Ref ([], "integer"))));
@@ -106,6 +107,68 @@ let parsing = "parsing" >::: [
          "type rec x = string and y = number ;")
       ; ((Decls (false, [("x", (Simple JString)); ("y", (Simple JNumber))])),
          "type nonrec x = string and y = number ;")
+      ; ((Local (
+          [(Import ("GeoLoc",
+                    "https://example.com/geographical-location.schema.json"))
+          ],
+          [(Decls (false,
+                   [("product",
+                     (And ((Simple JObject),
+                           (Atomic
+                              [(Field ("productid", (Ref ([], "integer"))));
+                               (Field ("productName", (Simple JString)));
+                               (Field ("price",
+                                       (And ((Simple JNumber),
+                                             (Atomic
+                                                [(NumberBound
+                                                    ({ it = (Some 0.); inclusive = false },
+                                                     { it = None; inclusive = true }))
+                                                ])
+                                            ))
+                                      ));
+                               (Field ("tags",
+                                       (And ((Simple JArray),
+                                             (Atomic
+                                                [(ArrayOf (Simple JString));
+                                                 (Size
+                                                    ({ it = 1; inclusive = true },
+                                                     { it = None; inclusive = false }));
+                                                 ArrayUnique])
+                                            ))
+                                      ));
+                               (Field ("dimensions",
+                                       (And ((Simple JObject),
+                                             (Atomic
+                                                [(Field ("length", (Simple JNumber)));
+                                                 (Field ("width", (Simple JNumber)));
+                                                 (Field ("height", (Simple JNumber)));
+                                                 (FieldRequired ["length"; "width"; "height"])])
+                                            ))
+                                      ));
+                               (FieldRequired
+                                  ["productid"; "productName"; "price"; "tags"]);
+                               (Field ("warehouseLocation", (Ref (["GeoLoc"], "latlong"))))
+                              ])
+                          )))
+                   ]
+                  ))
+          ]
+        )),
+         {|
+local
+import "https://example.com/geographical-location.schema.json" as GeoLoc ;
+in
+type product = object && [ "productid" : integer ;
+                     "productName" : string ;
+                     "price" : (number && [ bounds (0, max] ; ]) ;
+                     "tags" : (array && [ of string ; size [1,max) ; unique ; ]) ;
+                     "dimensions" : (object && [ "length" : number ; "width" : number ; "height" : number ;
+                                                 required "length", "width", "height" ; ]) ;
+                     required "productid", "productName", "price", "tags" ;
+                     "warehouseLocation" : GeoLoc.latlong ;
+                   ] ;
+end ;
+|})
       ]
 
       )

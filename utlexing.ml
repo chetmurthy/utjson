@@ -58,6 +58,14 @@ let readn n lb =
       end
   in rerec n
 
+let keywords = [
+  "module";"end";"local";"in";"of";"required";"unique";"size";"type";"and";"rec";"nonrec"
+    ;"null";"string";"bool";"number";"array";"object"
+    ;"sealed";"unsealed";"bounds"
+    ;"true";"false";"not";"max";"min"
+    ;"import";"open";"as"
+  ]
+
 let rec rawtoken buf =
   let pos() = Sedlexing.lexing_positions buf in
   match%sedlex buf with
@@ -69,16 +77,15 @@ let rec rawtoken buf =
     | "("|")"
     | "{"|"}"
     | "="
-    | ";"|","
+    | ";"|","|"."
     | "&&" | "||"
   ) -> (Spcl (Sedlexing.Latin1.lexeme buf), pos())
-  | (
-    "module"|"end"|"local"|"in"|"of"|"required"|"unique"|"size"|"type"|"and"|"rec"|"nonrec"
-    |"null"|"string"|"bool"|"number"|"array"|"object"
-    |"sealed"|"unsealed"|"bounds"
-    |"true"|"false"|"not"|"max"|"min"
-  ) -> (Keyw (Sedlexing.Latin1.lexeme buf),pos())
-  | lident -> (Lident (Sedlexing.Latin1.lexeme buf),pos())
+  | lident ->
+    let s = Sedlexing.Latin1.lexeme buf in
+    if List.mem s keywords then
+      (Keyw (Sedlexing.Latin1.lexeme buf),pos())
+    else
+      (Lident (Sedlexing.Latin1.lexeme buf),pos())
   | uident -> (Uident (Sedlexing.Latin1.lexeme buf),pos())
   | Plus (ws|comment) -> rawtoken buf
   | regexp -> (Regexp (Sedlexing.Latin1.lexeme buf),pos())

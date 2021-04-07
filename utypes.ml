@@ -42,7 +42,9 @@ and utype_t =
 type struct_item_t =
     Decls of bool * (string * utype_t) list
   | Module of string * structure
+  | Import of string * string
   | Local of structure * structure
+  | Open of string list
 
 and structure = struct_item_t list
 [@@deriving show { with_path = false },eq]
