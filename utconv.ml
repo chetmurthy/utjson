@@ -81,7 +81,7 @@ let andList l =
     "items"; "additionalProperties"; "minItems"; "uniqueItems";
     "id";
     "definitions";
-    "enum"; "default";"pattern"
+    "enum"; "default";"pattern";"format"
   ]
 
   let rec conv_type_l (j : json) = match j with
@@ -196,6 +196,11 @@ let andList l =
       )@
       (match assoc_opt "default" l with
          Some j  -> [Atomic[Default j]]
+       | None -> []
+      )@
+      (match assoc_opt "format" l with
+         Some (`String s)  -> [Atomic[Format s]]
+       | Some v -> Fmt.(failwithf "conv_type: format did not have string payload: %a" pp_json v)
        | None -> []
       )
 

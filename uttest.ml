@@ -299,6 +299,8 @@ let convert = "convert" >::: [
          "json-schema-samples/ansible-inventory-MODIFIED.json")
       ; ("json-schema-samples/apibuilder-MODIFIED.utj",
          "json-schema-samples/apibuilder-MODIFIED.json")
+      ; ("json-schema-samples/apple-app-site-association.utj",
+         "/home/chet/Hack/Github/SchemaStore/schemastore/src/schemas/json/apple-app-site-association.json")
       ]
       )
   ]

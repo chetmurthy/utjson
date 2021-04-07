@@ -102,6 +102,7 @@ EXTEND_PRINTER
       | OrElse t -> pprintf pc "orelse %p;" print_utype t
       | Enum l -> pprintf pc "enum %p;" (plist_with "," print_json 0) l
       | Default j -> pprintf pc "default %p;" print_json j
+      | Format s -> pprintf pc "format %s;" s
     ] ] ;
 
 END;

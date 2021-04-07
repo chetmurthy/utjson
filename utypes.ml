@@ -32,6 +32,7 @@ type atomic_utype_t =
   | MultipleOf of float
   | Enum of Yojson.Basic.t list
   | Default of Yojson.Basic.t
+  | Format of string
 
 and utype_t =
     Simple of base_type_t

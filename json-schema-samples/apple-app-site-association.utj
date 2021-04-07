@@ -1,0 +1,11 @@
+type nonrec t = object && [
+    "applinks": object && [
+        "apps": [ enum []; ];
+        "details": array && [
+            of object && [
+                "appID": string;
+                "paths": array && [ of string; ];
+];
+];
+] && [ required "apps",  "details"; ];
+] && [ required "applinks"; ];
