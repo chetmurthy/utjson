@@ -50,6 +50,11 @@ type json_list = json list [@@deriving show,eq]
     imports := [] ;
     locals := []
 
+  let assoc_opt k l =
+    match List.assoc k l with
+      v -> Some v
+    | exception Not_found -> None
+
   let conv_simple = function
       `String "null" -> [Simple JNull]
     | `String "string" -> [Simple JString]
@@ -62,37 +67,61 @@ type json_list = json list [@@deriving show,eq]
 
   let rec conv_type_l (j : json) = match j with
       `Assoc l ->
-      (match List.assoc "definitions" l with
-         `Assoc l ->
+      (match assoc_opt "definitions" l with
+         Some (`Assoc l) ->
+         l |> List.iter (fun (name, _) ->
+             forward_define_local name
+           ) ;
          l |> List.iter (fun (name, t) ->
-             forward_define_local name ;
              let t = conv_type0 t in
              register_local_definition name t
            )
 
-       | v -> Fmt.(failwithf "conv_type: malformed definitions member: %a" pp_json v)
-       | exception Not_found -> ()
+       | Some v -> Fmt.(failwithf "conv_type: malformed definitions member: %a" pp_json v)
+       | None -> ()
       ) ;
-      (match List.assoc "type" l with
-       | `String _ as j -> conv_simple j
-       | exception Not_found ->
-         (match List.assoc "$ref" l with
-            `String s -> [lookup_ref s]
-          | j -> Fmt.(failwithf "conv_type: $ref has malformed member: %a" pp_json j)
-          | exception Not_found -> []
-         )
+      (match assoc_opt "type" l with
+       | (Some (`String _ as j)) -> conv_simple j
+       | (Some j) -> Fmt.(failwithf "conv_type: type must have string member: %a" pp_json j)
+       | None -> []
       )@
-      (match List.assoc "properties" l with
-         `Assoc l ->
+      (match assoc_opt "$ref" l with
+       | Some (`String s) -> [lookup_ref s]
+       | Some j -> Fmt.(failwithf "conv_type: $ref has malformed member: %a" pp_json j)
+       | None -> []
+      )@
+      (match assoc_opt "properties" l with
+         Some (`Assoc l) ->
          [Atomic (List.map (fun (k,v) -> Field(k,conv_type0 v)) l)]
-       | v -> Fmt.(failwithf "conv_type: malformed properties member: %a" pp_json v)
-       | exception Not_found -> []
+       | Some v -> Fmt.(failwithf "conv_type: malformed properties member: %a" pp_json v)
+       | None -> []
       )@
-      (match List.assoc "patternProperties" l with
-         `Assoc l ->
+      (match assoc_opt "patternProperties" l with
+         Some (`Assoc l) ->
          [Atomic (List.map (fun (k,v) -> FieldRE("/"^k^"/",conv_type0 v)) l)]
-       | v -> Fmt.(failwithf "conv_type: malformed patternProperties member: %a" pp_json v)
-       | exception Not_found -> []
+       | Some v -> Fmt.(failwithf "conv_type: malformed patternProperties member: %a" pp_json v)
+       | None -> []
+      )@
+      (match (assoc_opt "minLength" l, assoc_opt "maxLength" l) with
+         (None, None) -> []
+       | (None, Some _) -> Fmt.(failwithf "conv_type: maxLength requires minLength: %a" pp_json j)
+       | (Some min, max) ->
+         let min = match min with
+             `Int n -> n
+           | `Float f -> int_of_float f
+           | j -> Fmt.(failwithf "conv_type: minLength must be number: %a" pp_json j) in
+         let max = match max with
+             None -> None
+           | Some (`Int n) -> Some n
+           | Some (`Float f) -> Some (int_of_float f)
+           | Some j -> Fmt.(failwithf "conv_type: minLength must be number: %a" pp_json j) in
+         [Atomic [(Size Bound.({it=min; inclusive = true}, {it=max; inclusive = true}))]]
+      )@
+      (match List.assoc "anyOf" l with
+         `List (_::_ as l) ->
+         let l = List.map conv_type0 l in
+         [List.fold_left (fun a b -> Or(a,b)) (List.hd l) (List.tl l)]
+       | v -> Fmt.(failwithf "conv_type: anyOf did not have nonempty array paylaod: %a" pp_json v)
       )
 
     | j -> Fmt.(failwithf "conv_type: %a" pp_json j)

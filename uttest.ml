@@ -56,6 +56,12 @@ let parsing = "parsing" >::: [
     "utype" >:: (fun ctxt -> List.iter success [
         (Simple JString, "string")
       ; ((Ref (["M"], "t")), "M.t")
+      ; ((Atomic
+            [(Enum
+                [`List ([`Int (1); `Int (2)]); `Assoc ([("a", `Int (2))]);
+                 `Bool (true)])
+            ]),
+         {|[ enum [1,2], {"a":2}, true ; ]|})
       ; ((And ((Simple JObject),
                (Atomic
                   [(Field ("productid", (Ref ([], "integer"))));

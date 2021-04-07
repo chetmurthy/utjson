@@ -84,7 +84,7 @@ EXTEND
     base_type: [ [
         "null" -> JNull
       | "string" -> JString
-      | "bool" -> JBool
+      | "boolean" -> JBool
       | "number" -> JNumber
       | "array" -> JArray
       | "object" -> JObject
@@ -127,6 +127,7 @@ EXTEND
       | "unsealed" ; ";" -> Sealed False
       | "orelse" ; t=utype ; ";" -> OrElse t
       | "multipleOf" ; n = FLOAT ; ";" -> MultipleOf (float_of_string n)
+      | "enum" ; l = LIST1 json SEP "," ; ";" -> Enum l
       ] ]
     ;
 
@@ -166,6 +167,23 @@ EXTEND
       ] ]
     ;
 
+
+  json:
+    [ [ s = scalar -> s
+
+      | "[" ; l = LIST0 json SEP "," ; "]" -> `List l
+      | "{" ; l = LIST0 [ s = STRING ; ":" ; v=json -> (s,v) ] SEP "," ; "}" -> `Assoc l
+    ] ]
+  ;
+
+  scalar:
+    [ [ n = INT -> `Int (int_of_string n)
+      | n = FLOAT -> `Float (float_of_string n)
+      | "null" -> `Null
+      | "true" -> `Bool True
+      | "false" -> `Bool False
+    ] ]
+  ;
 
   utype_eoi : [ [ e = utype ; EOI -> e ] ] ;
   utype_structure_eoi : [ [ e = utype_structure ; EOI -> e ] ] ;

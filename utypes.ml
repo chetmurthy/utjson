@@ -30,6 +30,7 @@ type atomic_utype_t =
   | Sealed of bool
   | OrElse of utype_t
   | MultipleOf of float
+  | Enum of Yojson.Basic.t list
 
 and utype_t =
     Simple of base_type_t
