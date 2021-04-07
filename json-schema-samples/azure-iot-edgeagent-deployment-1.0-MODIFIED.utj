@@ -1,0 +1,58 @@
+local type rec moduleType = [ enum "docker"; ]
+and status = [ enum "running", "stopped"; ]
+and restartPolicy = [ enum "never", "on-failure", "on-unhealthy", "always"; ]
+and moduleSettings = object && [
+    "image": string;
+    "createOptions": createOptions;
+] && [ required "image"; ]
+and env = object && [
+    /^[^\+#$\s\.]+$/ : object && [ "value": Predefined.json; ] && [ required "value"; ];
+] && [ sealed; ]
+and createOptions = string && [ contentMediaType "application/json"; ];
+in
+ type nonrec t = object && [
+    "$edgeAgent": object && [
+        "properties.desired": object && [
+            "schemaVersion": string && [ /1.0/ ];
+            "runtime": object && [
+                "type": moduleType;
+                "settings": object && [
+                    "minDockerVersion": string;
+                    "loggingOptions": string;
+                    "registryCredentials": object && [
+                        /^.+$/ : object && [
+                            "username": string;
+                            "password": string;
+                            "address": string && [ /^[^\s]+$/ ];
+] && [ required "username",  "password",  "address"; ];
+] && [ sealed; ];
+];
+] && [ required "type",  "settings"; ];
+            "systemModules": object && [
+                "edgeAgent": object && [
+                    "type": moduleType;
+                    "settings": moduleSettings;
+                    "env": env;
+] && [ required "type",  "settings"; ];
+                "edgeHub": object && [
+                    "type": moduleType;
+                    "settings": moduleSettings;
+                    "env": env;
+                    "status": status;
+                    "restartPolicy": restartPolicy;
+] && [ required "type",  "settings",  "status",  "restartPolicy"; ];
+] && [ sealed; ] && [ required "edgeAgent",  "edgeHub"; ];
+            "modules": object && [
+                /^[a-zA-Z0-9_-]+$/ : object && [
+                    "version": string;
+                    "type": moduleType;
+                    "status": status;
+                    "restartPolicy": restartPolicy;
+                    "env": env;
+                    "settings": moduleSettings;
+] && [ required "type",  "status",  "restartPolicy",  "settings"; ];
+] && [ sealed; ];
+] && [ required "schemaVersion",  "runtime",  "systemModules",  "modules"; ];
+] && [ required "properties.desired"; ];
+] && [ sealed; ] && [ required "$edgeAgent"; ];
+end;

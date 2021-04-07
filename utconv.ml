@@ -83,7 +83,8 @@ let andList l =
     "id";
     "definitions";
     "enum"; "default";"pattern";"format";"propertyNames";
-    "anyOf";"allOf";"oneOf";"not"
+    "anyOf";"allOf";"oneOf";"not";
+    "examples";"contentMediaType";"contentEncoding"
   ]
 
   let rec conv_type_l (j : json) = match j with
@@ -235,6 +236,16 @@ let andList l =
       (match assoc_opt "not" l with
          Some t ->
          [Not (conv_type0 t)]
+       | None -> []
+      )@
+      (match assoc_opt "contentMediaType" l with
+         Some (`String s)  -> [Atomic[ContentMediaType s]]
+       | Some v -> Fmt.(failwithf "conv_type: contentMediaType did not have string payload: %a" pp_json v)
+       | None -> []
+      )@
+      (match assoc_opt "contentEncoding" l with
+         Some (`String s)  -> [Atomic[ContentEncoding s]]
+       | Some v -> Fmt.(failwithf "conv_type: contentEncoding did not have string payload: %a" pp_json v)
        | None -> []
       )
 

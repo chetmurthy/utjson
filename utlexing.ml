@@ -65,6 +65,7 @@ let keywords = [
     ;"true";"false";"not";"max";"min"
     ;"import";"open";"as";"multipleOf";"format";"propertyNames";"orelse"
     ;"xor"
+    ;"contentMediaType";"contentEncoding"
   ]
 
 let rec rawtoken buf =

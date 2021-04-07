@@ -107,6 +107,8 @@ EXTEND_PRINTER
       | Default j -> pprintf pc "default %p;" print_json j
       | Format s -> pprintf pc "format %p;" qstring s
       | PropertyNames t -> pprintf pc "propertyNames %p;" print_utype t
+      | ContentMediaType s -> pprintf pc "contentMediaType %p;" qstring s
+      | ContentEncoding s -> pprintf pc "contentEncoding %p;" qstring s
     ] ] ;
 
 END;

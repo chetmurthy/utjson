@@ -311,6 +311,8 @@ let convert = "convert" >::: [
          "/home/chet/Hack/Github/SchemaStore/schemastore/src/schemas/json/asmdef.json")
       ; ("json-schema-samples/avro-avsc-MODIFIED.utj",
          "json-schema-samples/avro-avsc-MODIFIED.json")
+      ; ("json-schema-samples/azure-iot-edgeagent-deployment-1.0-MODIFIED.utj",
+         "json-schema-samples/azure-iot-edgeagent-deployment-1.0-MODIFIED.json")
       ]
       )
   ]

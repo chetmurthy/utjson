@@ -131,6 +131,8 @@ EXTEND
       | "default" ; j=json ; ";" -> Default j
       | "format" ; s=STRING ; ";" -> Format s
       | "propertyNames" ; t = utype ; ";" -> PropertyNames t
+      | "contentMediaType" ; s=STRING ; ";" -> ContentMediaType s
+      | "contentEncoding" ; s=STRING ; ";" -> ContentEncoding s
       ] ]
     ;
 

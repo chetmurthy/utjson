@@ -34,6 +34,8 @@ type atomic_utype_t =
   | Default of Yojson.Basic.t
   | Format of string
   | PropertyNames of utype_t
+  | ContentMediaType of string
+  | ContentEncoding of string
 
 and utype_t =
     Simple of base_type_t
