@@ -53,6 +53,12 @@ let conv_type j =
          [Atomic (List.map (fun (k,v) -> Field(k,conv_type0 v)) l)]
        | v -> Fmt.(failwithf "conv_type: malformed properties member: %a" pp_json v)
        | exception Not_found -> []
+      )@
+      (match List.assoc "patternProperties" l with
+         `Assoc l ->
+         [Atomic (List.map (fun (k,v) -> FieldRE(k,conv_type0 v)) l)]
+       | v -> Fmt.(failwithf "conv_type: malformed patternProperties member: %a" pp_json v)
+       | exception Not_found -> []
       )
 
     | j -> Fmt.(failwithf "conv_type: %a" pp_json j)
