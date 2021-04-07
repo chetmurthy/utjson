@@ -52,6 +52,12 @@ open Uttest ;;
 (*
 #use "jq_examples.ml";;
 *)
+
+let val1 schf jf =
+let j = Yojson.Basic.from_file jf in
+let e0 = elab (load_file schf) in
+let (t, e) = lookup e0 ["t"] in validate j e t ;;
+
 #print_length 1000;;
 #print_depth 1000;;
 (*

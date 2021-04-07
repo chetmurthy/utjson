@@ -114,8 +114,8 @@ EXTEND
 
     atomic_utype: [ [
         fname = STRING ; ":" ; t = utype ; ";" -> Field fname t
-      | re = REGEXP ; ":" ; t = utype ; ";" -> FieldRE re t
-      | re = REGEXP -> StringRE re
+      | re = REGEXP ; ":" ; t = utype ; ";" -> FieldRE (String.sub re 1 (String.length re - 2)) t
+      | re = REGEXP -> StringRE (String.sub re 1  (String.length re - 2))
       | "required" ; l = LIST1 STRING SEP "," ; ";" -> FieldRequired l
       | "of" ; t = utype ; ";" -> ArrayOf t
       | l = LIST1 utype SEP "*" ; ";" -> ArrayTuple l

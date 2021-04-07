@@ -106,7 +106,7 @@ type json_list = json list [@@deriving show,eq]
 let conv_type t =
   reset () ;
   let t = conv_type0 t in
-  let l = List.map (fun (mid, id) -> Import(id, mid)) !imports in
+  let l = List.map (fun (id, mid) -> Import(id, mid)) !imports in
   let l = if !locals = [] then l else
       l@[Decls(true, !locals)] in
   if l = [] then Decls(false, [("t", t)])

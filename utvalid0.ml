@@ -98,6 +98,11 @@ let elab env t =
   fst (elabrec (env, []) t)
 end
 
+let re_match re s =
+  match Str.(search_forward (regexp re) s 0) with
+    _ -> true
+  | exception Not_found -> false
+
 let rec validate (j : Yojson.Basic.t) env = function
     Simple bty ->
     (match (bty, j) with
@@ -124,7 +129,11 @@ and validate_atomic j env uty = match (j, uty) with
     end
   | (_, Field _) -> false
 
-  | (`Assoc l, FieldRE _) -> Fmt.(failwithf "FieldRE: unimplemented")
+  | (`Assoc l, FieldRE (re, t)) ->
+    l |> List.for_all (fun (k,v) ->
+        if re_match re k then validate v env t else true
+      )
+
   | (_, FieldRE _) -> false
   | (`Assoc l, FieldRequired flds) ->
     flds |> List.for_all (fun f -> List.mem_assoc f l)
@@ -147,7 +156,7 @@ and validate_atomic j env uty = match (j, uty) with
   | (_, ArrayIndex _) -> false
 
   | (_, Size _) -> Fmt.(failwithf "Size: unimplemented")
-  | (_, StringRE _) -> Fmt.(failwithf "StringRE: unimplemented")
+  | (`String s, StringRE re) -> re_match re s
   | (_, NumberBound _) -> Fmt.(failwithf "NumberBound: unimplemented")
   | (_, Sealed _) -> Fmt.(failwithf "Sealed: unimplemented")
   | (_, OrElse _) -> Fmt.(failwithf "OrElse: unimplemented")
