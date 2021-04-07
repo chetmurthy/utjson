@@ -11,6 +11,8 @@ value plist_with sep f sh pc l =
 
 value pr_utype = Eprinter.make "utype";
 value print_utype = Eprinter.apply pr_utype;
+value pr_utype_structure_item = Eprinter.make "utype_structure_item";
+value print_utype_structure_item = Eprinter.apply pr_utype_structure_item;
 value pr_base_type = Eprinter.make "base_type";
 value print_base_type = Eprinter.apply pr_base_type;
 value pr_atomic = Eprinter.make "atomic";
@@ -41,6 +43,21 @@ value print_range_constraint pc (lo,hi) =
 value print_id pc id = pprintf pc "%s" id ;
 
 EXTEND_PRINTER
+  pr_utype_structure_item: [ [
+    Decls recflag l ->
+    pprintf pc "type%s %p;" (if recflag then " rec" else " nonrec")
+      (plist_with " and" (fun pc (s,t) -> pprintf pc "%s = %p" s print_utype t) 0) l
+  | Module id l ->
+    pprintf pc "module %s = struct %p end;" id
+      (plist_with "" print_utype_structure_item 0) l
+  | Import id url ->
+    pprintf pc "import %s as %p;" id qstring url
+  | Local l1 l2 ->
+    pprintf pc "local %p in %p end" 
+      (plist_with "" print_utype_structure_item 0) l1
+      (plist_with "" print_utype_structure_item 0) l2
+  ] ] ;
+
   pr_utype:
     [ "||"
       [ Or x y -> pprintf pc "%p || %p" next x curr y ]

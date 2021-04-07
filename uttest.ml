@@ -30,6 +30,7 @@ let assert_raises_exn_pattern ?msg pattern f =
 let of_string_exn s = s |> parse_string parse_utype_eoi
 let to_string t = print_utype Pprintf.empty_pc t
 let item_of_string_exn s = s |> parse_string parse_utype_structure_item_eoi
+let item_to_string t = print_utype_structure_item Pprintf.empty_pc t
 
 let printer = show_utype_t
 let cmp = equal_utype_t
@@ -181,6 +182,10 @@ let success (expect, arg) =
   let msg = Fmt.(str "printing test for code << %s >>" arg) in
   assert_equal ~msg ~printer:(fun x -> x) expect (to_string (of_string_exn arg))
 
+let success_item (expect, arg) =
+  let msg = Fmt.(str "printing test for code << %s >>" arg) in
+  assert_equal ~msg ~printer:(fun x -> x) expect (item_to_string (item_of_string_exn arg))
+
 let printing = "printing" >::: [
     "utype" >:: (fun ctxt -> List.iter success [
         ("string", "string")
@@ -203,6 +208,32 @@ let printing = "printing" >::: [
                                                  required "length", "width", "height" ; ] ;
                      required "productid", "productName", "price", "tags" ;
                    ]
+|})
+      ]
+      )
+  ; "item" >:: (fun ctxt -> List.iter success_item [
+        ("type nonrec x = string;", "type x = string ;")
+      ; ("type nonrec x = string and y = number;",
+         "type x = string and y = number ;")
+      ; ("type rec x = string and y = number;",
+                  "type rec x = string and y = number ;")
+      ; ("type nonrec x = string and y = number;",
+         "type nonrec x = string and y = number ;")
+      ; ("",
+         {|
+local
+import "https://example.com/geographical-location.schema.json" as GeoLoc ;
+in
+type product = object && [ "productid" : integer ;
+                     "productName" : string ;
+                     "price" : (number && [ bounds (0, max] ; ]) ;
+                     "tags" : (array && [ of string ; size [1,max) ; unique ; ]) ;
+                     "dimensions" : (object && [ "length" : number ; "width" : number ; "height" : number ;
+                                                 required "length", "width", "height" ; ]) ;
+                     required "productid", "productName", "price", "tags" ;
+                     "warehouseLocation" : GeoLoc.latlong ;
+                   ] ;
+end ;
 |})
       ]
       )
