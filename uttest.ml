@@ -307,6 +307,10 @@ let convert = "convert" >::: [
          "/home/chet/Hack/Github/SchemaStore/schemastore/src/schemas/json/appsscript.json")
       ; ("json-schema-samples/appveyor-MODIFIED.utj",
          "json-schema-samples/appveyor-MODIFIED.json")
+      ; ("json-schema-samples/asmdef.utj",
+         "/home/chet/Hack/Github/SchemaStore/schemastore/src/schemas/json/asmdef.json")
+      ; ("json-schema-samples/avro-avsc-MODIFIED.utj",
+         "json-schema-samples/avro-avsc-MODIFIED.json")
       ]
       )
   ]

@@ -79,11 +79,11 @@ let andList l =
     "$schema"; "$ref"; "$id"; "title"; "description";
     "type"; "properties"; "required"; "patternProperties" ;
     "exclusiveMinimum"; "exclusiveMaximum"; "minLength"; "maxLength";
-    "items"; "additionalProperties"; "minItems"; "uniqueItems";
+    "items"; "additionalProperties"; "minItems"; "maxItems"; "uniqueItems";
     "id";
     "definitions";
     "enum"; "default";"pattern";"format";"propertyNames";
-    "anyOf";"allOf";"not"
+    "anyOf";"allOf";"oneOf";"not"
   ]
 
   let rec conv_type_l (j : json) = match j with
@@ -150,16 +150,22 @@ let andList l =
            | Some (`Int n) -> Some n
            | Some (`Float f) -> Some (int_of_float f)
            | Some j -> Fmt.(failwithf "conv_type: minLength must be number: %a" pp_json j) in
-         [Atomic [(Size Bound.({it=min; inclusive = true}, {it=max; inclusive = true}))]]
+         [And(Simple JString, Atomic [(Size Bound.({it=min; inclusive = true}, {it=max; inclusive = true}))])]
       )@
-      (match assoc_opt "minItems" l with
-         None -> []
-       | Some min ->
+      (match (assoc_opt "minItems" l, assoc_opt "maxItems" l) with
+         (None, None) -> []
+       | (min, max) ->
+         let max = match max with
+             Some (`Int n) -> Some n
+           | Some (`Float f) -> Some (int_of_float f)
+           | Some j -> Fmt.(failwithf "conv_type: minLength must be number: %a" pp_json j)
+           | None -> None in
          let min = match min with
-             `Int n -> n
-           | `Float f -> int_of_float f
-           | j -> Fmt.(failwithf "conv_type: minLength must be number: %a" pp_json j) in
-         [Atomic [(Size Bound.({it=min; inclusive = true}, {it=None; inclusive = true}))]]
+             Some (`Int n) -> n
+           | Some (`Float f) -> int_of_float f
+           | Some j -> Fmt.(failwithf "conv_type: minLength must be number: %a" pp_json j)
+           | None -> 0 in
+         [And(Simple JArray, Atomic [(Size Bound.({it=min; inclusive = true}, {it=max; inclusive = true}))])]
       )@
       (match assoc_opt "anyOf" l with
          Some (`List (_::_ as l)) ->
@@ -175,6 +181,14 @@ let andList l =
       let (last,l) = sep_last l in
          [List.fold_right (fun a b -> And(a,b)) l last]
        | Some v -> Fmt.(failwithf "conv_type: allOf did not have nonempty array paylaod: %a" pp_json v)
+       | None -> []
+      )@
+      (match assoc_opt "oneOf" l with
+         Some (`List (_::_ as l)) ->
+         let l = List.map conv_type0 l in
+      let (last,l) = sep_last l in
+         [List.fold_right (fun a b -> Xor(a,b)) l last]
+       | Some v -> Fmt.(failwithf "conv_type: oneOf did not have nonempty array paylaod: %a" pp_json v)
        | None -> []
       )@
       (match assoc_opt "additionalProperties" l with

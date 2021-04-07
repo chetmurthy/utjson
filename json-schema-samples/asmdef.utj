@@ -1,0 +1,38 @@
+local type rec platformValues = array && [
+    of [
+        enum "Android", "Editor", "iOS", "LinuxStandalone32",
+        "LinuxStandalone64", "LinuxStandaloneUniversal", "Lumin",
+        "macOSStandalone", "Nintendo3DS", "PS4", "PSVita", "Stadia", "Switch",
+        "tvOS", "WSA", "WebGL", "WindowsStandalone32", "WindowsStandalone64",
+        "XboxOne";
+];
+] && [ unique; ]; in type nonrec t = object && [
+    "name": string && string && [ size [1,max]; ];
+    "rootNamespace": string && string && [ size [1,max]; ];
+    "references": array && [ of string && string && [ size [1,max]; ]; ] && [ unique; ];
+    "includePlatforms": platformValues;
+    "excludePlatforms": platformValues;
+    "allowUnsafeCode": boolean && [ default false; ];
+    "autoReferenced": boolean && [ default true; ];
+    "noEngineReferences": boolean && [ default false; ];
+    "overrideReferences": boolean && [ default "false"; ];
+    "precompiledReferences": array && [ unique; ];
+    "defineConstraints": array && [ unique; ];
+    "optionalUnityReferences": array && [ of [ enum "TestAssemblies"; ]; ] && [ unique; ];
+    "versionDefines": array && [
+        of object && [
+            "name": string;
+            "expression": string;
+            "define": string;
+] && [ required "name",  "expression",  "define"; ];
+] && [ unique; ];
+] && ([
+    "includePlatforms": array && [ size [1,max]; ];
+    "excludePlatforms": array && [ size [0,0]; ];
+] || [
+    "includePlatforms": array && [ size [0,0]; ];
+    "excludePlatforms": array && [ size [1,max]; ];
+] || [
+    "includePlatforms": array && [ size [0,0]; ];
+    "excludePlatforms": array && [ size [0,0]; ];
+]) && [ required "name"; ]; end;

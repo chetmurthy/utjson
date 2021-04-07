@@ -1,0 +1,61 @@
+local
+type rec avroSchema = types
+and types = primitiveType xor primitiveTypeWithMetadata xor customTypeReference xor avroRecord xor avroEnum xor avroArray xor avroMap xor avroFixed xor avroUnion
+and primitiveType = string && [ enum "null", "boolean", "int", "long", "float", "double", "bytes", "string";
+]
+and primitiveTypeWithMetadata = object && [ "type": primitiveType; ] && [ required "type"; ]
+and customTypeReference = string && [ /^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)*$/ ] && not primitiveType
+and avroUnion = array && [ of avroSchema; ] && array && [ size [1,max]; ]
+and avroField = object && [
+    "name": name;
+    "type": types;
+    "doc": string;
+    "default": Predefined.json;
+    "order": [ enum "ascending", "descending", "ignore"; ];
+    "aliases": array && [ of name; ];
+] && [ required "name",  "type"; ]
+and avroRecord = object && [
+    "type": string && [ enum "record"; ];
+    "name": name;
+    "namespace": namespace;
+    "doc": string;
+    "aliases": array && [ of name; ];
+    "fields": array && [ of avroField; ];
+] && [ required "type",  "name",  "fields"; ]
+and avroEnum = object && [
+    "type": string && [ enum "enum"; ];
+    "name": name;
+    "namespace": namespace;
+    "doc": string;
+    "aliases": array && [ of name; ];
+    "symbols": array && [ of name; ];
+] && [ required "type",  "name",  "symbols"; ]
+and avroArray = object && [
+    "type": string && [ enum "array"; ];
+    "name": name;
+    "namespace": namespace;
+    "doc": string;
+    "aliases": array && [ of name; ];
+    "items": types;
+] && [ required "type",  "items"; ]
+and avroMap = object && [
+    "type": string && [ enum "map"; ];
+    "name": name;
+    "namespace": namespace;
+    "doc": string;
+    "aliases": array && [ of name; ];
+    "values": types;
+] && [ required "type",  "values"; ]
+and avroFixed = object && [
+    "type": string && [ enum "fixed"; ];
+    "name": name;
+    "namespace": namespace;
+    "doc": string;
+    "aliases": array && [ of name; ];
+    "size": number;
+] && [ required "type",  "name",  "size"; ]
+and name = string && [ /^[A-Za-z_][A-Za-z0-9_]*$/ ]
+and namespace = string && [ /^([A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)*)*$/ ];
+in
+type nonrec t = avroSchema;
+end;

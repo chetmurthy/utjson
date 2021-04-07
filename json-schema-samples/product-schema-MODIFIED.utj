@@ -3,7 +3,7 @@ local import "json-schema-samples/geographical-location.schema.utj" as M0; in
     "productId": Predefined.integer;
     "productName": string;
     "price": number;
-    "tags": array && [ of string ; ] && [ unique ; ] && [ size [1,max] ; ];
+    "tags": array && [ of string ; ] && [ unique ; ] && array && [ size [1,max] ; ];
     "dimensions": object && [
         "length": number;
         "width": number;

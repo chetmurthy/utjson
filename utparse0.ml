@@ -138,6 +138,9 @@ EXTEND
       "||" RIGHTA [
         t1 = utype ; "||" ; t2 = utype -> Or t1 t2
       ]
+    | "xor" RIGHTA [
+        t1 = utype ; "xor" ; t2 = utype -> Xor t1 t2
+      ]
     | "&&" RIGHTA [
         t1 = utype ; "&&" ; t2 = utype -> And t1 t2
       ]
