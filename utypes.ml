@@ -39,12 +39,9 @@ and utype_t =
   | Ref of string list * string
 [@@deriving show { with_path = false },eq]
 
-type decl_t = string * utype_t
-[@@deriving show { with_path = false },eq]
-
 type struct_item_t =
-    Decl of decl_t
-  | Module of structure
+    Decl of string * utype_t
+  | Module of string * structure
   | Local of structure * structure
 
 and structure = struct_item_t list

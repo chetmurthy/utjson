@@ -27,13 +27,21 @@ let assert_raises_exn_pattern ?msg pattern f =
     f
 
 let of_string_exn s = s |> parse_string parse_utype_eoi
+let item_of_string_exn s = s |> parse_string parse_utype_structure_item_eoi
 
 let printer = show_utype_t
 let cmp = equal_utype_t
+let item_printer = show_struct_item_t
+let item_cmp = equal_struct_item_t
 
 let success (expect, arg) =
   let msg = Fmt.(str "parsing test for code << %s >>" arg) in
   assert_equal ~msg ~printer ~cmp expect (of_string_exn arg)
+
+let success_item (expect, arg) =
+  let msg = Fmt.(str "parsing test for code << %s >>" arg) in
+  assert_equal ~msg ~printer:item_printer ~cmp:item_cmp
+    expect (item_of_string_exn arg)
 
 let simple = "simple" >::: [
     "simple" >:: (fun ctxt ->
@@ -44,6 +52,7 @@ let simple = "simple" >::: [
 let parsing = "parsing" >::: [
     "simple" >:: (fun ctxt ->
         success (Simple JString, "string")
+      ; success_item (Decl("x",Simple JString), "type x = string ;")
       )
   ]
 

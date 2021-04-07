@@ -1,0 +1,55 @@
+#use "topfind.camlp5";;
+#require "oUnit";;
+#require "fmt";;
+#require "rresult";;
+#require "pcre";;
+#require "bos";;
+#require "uutf";;
+#require "yaml";;
+#require "camlp5.pa_o";;
+#require "yojson" ;;
+#require "sedlex" ;;
+#require "pa_ppx.testutils" ;;
+#require "pa_ppx.base" ;;
+#require "pa_ppx.runtime" ;;
+
+let lexbuf_contents lb =
+  let open Lexing in
+  let pos = lb.lex_curr_pos in
+  let len = lb.lex_buffer_len - lb.lex_curr_pos in
+  (Bytes.to_string (Bytes.sub lb.lex_buffer pos len))
+;;
+
+let pp_lexbuf lb =
+  Format.print_string "#<lexbuf:<";
+  Format.print_string (lexbuf_contents lb);
+  Format.print_string ">>"
+;;
+#install_printer pp_lexbuf ;;
+
+print_string "================ START ================\n";; flush stdout ;;
+
+open Yojson.Basic ;;
+
+#load "utypes.cmo";;
+open Utypes ;;
+#load "ututil.cmo";;
+open Ututil ;;
+#load "utlexing.cmo";;
+open Utlexing ;;
+#load "utparse0.cmo";;
+open Utparse0 ;;
+#load "uttest.cmo";;
+open Uttest ;;
+
+(*
+#use "jq_examples.ml";;
+*)
+#print_length 1000;;
+#print_depth 1000;;
+(*
+;;; Local Variables: ***
+;;; mode:tuareg ***
+;;; End: ***
+
+*)

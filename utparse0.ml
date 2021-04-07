@@ -145,6 +145,21 @@ EXTEND
       ]
     ]
     ;
+
+    utype_structure_item: [ [
+        "module" ; uid=UIDENT ; "=" ; "struct" ;
+        l = utype_structure ; ";" -> Module uid l
+      | "local" ; l1 = utype_structure ; "in" ; l2 = utype_structure ; ";" -> Local l1 l2
+      | "type" ; id = LIDENT ; "=" ; t = utype ; ";" -> Decl id t
+      ] ]
+    ;
+
+    utype_structure: [ [
+        l = LIST0 utype_structure_item -> l
+      ] ]
+    ;
+
+
   utype_eoi : [ [ e = utype ; EOI -> e ] ] ;
   utype_structure_eoi : [ [ e = utype_structure ; EOI -> e ] ] ;
   utype_structure_item_eoi : [ [ e = utype_structure_item ; EOI -> e ] ] ;
