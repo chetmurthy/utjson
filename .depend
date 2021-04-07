@@ -20,3 +20,7 @@ utparse0.cmo : \
 utparse0.cmx : \
     utypes.cmx \
     utlexing.cmx
+utprint.cmo : \
+    utypes.cmo
+utprint.cmx : \
+    utypes.cmx
