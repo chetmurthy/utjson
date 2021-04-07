@@ -40,7 +40,7 @@ and utype_t =
 [@@deriving show { with_path = false },eq]
 
 type struct_item_t =
-    Decl of string * utype_t
+    Decls of bool * (string * utype_t) list
   | Module of string * structure
   | Local of structure * structure
 

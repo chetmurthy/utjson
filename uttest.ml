@@ -52,7 +52,13 @@ let simple = "simple" >::: [
 let parsing = "parsing" >::: [
     "simple" >:: (fun ctxt ->
         success (Simple JString, "string")
-      ; success_item (Decl("x",Simple JString), "type x = string ;")
+      ; success_item (Decls(false,[("x",Simple JString)]), "type x = string ;")
+      ; success_item ((Decls (false, [("x", (Simple JString)); ("y", (Simple JNumber))])),
+                      "type x = string and y = number ;")
+      ; success_item ((Decls (true, [("x", (Simple JString)); ("y", (Simple JNumber))])),
+                      "type rec x = string and y = number ;")
+      ; success_item ((Decls (false, [("x", (Simple JString)); ("y", (Simple JNumber))])),
+                      "type nonrec x = string and y = number ;")
       )
   ]
 
