@@ -256,7 +256,7 @@ and y = number;|},
 ];
     required "productid",  "productName",  "price",  "tags";
     "warehouseLocation": GeoLoc.latlong;
-]; end|},
+]; end;|},
          {|
 local
 import "https://example.com/geographical-location.schema.json" as GeoLoc ;
@@ -303,6 +303,10 @@ let convert = "convert" >::: [
          "/home/chet/Hack/Github/SchemaStore/schemastore/src/schemas/json/apple-app-site-association.json")
       ; ("json-schema-samples/appsettings-MODIFIED.utj",
          "json-schema-samples/appsettings-MODIFIED.json")
+      ; ("json-schema-samples/appsscript.utj",
+         "/home/chet/Hack/Github/SchemaStore/schemastore/src/schemas/json/appsscript.json")
+      ; ("json-schema-samples/appveyor-MODIFIED.utj",
+         "json-schema-samples/appveyor-MODIFIED.json")
       ]
       )
   ]

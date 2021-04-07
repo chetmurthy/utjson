@@ -1,0 +1,120 @@
+local type rec possiblySecretString = string || number || object && [ "secure": string; ] && [ sealed; ]
+and commitFilter = object && [
+    "message": string && [ format "regex"; ];
+    "author": string && [ format "regex"; ] || string;
+    "files": array && [ of string; ];
+] && [ sealed; ]
+and command = string || object && [ "ps": string; ] && [ sealed; ] || object && [ "pwsh": string; ] && [ sealed; ] || object && [ "cmd": string; ] && [ sealed; ] || object && [ "sh": string; ] && [ sealed; ]
+and envVarHash = object && [ orelse possiblySecretString; ]
+and platform = [ enum "x86", "x64", "ARM", "ARM64", "Win32", "Any CPU"; ]
+and configuration = string
+and imageName = [
+    enum "macOS", "macOS-Mojave", "Previous macOS", "Previous macOS-Mojave",
+    "Ubuntu", "Ubuntu1604", "Ubuntu1804", "Ubuntu2004", "Previous Ubuntu",
+    "Previous Ubuntu1604", "Previous Ubuntu1804", "Previous Ubuntu2004",
+    "Visual Studio 2013", "Visual Studio 2015", "Visual Studio 2017",
+    "Visual Studio 2019", "Visual Studio 2017 Preview",
+    "Visual Studio 2019 Preview", "Previous Visual Studio 2013",
+    "Previous Visual Studio 2015", "Previous Visual Studio 2017", "zhaw18",
+    "WMF 5";
+]
+and image = array && [ of imageName; ] || imageName
+and jobScalars = object && [
+    "image": image;
+    "platform": platform || array && [ of platform; ];
+    "configuration": configuration || array && [ of configuration; ];
+] && not [ required "skip_tags"; ] && not [ required "skip_commits"; ] && not [ required "skip_branch_with_pr"; ] && not [ required "skip_non_tags"; ]
+and job = [
+    "version": string;
+    "branches": object && [
+        "only": array && [ of string; ];
+        "except": array && [ of string; ];
+] && [ sealed; ];
+    "skip_tags": boolean;
+    "skip_non_tags": boolean;
+    "skip_commits": commitFilter;
+    "only_commits": commitFilter;
+    "skip_branch_with_pr": boolean;
+    "max_jobs": Predefined.integer;
+    "notifications": array && [ of object; ];
+    "image": image;
+    "init": array && [ of command; ];
+    "clone_folder": string;
+    "shallow_clone": boolean && [ default false; ];
+    "clone_depth": Predefined.integer;
+    "hosts": object && [ orelse string && ([ format "ipv4"; ] || [ format "ipv6"; ]); ];
+    "environment": object && [
+        "global": envVarHash;
+        "matrix": array && [ of envVarHash; ];
+] || envVarHash;
+    "matrix": object && [
+        "fast_finish": boolean;
+        "allow_failures": array && [ of jobScalars; ];
+        "exclude": array && [ of job; ];
+] && [ sealed; ];
+    "cache": array && [ of string; ];
+    "services": array && [
+        of [
+            enum "iis", "mongodb", "msmq", "mssql2008r2sp2",
+            "mssql2008r2sp2rs", "mssql2012sp1", "mssql2012sp1rs", "mssql2014",
+            "mssql2014rs", "mysql", "postgresql", "postgresql93",
+            "postgresql94", "postgresql95", "postgresql96", "postgresql10";
+];
+];
+    "install": array && [ of command; ];
+    "assembly_info": object && [
+        "patch": boolean;
+        "file": string;
+        "assembly_version": string;
+        "assembly_file_version": string;
+        "assembly_informational_version": string;
+] && [ sealed; ];
+    "nuget": object && [
+        "account_feed": boolean;
+        "project_feed": boolean;
+        "disable_publish_on_pr": boolean;
+];
+    "platform": platform || array && [ of platform; ];
+    "configuration": configuration || array && [ of configuration; ];
+    "build": [ enum false; ] || object && [
+        "parallel": boolean;
+        "project": string;
+        "publish_wap": boolean;
+        "publish_wap_xcopy": boolean;
+        "publish_azure": boolean;
+        "publish_nuget": boolean;
+        "publish_nuget_symbols": boolean;
+        "include_nuget_references": boolean;
+        "verbosity": [ enum "quiet", "minimal", "normal", "detailed"; ];
+] && [ sealed; ];
+    "before_build": array && [ of command; ];
+    "before_package": array && [ of command; ];
+    "after_build": array && [ of command; ];
+    "build_script": array && [ of command; ];
+    "before_test": array && [ of command; ];
+    "test": boolean && [ enum false; ] || object && [
+        "assemblies": object && [
+            "only": array && [ of string; ];
+            "except": array && [ of string; ];
+] && [ sealed; ];
+        "categories": object && [
+            "only": array && [ of string; ];
+            "except": array && [ of string; ];
+] && [ sealed; ] || array && [ of string || array && [ of string; ]; ];
+] && [ sealed; ];
+    "test_script": array && [ of command; ];
+    "after_test": array && [ of command; ];
+    "artifacts": array && [
+        of object && [
+            "path": string;
+            "name": string;
+] && [ sealed; ] && [ required "path"; ];
+];
+    "before_deploy": array && [ of command; ];
+    "deploy": [ enum false; ] || array && [ of object; ];
+    "deploy_script": array && [ of command; ];
+    "after_deploy": array && [ of command; ];
+    "on_success": array && [ of command; ];
+    "on_failure": array && [ of command; ];
+    "on_finish": array && [ of command; ];
+]; in type nonrec t = job; end ;

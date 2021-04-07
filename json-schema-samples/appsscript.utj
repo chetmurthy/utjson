@@ -1,0 +1,99 @@
+type nonrec t = object && [
+    "runtimeVersion": string && [ enum "STABLE", "V8", "DEPRECATED_ES5"; ] && [ default "STABLE"; ];
+    "timeZone": string && [ default "America/New_York"; ];
+    "dependencies": object && [
+        "enabledAdvancedServices": array && [
+            of object && [
+                "userSymbol": string && [ default "Sheets"; ];
+                "serviceId": string && [ default "sheets"; ];
+                "version": string && [ default "v4"; ];
+] && [ required "userSymbol",  "serviceId",  "version"; ];
+];
+        "libraries": array && [
+            of object && [
+                "userSymbol": string && [ default "OAuth2"; ];
+                "libraryId": string && [ size [57,57]; ] && [ default "1B7FSrk5Zi6L1rSxxTDgDEUsPzlukDsi4KGuTMorsTQHhGBzBkMun4iDF"; ];
+                "version": string && [ default 32; ];
+                "developmentMode": boolean && [ default true; ];
+] && [ required "userSymbol",  "libraryId",  "version"; ];
+];
+];
+    "webapp": object && [
+        "access": string && [ enum "MYSELF", "DOMAIN", "ANYONE", "ANYONE_ANONYMOUS"; ] && [ default "MYSELF"; ];
+        "executeAs": string && [ enum "USER_ACCESSING", "USER_DEPLOYING"; ] && [ default "USER_DEPLOYING"; ];
+];
+    "exceptionLogging": string && [ enum "NONE", "STACKDRIVER"; ];
+    "oauthScopes": array && [ of string && [ format "hostname"; ]; ];
+    "urlFetchWhitelist": array && [ of string && [ format "hostname"; ]; ];
+    "executionApi": object && [
+        "access": string && [ enum "MYSELF", "DOMAIN", "ANYONE", "ANYONE_ANONYMOUS"; ];
+];
+    "sheets": object && [
+        "macros": array && [
+            of object && [
+                "menuName": string && [ default "My Macro"; ];
+                "functionName": string && [ default "myFunction"; ];
+                "defaultShortcut": string && [ default "Ctrl+Alt+Shift+1"; ];
+] && [ required "menuName",  "functionName",  "defaultShortcut"; ];
+];
+];
+    "dataStudio": object && [
+        "name": string;
+        "logoUrl": string && [ format "hostname"; ];
+        "company": string;
+        "addonUrl": string && [ format "hostname"; ];
+        "companyUrl": string && [ format "hostname"; ];
+        "supportUrl": string && [ format "hostname"; ];
+        "description": string;
+        "sources": array && [ of string; ];
+        "templates": object;
+        "shortDescription": string;
+        "authType": array && [ of string && [ enum "NONE", "KEY", "USER_PASS", "OAUTH2"; ]; ];
+        "privacyPolicyUrl": string && [ format "hostname"; ];
+        "termsOfServiceUrl": string && [ format "hostname"; ];
+] && [ required "name",  "logoUrl",  "company",  "supportUrl",  "description"; ];
+    "addOns": object && [
+        "common": object && [
+            "name": string;
+            "logoUrl": string && [ format "hostname"; ];
+            "layoutProperties": object && [
+                "primaryColor": string;
+                "secondaryColor": string;
+];
+            "homepageTrigger": object && [
+                "enabled": boolean;
+                "runFunctions": string;
+];
+            "universalActions": array && [
+                of object && [
+                    "label": string;
+                    "openLink": string && [ format "hostname"; ];
+                    "runFunction": string;
+];
+];
+            "openLinkUrlPrefixes": array && [ of string; ];
+            "useLocaleFromApp": boolean;
+] && [ required "logoUrl",  "name"; ];
+        "gmail": object && [
+            "contextualTriggers": array && [
+                of object && [
+                    "onTriggerFunction": string;
+                    "unconditional": object;
+];
+];
+            "homepageTrigger": object && [
+                "enabled": boolean;
+                "runFunction": string;
+];
+];
+        "calendar": object && [
+            "homepageTrigger": object && [
+                "enabled": boolean;
+                "runFunction": string;
+];
+            "eventOpenTrigger": object && [ "runFunction": string; ];
+            "eventUpdateTrigger": object && [ "runFunction": string; ];
+            "eventAccess": string && [ enum "METADATA", "READ", "WRITE", "READ_WRITE"; ];
+];
+];
+];

@@ -59,7 +59,7 @@ EXTEND_PRINTER
   | Import url id ->
     pprintf pc "import %p as %s;" qstring url id
   | Local l1 l2 ->
-    pprintf pc "local %p in %p end" 
+    pprintf pc "local %p in %p end;" 
       (plist_with "" print_utype_structure_item 0) l1
       (plist_with "" print_utype_structure_item 0) l2
   ] ] ;

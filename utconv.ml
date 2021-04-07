@@ -83,7 +83,7 @@ let andList l =
     "id";
     "definitions";
     "enum"; "default";"pattern";"format";"propertyNames";
-    "anyOf"
+    "anyOf";"allOf";"not"
   ]
 
   let rec conv_type_l (j : json) = match j with
@@ -169,6 +169,14 @@ let andList l =
        | Some v -> Fmt.(failwithf "conv_type: anyOf did not have nonempty array paylaod: %a" pp_json v)
        | None -> []
       )@
+      (match assoc_opt "allOf" l with
+         Some (`List (_::_ as l)) ->
+         let l = List.map conv_type0 l in
+      let (last,l) = sep_last l in
+         [List.fold_right (fun a b -> And(a,b)) l last]
+       | Some v -> Fmt.(failwithf "conv_type: allOf did not have nonempty array paylaod: %a" pp_json v)
+       | None -> []
+      )@
       (match assoc_opt "additionalProperties" l with
          Some (`Bool b) -> [Atomic[Sealed (not b)]]
        | Some (`Assoc _ as j) ->
@@ -208,6 +216,11 @@ let andList l =
       (match assoc_opt "propertyNames" l with
          Some t ->
          [Atomic [PropertyNames (conv_type0 t)]]
+       | None -> []
+      )@
+      (match assoc_opt "not" l with
+         Some t ->
+         [Not (conv_type0 t)]
        | None -> []
       )
 
