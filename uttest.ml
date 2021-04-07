@@ -50,15 +50,21 @@ let simple = "simple" >::: [
   ]
 
 let parsing = "parsing" >::: [
-    "simple" >:: (fun ctxt ->
-        success (Simple JString, "string")
-      ; success_item (Decls(false,[("x",Simple JString)]), "type x = string ;")
-      ; success_item ((Decls (false, [("x", (Simple JString)); ("y", (Simple JNumber))])),
-                      "type x = string and y = number ;")
-      ; success_item ((Decls (true, [("x", (Simple JString)); ("y", (Simple JNumber))])),
-                      "type rec x = string and y = number ;")
-      ; success_item ((Decls (false, [("x", (Simple JString)); ("y", (Simple JNumber))])),
-                      "type nonrec x = string and y = number ;")
+    "utype" >:: (fun ctxt -> List.iter success [
+        (Simple JString, "string")
+      ; (Simple JString, "string")
+      ]
+      )
+  ; "item" >:: (fun ctxt -> List.iter success_item [
+        (Decls(false,[("x",Simple JString)]), "type x = string ;")
+      ; ((Decls (false, [("x", (Simple JString)); ("y", (Simple JNumber))])),
+         "type x = string and y = number ;")
+      ; ((Decls (true, [("x", (Simple JString)); ("y", (Simple JNumber))])),
+         "type rec x = string and y = number ;")
+      ; ((Decls (false, [("x", (Simple JString)); ("y", (Simple JNumber))])),
+         "type nonrec x = string and y = number ;")
+      ]
+
       )
   ]
 
