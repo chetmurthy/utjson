@@ -129,9 +129,19 @@ EXTEND
     ;
 
     utype: [
-      "simple" [
+      "||" RIGHTA [
+        t1 = utype ; "||" ; t2 = utype -> Or t1 t2
+      ]
+    | "&&" RIGHTA [
+        t1 = utype ; "&&" ; t2 = utype -> And t1 t2
+      ]
+    | "not" [
+        "not" ; t = utype -> Not t
+      ]
+    | "simple" [
         b = base_type -> Simple b
       | l = LIST0 [ s = UIDENT ; "." -> s ] ; id = LIDENT -> Ref l id
+      | "[" ; l = LIST1 atomic_utype ; "]" -> Atomic l
       ]
     ]
     ;

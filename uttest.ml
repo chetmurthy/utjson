@@ -41,11 +41,18 @@ let simple = "simple" >::: [
       )
   ]
 
+let parsing = "parsing" >::: [
+    "simple" >:: (fun ctxt ->
+        success (Simple JString, "string")
+      )
+  ]
+
 
 
 
 let tests = "all" >::: [
     simple
+  ; parsing
 ]
 
 if not !Sys.interactive then
