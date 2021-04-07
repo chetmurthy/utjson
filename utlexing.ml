@@ -69,14 +69,14 @@ let rec rawtoken buf =
     | "("|")"
     | "{"|"}"
     | "="
-    | ";"
+    | ";"|","
     | "&&" | "||"
   ) -> (Spcl (Sedlexing.Latin1.lexeme buf), pos())
   | (
     "module"|"end"|"local"|"in"|"of"|"required"|"unique"|"size"|"type"|"and"|"rec"|"nonrec"
     |"null"|"string"|"bool"|"number"|"array"|"object"
     |"sealed"|"unsealed"|"bounds"
-    |"true"|"false"|"not"
+    |"true"|"false"|"not"|"max"|"min"
   ) -> (Keyw (Sedlexing.Latin1.lexeme buf),pos())
   | lident -> (Lident (Sedlexing.Latin1.lexeme buf),pos())
   | uident -> (Uident (Sedlexing.Latin1.lexeme buf),pos())

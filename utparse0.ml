@@ -101,10 +101,11 @@ EXTEND
       ] ]
     ;
 
+    number: [ [ n = FLOAT -> n | n = INT -> n ] ] ;
     range_constraint: [ [
         lincl = [ "[" -> True | "(" -> False ] ;
-        n = [ n = FLOAT -> Some (float_of_string n) | "min" -> None ] ; "," ;
-        m = [ m = FLOAT -> Some (float_of_string m) | "max" -> None ] ;
+        n = [ n = number -> Some (float_of_string n) | "min" -> None ] ; "," ;
+        m = [ m = number -> Some (float_of_string m) | "max" -> None ] ;
         rincl= [ "]" -> True | ")" -> False ] ->
         (Bound.{ it=n ; inclusive = lincl }, 
          Bound.{ it=m ; inclusive = rincl })
@@ -142,6 +143,7 @@ EXTEND
         b = base_type -> Simple b
       | l = LIST0 [ s = UIDENT ; "." -> s ] ; id = LIDENT -> Ref l id
       | "[" ; l = LIST1 atomic_utype ; "]" -> Atomic l
+      | "(" ; t = utype ; ")" -> t
       ]
     ]
     ;

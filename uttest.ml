@@ -52,13 +52,49 @@ let simple = "simple" >::: [
 let parsing = "parsing" >::: [
     "utype" >:: (fun ctxt -> List.iter success [
         (Simple JString, "string")
-      ; (Simple JString, "string")
       ; ((And ((Simple JObject),
                (Atomic
                   [(Field ("productid", (Ref ([], "integer"))));
-                   (FieldRequired ["productid"])])
+                   (Field ("productName", (Simple JString)));
+                   (Field ("price",
+                           (And ((Simple JNumber),
+                                 (Atomic
+                                    [(NumberBound
+                                        ({ it = (Some 0.); inclusive = false },
+                                         { it = None; inclusive = true }))
+                                    ])
+                                ))
+                          ));
+                   (Field ("tags",
+                           (And ((Simple JArray),
+                                 (Atomic
+                                    [(ArrayOf (Simple JString));
+                                     (Size
+                                        ({ it = 1; inclusive = true },
+                                         { it = None; inclusive = false }));
+                                     ArrayUnique
+                                    ])
+                                ))
+                          ));
+                   (Field ("dimensions",
+                           (And ((Simple JObject),
+                                 (Atomic
+                                    [(Field ("length", (Simple JNumber)));
+                                     (Field ("width", (Simple JNumber)));
+                                     (Field ("height", (Simple JNumber)));
+                                     (FieldRequired ["length"; "width"; "height"])])
+                                ))
+                          ));
+                   (FieldRequired ["productid"; "productName"; "price"; "tags"])])
               )), {|
-         object && [ "productid" : integer ; required "productid" ; ]
+         object && [ "productid" : integer ;
+                     "productName" : string ;
+                     "price" : (number && [ bounds (0, max] ; ]) ;
+                     "tags" : (array && [ of string ; size [1,max) ; unique ; ]) ;
+                     "dimensions" : (object && [ "length" : number ; "width" : number ; "height" : number ;
+                                                 required "length", "width", "height" ; ]) ;
+                     required "productid", "productName", "price", "tags" ;
+                   ]
 |})
       ]
       )
