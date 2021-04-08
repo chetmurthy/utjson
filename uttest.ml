@@ -291,28 +291,34 @@ let successf (expectf, f) =
     (load_file expectf)
     (load_file f)
 
+(*
+let convert_check1 f =
+
+let convert_check = "convert_check" >::: (List.map convert_check1 [
+  ])
+*)
 let convert = "convert" >::: [
     "convert" >:: (fun ctxt -> List.iter successf [
         ("json-schema-samples/product-schema-MODIFIED.utj",
          "json-schema-samples/product-schema-MODIFIED.json")
       ; ("json-schema-samples/ansible-inventory.utj",
-         "/home/chet/Hack/Github/SchemaStore/schemastore/src/schemas/json/ansible-inventory.json")
+         "schemastore/src/schemas/json/ansible-inventory.json")
       ; ("json-schema-samples/apibuilder-MODIFIED.utj",
          "json-schema-samples/apibuilder-MODIFIED.json")
       ; ("json-schema-samples/apple-app-site-association.utj",
-         "/home/chet/Hack/Github/SchemaStore/schemastore/src/schemas/json/apple-app-site-association.json")
+         "schemastore/src/schemas/json/apple-app-site-association.json")
       ; ("json-schema-samples/appsettings-MODIFIED.utj",
          "json-schema-samples/appsettings-MODIFIED.json")
       ; ("json-schema-samples/appsscript.utj",
-         "/home/chet/Hack/Github/SchemaStore/schemastore/src/schemas/json/appsscript.json")
+         "schemastore/src/schemas/json/appsscript.json")
       ; ("json-schema-samples/appveyor.utj",
-         "/home/chet/Hack/Github/SchemaStore/schemastore/src/schemas/json/appveyor.json")
+         "schemastore/src/schemas/json/appveyor.json")
       ; ("json-schema-samples/asmdef.utj",
-         "/home/chet/Hack/Github/SchemaStore/schemastore/src/schemas/json/asmdef.json")
+         "schemastore/src/schemas/json/asmdef.json")
       ; ("json-schema-samples/avro-avsc.utj",
-         "/home/chet/Hack/Github/SchemaStore/schemastore/src/schemas/json/avro-avsc.json")
+         "schemastore/src/schemas/json/avro-avsc.json")
       ; ("json-schema-samples/azure-iot-edgeagent-deployment-1.0.utj",
-         "/home/chet/Hack/Github/SchemaStore/schemastore/src/schemas/json/azure-iot-edgeagent-deployment-1.0.json")
+         "schemastore/src/schemas/json/azure-iot-edgeagent-deployment-1.0.json")
       ]
       )
   ]
