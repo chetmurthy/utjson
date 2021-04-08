@@ -113,26 +113,26 @@ EXTEND
     ;
 
     atomic_utype: [ [
-        fname = STRING ; ":" ; t = utype ; ";" -> Field fname t
-      | re = REGEXP ; ":" ; t = utype ; ";" -> FieldRE (String.sub re 1 (String.length re - 2)) t
+        fname = STRING ; ":" ; t = utype -> Field fname t
+      | re = REGEXP ; ":" ; t = utype -> FieldRE (String.sub re 1 (String.length re - 2)) t
       | re = REGEXP -> StringRE (String.sub re 1  (String.length re - 2))
-      | "required" ; l = LIST1 STRING SEP "," ; ";" -> FieldRequired l
-      | "of" ; t = utype ; ";" -> ArrayOf t
-      | l = LIST1 utype SEP "*" ; ";" -> ArrayTuple l
-      | "unique" ; ";" -> ArrayUnique
-      | n=INT ; ":" ; t=utype ; ";" -> ArrayIndex (int_of_string n) t
-      | "size" ; s=size_constraint ; ";" -> Size s
-      | "bounds" ; s=range_constraint ; ";" -> NumberBound s
-      | "sealed" ; ";" -> Sealed True
-      | "unsealed" ; ";" -> Sealed False
-      | "orelse" ; t=utype ; ";" -> OrElse t
-      | "multipleOf" ; n = FLOAT ; ";" -> MultipleOf (float_of_string n)
-      | "enum" ; l = LIST1 json SEP "," ; ";" -> Enum l
-      | "default" ; j=json ; ";" -> Default j
-      | "format" ; s=STRING ; ";" -> Format s
-      | "propertyNames" ; t = utype ; ";" -> PropertyNames t
-      | "contentMediaType" ; s=STRING ; ";" -> ContentMediaType s
-      | "contentEncoding" ; s=STRING ; ";" -> ContentEncoding s
+      | "required" ; l = LIST1 STRING SEP "," -> FieldRequired l
+      | "of" ; t = utype -> ArrayOf t
+      | l = LIST1 utype SEP "*" -> ArrayTuple l
+      | "unique" -> ArrayUnique
+      | n=INT ; ":" ; t=utype -> ArrayIndex (int_of_string n) t
+      | "size" ; s=size_constraint -> Size s
+      | "bounds" ; s=range_constraint -> NumberBound s
+      | "sealed" -> Sealed True
+      | "unsealed" -> Sealed False
+      | "orelse" ; t=utype -> OrElse t
+      | "multipleOf" ; n = FLOAT -> MultipleOf (float_of_string n)
+      | "enum" ; l = LIST1 json SEP "," -> Enum l
+      | "default" ; j=json -> Default j
+      | "format" ; s=STRING -> Format s
+      | "propertyNames" ; t = utype -> PropertyNames t
+      | "contentMediaType" ; s=STRING -> ContentMediaType s
+      | "contentEncoding" ; s=STRING -> ContentEncoding s
       ] ]
     ;
 
@@ -155,10 +155,21 @@ EXTEND
     | "simple" [
         b = base_type -> Simple b
       | l = LIST0 [ s = UIDENT ; "." -> s ] ; id = LIDENT -> Ref l id
-      | "[" ; l = LIST1 atomic_utype ; "]" -> Atomic l
+      | "[" ; h = atomic_utype ; ";" ; l = atomic_utype_semi_list ; "]" -> Atomic [h::l]
+      | "[" ; h = atomic_utype ; "]" -> Atomic [h]
       | "(" ; t = utype ; ")" -> t
       ]
     ]
+    ;
+
+
+    atomic_utype_semi_list:
+      [ [
+        v = atomic_utype -> [v]
+      | v = atomic_utype ; ";" -> [v]
+      | v = atomic_utype ; ";" ; vl = atomic_utype_semi_list -> [v::vl]
+      | -> []
+      ] ]
     ;
 
     utype_structure_item: [ [

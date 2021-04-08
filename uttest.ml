@@ -42,6 +42,10 @@ let success (expect, arg) =
   let msg = Fmt.(str "parsing test for code << %s >>" arg) in
   assert_equal ~msg ~printer ~cmp expect (of_string_exn arg)
 
+let fail (exnmsg, arg) =
+  let msg = Fmt.(str "parsing test for code << %s >>" arg) in
+  assert_raises_exn_pattern ~msg exnmsg (fun () -> of_string_exn arg)
+
 let success_item (expect, arg) =
   let msg = Fmt.(str "parsing test for code << %s >>" arg) in
   assert_equal ~msg ~printer:item_printer ~cmp:item_cmp
@@ -63,6 +67,14 @@ let parsing = "parsing" >::: [
                  `Bool (true)])
             ]),
          {|[ enum [1,2], {"a":2}, true ; ]|})
+      ; ((Atomic [(Field ("a", (Simple JObject)))]),
+         {|[ "a": object ]|})
+      ; ((Atomic [(Field ("a", (Simple JObject)))]),
+         {|[ "a": object ; ]|})
+      ; ((Atomic [(Field ("a", (Simple JObject))); (Field ("b", (Simple JObject)))]),
+         {|[ "a": object ; "b" : object ]|})
+      ; ((Atomic [(Field ("a", (Simple JObject))); (Field ("b", (Simple JObject)))]),
+         {|[ "a": object ; "b" : object ;]|})
       ; ((And ((Simple JObject),
                (Atomic
                   [(Field ("productid", (Ref ([], "integer"))));
@@ -107,6 +119,11 @@ let parsing = "parsing" >::: [
                      required "productid", "productName", "price", "tags" ;
                    ]
 |})
+      ]
+      )
+  ; "utype-fail" >:: (fun ctxt -> List.iter fail [
+        ("[atomic_utype] expected after '[' (in [utype])",
+         {|[  ]|})
       ]
       )
   ; "item" >:: (fun ctxt -> List.iter success_item [
