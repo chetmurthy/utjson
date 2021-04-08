@@ -86,6 +86,7 @@ let xorList l =
     "$schema"; "$id"; "title"; "description"; "$contact"; "$comment"
     ; "examples"; "example" ; "documentation"; "enumDescriptions"
     ; "deprecated"; "version" ; "authors"
+    ; "$vocabulary"
   ]
   let known_keys = documentation_keys@[
     "$ref"
@@ -116,32 +117,6 @@ let xorList l =
           if not (List.mem k known_keys) then
             Fmt.(failwithf "conv_type: unrecognized object-key %s in %a" k pp_json j)
         ) ;
-      (match assoc_opt "definitions" l with
-         Some (`Assoc l) ->
-         l |> List.iter (fun (name, _) ->
-             forward_define_local name
-           ) ;
-         l |> List.iter (fun (name, t) ->
-             let t = conv_type0 t in
-             register_local_definition name t
-           )
-
-       | Some v -> Fmt.(failwithf "conv_type: malformed definitions member: %a" pp_json v)
-       | None -> ()
-      ) ;
-      (match assoc_opt "$defs" l with
-         Some (`Assoc l) ->
-         l |> List.iter (fun (name, _) ->
-             forward_define_local name
-           ) ;
-         l |> List.iter (fun (name, t) ->
-             let t = conv_type0 t in
-             register_local_definition name t
-           )
-
-       | Some v -> Fmt.(failwithf "conv_type: malformed definitions member: %a" pp_json v)
-       | None -> ()
-      ) ;
       (match assoc_opt "type" l with
        | (Some (`String _ as j)) -> conv_simple j
        | (Some (`List (_::_ as l))) when List.for_all isString l ->
@@ -401,9 +376,37 @@ let xorList l =
     match conv_type_l t with
       [] -> Fmt.(failwithf "conv_type: conversion produced no result: %a" pp_json t)
     | l -> andList l
-  
+
+  and conv_definitions j =
+    match j with
+      `Assoc l ->
+      l |> List.iter (fun (name, _) ->
+          forward_define_local name
+        ) ;
+      l |> List.iter (fun (name, t) ->
+          let t = conv_type0 t in
+          register_local_definition name t
+        )
+
+    | _ -> assert false
+
 let conv_type t =
   reset () ;
+  (match t with
+     `Assoc l ->
+     (match assoc_opt "definitions" l with
+        Some (`Assoc _ as j) -> conv_definitions j
+
+      | Some v -> Fmt.(failwithf "conv_type: malformed definitions member: %a" pp_json v)
+      | None -> ()
+     ) ;
+     (match assoc_opt "$defs" l with
+        Some (`Assoc _ as j) -> conv_definitions j
+
+      | Some v -> Fmt.(failwithf "conv_type: malformed definitions member: %a" pp_json v)
+      | None -> ()
+     ) ;
+   | _ -> ()) ;
   let t = conv_type0 t in
   let l = List.map (fun (id, mid) -> Import(id, mid)) !imports in
   let l = if !locals = [] then l else
