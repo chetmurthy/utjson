@@ -83,12 +83,13 @@ let xorList l =
     | v -> Fmt.(failwithf "conv_type: malformed type member: %a" pp_json v)
 
   let documentation_keys = [
-    "$schema"; "$id"; "title"; "description";
-    "examples"
+    "$schema"; "$id"; "title"; "description"; "$contact"
+    ; "examples"
   ]
   let known_keys = documentation_keys@[
     "$ref"
   ; "type"; "properties"; "required"; "patternProperties" ;
+    "minimum"; "maximum";
     "exclusiveMinimum"; "exclusiveMaximum"; "minLength"; "maxLength";
     "items"; "additionalProperties"; "minItems"; "maxItems"; "uniqueItems";
     "id";
@@ -167,7 +168,7 @@ let xorList l =
            | Some (`Int n) -> Some n
            | Some (`Float f) -> Some (int_of_float f)
            | Some j -> Fmt.(failwithf "conv_type: minLength must be number: %a" pp_json j) in
-         [And(Simple JString, Atomic [(Size Bound.({it=min; inclusive = true}, {it=max; inclusive = true}))])]
+         [And(Simple JString, Atomic [(Size Bound.({it=min; exclusive = false}, {it=max; exclusive = false}))])]
       )@
       (match (assoc_opt "minItems" l, assoc_opt "maxItems" l) with
          (None, None) -> []
@@ -182,7 +183,30 @@ let xorList l =
            | Some (`Float f) -> int_of_float f
            | Some j -> Fmt.(failwithf "conv_type: minLength must be number: %a" pp_json j)
            | None -> 0 in
-         [And(Simple JArray, Atomic [(Size Bound.({it=min; inclusive = true}, {it=max; inclusive = true}))])]
+         [And(Simple JArray, Atomic [(Size Bound.({it=min; exclusive = false}, {it=max; exclusive = false}))])]
+      )@
+      (match (assoc_opt "minimum" l, assoc_opt "maximum" l) with
+         (None, None) -> []
+       | (min, max) ->
+         let min = match min with
+             Some (`Int n) -> Some (float_of_int n)
+           | Some (`Float f) -> Some f
+           | None -> None
+           | Some j -> Fmt.(failwithf "conv_type: minimum must be number: %a" pp_json j) in
+         let max = match max with
+             Some (`Int n) -> Some (float_of_int n)
+           | Some (`Float f) -> Some f
+           | None -> None
+           | Some j -> Fmt.(failwithf "conv_type: maximum must be number: %a" pp_json j) in
+         let exclMin = match assoc_opt "exclusiveMinimum" l with
+             None -> false
+           | Some (`Bool b) -> b
+           | Some j -> Fmt.(failwithf "conv_type: exclusiveMinimum must be bool: %a" pp_json j) in
+         let exclMax = match assoc_opt "exclusiveMaximum" l with
+             None -> false
+           | Some (`Bool b) -> b
+           | Some j -> Fmt.(failwithf "conv_type: exclusiveMaximum must be bool: %a" pp_json j) in
+         [And(Simple JString, Atomic [(NumberBound Bound.({it=min; exclusive = exclMin}, {it=max; exclusive = exclMax}))])]
       )@
       (match assoc_opt "anyOf" l with
          Some (`List (_::_ as l)) ->

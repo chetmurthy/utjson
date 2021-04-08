@@ -12,7 +12,7 @@ RML=utparse0.ml utprint.ml
 all: $(OBJ) uttest
 
 test:: all
-	mkdir -p _build
+	rm -rf _build && mkdir -p _build
 	./uttest
 
 uttest: $(OBJ) uttest.cmo

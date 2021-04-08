@@ -4,7 +4,7 @@ type base_type_t =
 [@@deriving show { with_path = false },eq]
 
 module Bound = struct
-  type 'a t = { it : 'a ; inclusive : bool }
+  type 'a t = { it : 'a ; exclusive : bool }
   [@@deriving show { with_path = false },eq]
 end
 

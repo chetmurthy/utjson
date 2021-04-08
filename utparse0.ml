@@ -92,23 +92,23 @@ EXTEND
     ;
 
     size_constraint: [ [
-        lincl = [ "[" -> True | "(" -> False ] ; n = INT ; "," ;
+        lexcl = [ "[" -> False | "(" -> True ] ; n = INT ; "," ;
         m = [ m = INT -> Some (int_of_string m) | "max" -> None ] ;
-        rincl= [ "]" -> True | ")" -> False ] ->
+        rexcl= [ "]" -> False | ")" -> True ] ->
         let n = int_of_string n in
-        (Bound.{ it=n ; inclusive = lincl }, 
-         Bound.{ it=m ; inclusive = rincl })
+        (Bound.{ it=n ; exclusive = lexcl }, 
+         Bound.{ it=m ; exclusive = rexcl })
       ] ]
     ;
 
     number: [ [ n = FLOAT -> n | n = INT -> n ] ] ;
     range_constraint: [ [
-        lincl = [ "[" -> True | "(" -> False ] ;
+        lexcl = [ "[" -> False | "(" -> True ] ;
         n = [ n = number -> Some (float_of_string n) | "min" -> None ] ; "," ;
         m = [ m = number -> Some (float_of_string m) | "max" -> None ] ;
-        rincl= [ "]" -> True | ")" -> False ] ->
-        (Bound.{ it=n ; inclusive = lincl }, 
-         Bound.{ it=m ; inclusive = rincl })
+        rexcl= [ "]" -> False | ")" -> True ] ->
+        (Bound.{ it=n ; exclusive = lexcl }, 
+         Bound.{ it=m ; exclusive = rexcl })
       ] ]
     ;
 

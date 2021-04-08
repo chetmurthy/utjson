@@ -26,19 +26,19 @@ value qstring pc s =
 value print_size_constraint pc (lo,hi) =
   let open Bound in 
   pprintf pc "%s%s,%s%s"
-    (if lo.inclusive then "[" else "(")
+    (if lo.exclusive then "(" else "[")
     (string_of_int lo.it)
     (match hi.it with [ None -> "max" | Some n -> string_of_int n ])
-    (if hi.inclusive then "]" else ")")
+    (if hi.exclusive then ")" else "]")
 ;
 
 value print_range_constraint pc (lo,hi) =
   let open Bound in 
   pprintf pc "%s%s,%s%s"
-    (if lo.inclusive then "[" else "(")
+    (if lo.exclusive then "(" else "[")
     (match lo.it with [ None -> "min" | Some n -> string_of_float n ])
     (match hi.it with [ None -> "max" | Some n -> string_of_float n ])
-    (if hi.inclusive then "]" else ")")
+    (if hi.exclusive then ")" else "]")
 ;
 
 value print_id pc id = pprintf pc "%s" id ;
