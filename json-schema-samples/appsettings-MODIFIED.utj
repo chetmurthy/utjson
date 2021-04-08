@@ -85,7 +85,7 @@ and allowedHosts = string
 and connectionStrings = object && [ orelse string; ]
 and _NLog = object && [
     "autoReload": boolean && [ default false; ];
-    "throwConfigExceptions": boolean && [ default false; ];
+    "throwConfigExceptions": (boolean || null) && [ default false; ];
     "throwExceptions": boolean && [ default false; ];
     "internalLogLevel": string && [ enum "Trace", "Debug", "Info", "Warn", "Error", "Fatal", "Off"; ] && [ default "Off"; ];
     "internalLogFile": string;
@@ -103,7 +103,7 @@ and _NLog = object && [
     "variables": object && [ /.*/ : Predefined.scalar; ] && [ propertyNames [ /^[A-Za-z0-9_.-]+$/ ]; ];
     "default-wrapper": object && [ "type": string; ] && [ required "type"; ] && [ default {}; ];
     "targets": object && [ default {}; ];
-    "rules": array && [ of _NLogRulesItem; ] && [ default []; ] || object && [ /.*/ : _NLogRulesItem; ] && [ propertyNames [ /^[0-9]+$/ ]; ];
+    "rules": array && [ of _NLogRulesItem; ] && [ default []; ] xor object && [ /.*/ : _NLogRulesItem; ] && [ propertyNames [ /^[0-9]+$/ ]; ];
 ] && [ default {}; ]
 and _NLogRulesItem = object && [
     "logger": string;
@@ -120,7 +120,7 @@ and _NLogRulesItem = object && [
             "type": string;
             "action": string && [ enum "Neutral", "Log", "Ignore", "LogFinal", "IgnoreFinal"; ] && [ default "Neutral"; ];
 ] && [ required "type"; ] && [ default {}; ];
-] && [ default []; ] || object && [ default {}; ];
+] && [ default []; ] xor object && [ default {}; ];
     "filterDefaultAction": string && [ enum "Neutral", "Log", "Ignore", "LogFinal", "IgnoreFinal"; ] && [ default "Ignore"; ];
 ] && [ required "logger"; ] && [ default {}; ]
 and umbraco = [

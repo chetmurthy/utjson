@@ -169,8 +169,7 @@
           "description":"boolean: true|false. By default, all headers are considered required. To make a parameter optional, set \"required\" to false."
         },
         "default":{
-            "description":"The default value for this header. If specified, generated clients will automatically include this header in all requests. Default values must be specified as strings.",
-	    "type": "string"
+            "description":"The default value for this header. If specified, generated clients will automatically include this header in all requests. Default values must be specified as strings."
         },
         "description":{
           "type":"string",
@@ -355,8 +354,7 @@
           "description":"By default, all fields are considered required. To make a field optional, set \"required\" to false. When a field is marked as required, it must be present in any form of a model for that form to be valid. In client-server scenario, this means that any defaults that are present in the model must be applied by the client. If you want a default to be applied by the receiver, you should mark the field as \"required\": false"
         },
         "default":{
-            "description":"Optional default value. The value must be valid for the type specified for this field. For example, if you specify a field named 'limit' with type 'integer', an acceptable default would be 10.",
-	    "type": "json"
+            "description":"Optional default value. The value must be valid for the type specified for this field. For example, if you specify a field named 'limit' with type 'integer', an acceptable default would be 10."
         },
         "example":{
           "type":"string",
@@ -628,8 +626,7 @@
           "description":"By default all parameters are considered required. To make a parameter optional, set \"required\" to false."
         },
         "default":{
-            "description":"Optional default value. The value must be valid for the type specified for this parameter. For example, if you specify a parameter named 'limit' with type 'integer', an acceptable default would be 10",
-	    "type": "json"
+            "description":"Optional default value. The value must be valid for the type specified for this parameter. For example, if you specify a parameter named 'limit' with type 'integer', an acceptable default would be 10"
         },
         "example":{
           "type":"string",

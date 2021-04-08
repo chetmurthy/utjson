@@ -4,7 +4,7 @@ and commitFilter = object && [
     "author": string && [ format "regex"; ] || string;
     "files": array && [ of string; ];
 ] && [ sealed; ]
-and command = string || object && [ "ps": string; ] && [ sealed; ] || object && [ "pwsh": string; ] && [ sealed; ] || object && [ "cmd": string; ] && [ sealed; ] || object && [ "sh": string; ] && [ sealed; ]
+and command = string xor object && [ "ps": string; ] && [ sealed; ] xor object && [ "pwsh": string; ] && [ sealed; ] xor object && [ "cmd": string; ] && [ sealed; ] xor object && [ "sh": string; ] && [ sealed; ]
 and envVarHash = object && [ orelse possiblySecretString; ]
 and platform = [ enum "x86", "x64", "ARM", "ARM64", "Win32", "Any CPU"; ]
 and configuration = string
@@ -18,11 +18,11 @@ and imageName = [
     "Previous Visual Studio 2015", "Previous Visual Studio 2017", "zhaw18",
     "WMF 5";
 ]
-and image = array && [ of imageName; ] || imageName
+and image = array && [ of imageName; ] xor imageName
 and jobScalars = object && [
     "image": image;
-    "platform": platform || array && [ of platform; ];
-    "configuration": configuration || array && [ of configuration; ];
+    "platform": platform xor array && [ of platform; ];
+    "configuration": configuration xor array && [ of configuration; ];
 ] && not [ required "skip_tags"; ] && not [ required "skip_commits"; ] && not [ required "skip_branch_with_pr"; ] && not [ required "skip_non_tags"; ]
 and job = [
     "version": string;
@@ -74,9 +74,9 @@ and job = [
         "project_feed": boolean;
         "disable_publish_on_pr": boolean;
 ];
-    "platform": platform || array && [ of platform; ];
-    "configuration": configuration || array && [ of configuration; ];
-    "build": [ enum false; ] || object && [
+    "platform": platform xor array && [ of platform; ];
+    "configuration": configuration xor array && [ of configuration; ];
+    "build": [ enum false; ] xor object && [
         "parallel": boolean;
         "project": string;
         "publish_wap": boolean;
@@ -92,7 +92,7 @@ and job = [
     "after_build": array && [ of command; ];
     "build_script": array && [ of command; ];
     "before_test": array && [ of command; ];
-    "test": boolean && [ enum false; ] || object && [
+    "test": boolean && [ enum false; ] xor object && [
         "assemblies": object && [
             "only": array && [ of string; ];
             "except": array && [ of string; ];
@@ -100,7 +100,7 @@ and job = [
         "categories": object && [
             "only": array && [ of string; ];
             "except": array && [ of string; ];
-] && [ sealed; ] || array && [ of string || array && [ of string; ]; ];
+] && [ sealed; ] xor array && [ of string xor array && [ of string; ]; ];
 ] && [ sealed; ];
     "test_script": array && [ of command; ];
     "after_test": array && [ of command; ];
@@ -111,7 +111,7 @@ and job = [
 ] && [ sealed; ] && [ required "path"; ];
 ];
     "before_deploy": array && [ of command; ];
-    "deploy": [ enum false; ] || array && [ of object; ];
+    "deploy": [ enum false; ] xor array && [ of object; ];
     "deploy_script": array && [ of command; ];
     "after_deploy": array && [ of command; ];
     "on_success": array && [ of command; ];

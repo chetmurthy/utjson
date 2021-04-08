@@ -22,6 +22,14 @@ let andList l =
   let (last,l) = sep_last l in
   List.fold_right (fun a b -> And(a,b)) l last
 
+let orList l =
+  let (last,l) = sep_last l in
+  List.fold_right (fun a b -> Or(a,b)) l last
+
+let xorList l =
+  let (last,l) = sep_last l in
+  List.fold_right (fun a b -> Xor(a,b)) l last
+
   let counter = ref 0
   let newmid () =
     let mid = Printf.sprintf "M%d" !counter in
@@ -71,24 +79,29 @@ let andList l =
     | `String "array" -> [Simple JArray]
     | `String "object" -> [Simple JObject]
     | `String "integer" -> [Ref (["Predefined"], "integer")]
-    | `String "json" -> [Ref (["Predefined"], "json")]
     | `String "scalar" -> [Ref (["Predefined"], "scalar")]
     | v -> Fmt.(failwithf "conv_type: malformed type member: %a" pp_json v)
 
-  let known_keys = [
-    "$schema"; "$ref"; "$id"; "title"; "description";
-    "type"; "properties"; "required"; "patternProperties" ;
+  let documentation_keys = [
+    "$schema"; "$id"; "title"; "description";
+    "examples"
+  ]
+  let known_keys = documentation_keys@[
+    "$ref"
+  ; "type"; "properties"; "required"; "patternProperties" ;
     "exclusiveMinimum"; "exclusiveMaximum"; "minLength"; "maxLength";
     "items"; "additionalProperties"; "minItems"; "maxItems"; "uniqueItems";
     "id";
     "definitions";
     "enum"; "default";"pattern";"format";"propertyNames";
     "anyOf";"allOf";"oneOf";"not";
-    "examples";"contentMediaType";"contentEncoding"
+    "contentMediaType";"contentEncoding"
   ]
 
   let rec conv_type_l (j : json) = match j with
-      `Assoc l ->
+      `Assoc l when l |> List.for_all (fun (k,_) -> List.mem k documentation_keys) ->
+      [Ref (["Predefined"], "json")]
+    | `Assoc l ->
       let keys = List.map fst l in
       keys |> List.iter (fun k ->
           if not (List.mem k known_keys) then
@@ -109,6 +122,9 @@ let andList l =
       ) ;
       (match assoc_opt "type" l with
        | (Some (`String _ as j)) -> conv_simple j
+       | (Some (`List (_::_ as l))) when List.for_all isString l ->
+         let l = List.concat_map conv_simple l in
+         [orList l]
        | (Some j) -> Fmt.(failwithf "conv_type: type must have string member: %a" pp_json j)
        | None -> []
       )@
@@ -171,24 +187,21 @@ let andList l =
       (match assoc_opt "anyOf" l with
          Some (`List (_::_ as l)) ->
          let l = List.map conv_type0 l in
-      let (last,l) = sep_last l in
-         [List.fold_right (fun a b -> Or(a,b)) l last]
+         [orList l]
        | Some v -> Fmt.(failwithf "conv_type: anyOf did not have nonempty array paylaod: %a" pp_json v)
        | None -> []
       )@
       (match assoc_opt "allOf" l with
          Some (`List (_::_ as l)) ->
          let l = List.map conv_type0 l in
-      let (last,l) = sep_last l in
-         [List.fold_right (fun a b -> And(a,b)) l last]
+         [andList l]
        | Some v -> Fmt.(failwithf "conv_type: allOf did not have nonempty array paylaod: %a" pp_json v)
        | None -> []
       )@
       (match assoc_opt "oneOf" l with
          Some (`List (_::_ as l)) ->
          let l = List.map conv_type0 l in
-      let (last,l) = sep_last l in
-         [List.fold_right (fun a b -> Xor(a,b)) l last]
+         [xorList l]
        | Some v -> Fmt.(failwithf "conv_type: oneOf did not have nonempty array paylaod: %a" pp_json v)
        | None -> []
       )@

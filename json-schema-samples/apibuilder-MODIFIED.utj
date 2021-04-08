@@ -17,7 +17,7 @@ and header = object && [
     "name": string;
     "type": string;
     "required": boolean && [ default true ; ];
-    "default": string;
+    "default": Predefined.json;
     "description": string;
     "attributes": array && [ of attribute; ];
     "deprecation": deprecation;

@@ -1,5 +1,5 @@
 local type rec group = object && [
-    "hosts": object && [ /[a-zA-Z.-_0-9]/ : null; ];
+    "hosts": (object || string) && [ /[a-zA-Z.-_0-9]/ : (object || null); ];
     "vars": object;
     "children": [ /[a-zA-Z-_0-9]/ : group; ];
 ];

@@ -6,7 +6,7 @@ and moduleSettings = object && [
     "createOptions": createOptions;
 ] && [ required "image"; ]
 and env = object && [
-    /^[^\+#$\s\.]+$/ : object && [ "value": Predefined.json; ] && [ required "value"; ];
+    /^[^\+#$\s\.]+$/ : object && [ "value": number || string || boolean; ] && [ required "value"; ];
 ] && [ sealed; ]
 and createOptions = string && [ contentMediaType "application/json"; ];
 in
