@@ -94,7 +94,7 @@ let xorList l =
   ; "minimum"; "maximum"
   ; "exclusiveMinimum"; "exclusiveMaximum"
   ; "minLength"; "maxLength"
-  ; "items"; "additionalProperties"
+  ; "items"; "additionalProperties"; "unevaluatedProperties"
   ; "additionalItems"
   ; "minItems"; "maxItems"
   ; "minProperties"; "maxProperties"
@@ -270,6 +270,15 @@ let xorList l =
          if l = [] then Fmt.(failwithf "additionalItems %a yielded no type-constraints" pp_json j) ;
          [And(Simple JArray, Atomic [OrElse (andList l)])]
        | Some v -> Fmt.(failwithf "conv_type: additionalItems did not have bool or type payload: %a" pp_json v)
+       | None -> []
+      )@
+      (match assoc_opt "unevaluatedProperties" l with
+         Some (`Bool b) -> [And(Simple JObject, Atomic[Sealed (not b)])]
+       | Some (`Assoc _ as j) ->
+         let l = conv_type_l j in
+         if l = [] then Fmt.(failwithf "unevaluatedProperties %a yielded no type-constraints" pp_json j) ;
+         [Atomic [OrElse (andList l)]]
+       | Some v -> Fmt.(failwithf "conv_type: unevaluatedProperties did not have bool or type payload: %a" pp_json v)
        | None -> []
       )@
       (match assoc_opt "required" l with
