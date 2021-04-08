@@ -30,13 +30,34 @@ let assert_raises_exn_pattern ?msg pattern f =
 
 let of_string_exn s = s |> parse_string parse_utype_eoi
 let to_string t = print_utype Pprintf.empty_pc t
-let item_of_string_exn s = s |> parse_string parse_structure_item_eoi
-let item_to_string t = print_structure_item Pprintf.empty_pc t
+
+let struct_item_of_string_exn s = s |> parse_string parse_struct_item_eoi
+let struct_item_to_string t = print_struct_item Pprintf.empty_pc t
+
+let sig_item_of_string_exn s = s |> parse_string parse_sig_item_eoi
+let sig_item_to_string t = print_sig_item Pprintf.empty_pc t
+
+let module_expr_of_string_exn s = s |> parse_string parse_module_expr_eoi
+let module_expr_to_string t = print_module_expr Pprintf.empty_pc t
+
+let module_type_of_string_exn s = s |> parse_string parse_module_type_eoi
+let module_type_to_string t = print_module_type Pprintf.empty_pc t
 
 let printer = show_utype_t
 let cmp = equal_utype_t
-let item_printer x = "<<"^(show_struct_item_t x)^">>"
-let item_cmp = equal_struct_item_t
+
+let struct_item_printer x = "<<"^(show_struct_item_t x)^">>"
+let struct_item_cmp = equal_struct_item_t
+
+
+let module_expr_printer x = "<<"^(show_module_expr_t x)^">>"
+let module_expr_cmp = equal_module_expr_t
+
+let module_type_printer x = "<<"^(show_module_type_t x)^">>"
+let module_type_cmp = equal_module_type_t
+
+let sig_item_printer x = "<<"^(show_sig_item_t x)^">>"
+let sig_item_cmp = equal_sig_item_t
 
 let success (expect, arg) =
   let msg = Fmt.(str "parsing test for code << %s >>" arg) in
@@ -46,10 +67,26 @@ let fail (exnmsg, arg) =
   let msg = Fmt.(str "parsing test for code << %s >>" arg) in
   assert_raises_exn_pattern ~msg exnmsg (fun () -> of_string_exn arg)
 
-let success_item (expect, arg) =
+let success_struct_item (expect, arg) =
   let msg = Fmt.(str "parsing test for code << %s >>" arg) in
-  assert_equal ~msg ~printer:item_printer ~cmp:item_cmp
-    expect (item_of_string_exn arg)
+  assert_equal ~msg ~printer:struct_item_printer ~cmp:struct_item_cmp
+    expect (struct_item_of_string_exn arg)
+
+let success_module_expr (expect, arg) =
+  let msg = Fmt.(str "parsing test for code << %s >>" arg) in
+  assert_equal ~msg ~printer:module_expr_printer ~cmp:module_expr_cmp
+    expect (module_expr_of_string_exn arg)
+
+let success_module_type (expect, arg) =
+  let msg = Fmt.(str "parsing test for code << %s >>" arg) in
+  assert_equal ~msg ~printer:module_type_printer ~cmp:module_type_cmp
+    expect (module_type_of_string_exn arg)
+
+let success_sig_item (expect, arg) =
+  let msg = Fmt.(str "parsing test for code << %s >>" arg) in
+  assert_equal ~msg ~printer:sig_item_printer ~cmp:sig_item_cmp
+    expect (sig_item_of_string_exn arg)
+
 
 let simple = "simple" >::: [
     "simple" >:: (fun ctxt ->
@@ -126,7 +163,7 @@ let parsing = "parsing" >::: [
          {|[  ]|})
       ]
       )
-  ; "item" >:: (fun ctxt -> List.iter success_item [
+  ; "struct_item" >:: (fun ctxt -> List.iter success_struct_item [
         (StTypes(false,[("x",Simple JString)]), "type x = string ;")
       ; ((StTypes (false, [("x", (Simple JString)); ("y", (Simple JNumber))])),
          "type x = string and y = number ;")
@@ -202,6 +239,18 @@ end ;
       ]
 
       )
+  ; "module_type" >:: (fun ctxt -> List.iter success_module_type [
+      ]
+
+      )
+  ; "module_expr" >:: (fun ctxt -> List.iter success_module_expr [
+      ]
+
+      )
+  ; "sig_item" >:: (fun ctxt -> List.iter success_sig_item [
+      ]
+
+      )
   ]
 
 
@@ -209,9 +258,9 @@ let success (expect, arg) =
   let msg = Fmt.(str "printing test for code << %s >>" arg) in
   assert_equal ~msg ~printer:(fun x -> "<<"^x^">>") expect (to_string (of_string_exn arg))
 
-let success_item (expect, arg) =
+let success_struct_item (expect, arg) =
   let msg = Fmt.(str "printing test for code << %s >>" arg) in
-  assert_equal ~msg ~printer:(fun x -> "<<"^x^">>") expect (item_to_string (item_of_string_exn arg))
+  assert_equal ~msg ~printer:(fun x -> "<<"^x^">>") expect (struct_item_to_string (struct_item_of_string_exn arg))
 
 let printing = "printing" >::: [
     "utype" >:: (fun ctxt -> List.iter success [
@@ -245,7 +294,7 @@ let printing = "printing" >::: [
 |})
       ]
       )
-  ; "item" >:: (fun ctxt -> List.iter success_item [
+  ; "struct_item" >:: (fun ctxt -> List.iter success_struct_item [
         ("type nonrec x = string;", "type x = string ;")
       ; ({|type nonrec x = string
 and y = number;|},
@@ -293,8 +342,8 @@ end ;
       )
   ]
 
-let item_of_string_exn s = s |> parse_string parse_structure_item_eoi
-let item_to_string t = print_structure_item Pprintf.empty_pc t
+let item_of_string_exn s = s |> parse_string parse_struct_item_eoi
+let item_to_string t = print_struct_item Pprintf.empty_pc t
 let item_printer x = "<<"^(show_struct_item_t x)^">>"
 let item_cmp = equal_struct_item_t
 

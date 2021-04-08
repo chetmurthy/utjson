@@ -18,10 +18,10 @@ value print_module_expr = Eprinter.apply pr_module_expr;
 value pr_module_type = Eprinter.make "module_type";
 value print_module_type = Eprinter.apply pr_module_type;
 
-value pr_structure_item = Eprinter.make "structure_item";
-value print_structure_item = Eprinter.apply pr_structure_item;
-value pr_signature_item = Eprinter.make "signature_item";
-value print_signature_item = Eprinter.apply pr_signature_item;
+value pr_struct_item = Eprinter.make "struct_item";
+value print_struct_item = Eprinter.apply pr_struct_item;
+value pr_sig_item = Eprinter.make "sig_item";
+value print_sig_item = Eprinter.apply pr_sig_item;
 value pr_base_type = Eprinter.make "base_type";
 value print_base_type = Eprinter.apply pr_base_type;
 value pr_atomic = Eprinter.make "atomic";
@@ -58,23 +58,23 @@ value print_module_path pc l = plist_with "." string 0 pc l ;
 
 EXTEND_PRINTER
   pr_module_expr: [ [
-    Struct l -> pprintf pc "struct@;%p@;end" (plist_with "" print_structure_item 2) l
+    Struct l -> pprintf pc "struct@;%p@;end" (plist_with "" print_struct_item 2) l
   | FunctorApp me1 me2 ->  pprintf pc "%p(%p)" print_module_expr me1 print_module_expr me2
   | ModulePath p -> print_module_path pc p
   | Functor (id, mty) me ->  pprintf pc "functor (%s:%p) -> %p" id print_module_type mty print_module_expr me
   ] ] ;
   pr_module_type: [ [
-    Sig l -> pprintf pc "sig@;%p@;end" (plist_with "" print_signature_item 2) l
+    Sig l -> pprintf pc "sig@;%p@;end" (plist_with "" print_sig_item 2) l
   | FunctorType (id, mty1) mty2 -> pprintf pc "functor (%s:%p) -> %p" id print_module_type mty1 print_module_type mty2
   ] ] ;
-  pr_signature_item: [ [
+  pr_sig_item: [ [
     SiType s -> pprintf pc "%s;" s
   | SiModuleBinding s mty -> 
     pprintf pc "module %s : %p;" s print_module_type mty
   | SiModuleType s mty ->
     pprintf pc "module type %s = %p;" s print_module_type mty
   ] ] ;
-  pr_structure_item: [ [
+  pr_struct_item: [ [
     StTypes recflag l ->
     pprintf pc "type%s %p;" (if recflag then " rec" else " nonrec")
       (Prtools.vlist2
@@ -89,8 +89,8 @@ EXTEND_PRINTER
     pprintf pc "import %p as %s;" qstring url id
   | StLocal l1 l2 ->
     pprintf pc "local %p in %p end;" 
-      (plist_with "" print_structure_item 0) l1
-      (plist_with "" print_structure_item 0) l2
+      (plist_with "" print_struct_item 0) l1
+      (plist_with "" print_struct_item 0) l2
   | StOpen p ->
     pprintf pc "open %p;" print_module_path p
   | StInclude p ->

@@ -71,22 +71,30 @@ value (utype_eoi : Grammar.Entry.e utype_t) = Grammar.Entry.create g "utype_eoi"
 value (structure : Grammar.Entry.e structure) = Grammar.Entry.create g "structure";
 value (structure_eoi : Grammar.Entry.e structure) = Grammar.Entry.create g "structure_eoi";
 
-value (structure_item : Grammar.Entry.e struct_item_t) = Grammar.Entry.create g "structure_item";
-value (structure_item_eoi : Grammar.Entry.e struct_item_t) = Grammar.Entry.create g "structure_item_eoi";
+value (struct_item : Grammar.Entry.e struct_item_t) = Grammar.Entry.create g "struct_item";
+value (struct_item_eoi : Grammar.Entry.e struct_item_t) = Grammar.Entry.create g "struct_item_eoi";
 
 value (signature : Grammar.Entry.e signature) = Grammar.Entry.create g "signature";
 value (signature_eoi : Grammar.Entry.e signature) = Grammar.Entry.create g "signature_eoi";
 
-value (signature_item : Grammar.Entry.e struct_item_t) = Grammar.Entry.create g "signature_item";
-value (signature_item_eoi : Grammar.Entry.e struct_item_t) = Grammar.Entry.create g "signature_item_eoi";
+value (sig_item : Grammar.Entry.e sig_item_t) = Grammar.Entry.create g "sig_item";
+value (sig_item_eoi : Grammar.Entry.e sig_item_t) = Grammar.Entry.create g "sig_item_eoi";
+
+value (module_expr : Grammar.Entry.e module_expr_t) = Grammar.Entry.create g "module_expr";
+value (module_expr_eoi : Grammar.Entry.e module_expr_t) = Grammar.Entry.create g "module_expr_eoi";
+
+value (module_type : Grammar.Entry.e module_type_t) = Grammar.Entry.create g "module_type";
+value (module_type_eoi : Grammar.Entry.e module_type_t) = Grammar.Entry.create g "module_type_eoi";
 
 EXTEND
   GLOBAL:
     utype utype_eoi
     structure structure_eoi
-    structure_item structure_item_eoi
+    struct_item struct_item_eoi
     signature signature_eoi
-    signature_item signature_item_eoi
+    sig_item sig_item_eoi
+    module_expr module_expr_eoi
+    module_type module_type_eoi
     ;
 
     base_type: [ [
@@ -205,7 +213,7 @@ EXTEND
       ] ]
     ;
 
-    structure_item: [ [
+    struct_item: [ [
         "module" ; uid=UIDENT ; "=" ; e = module_expr ; ";" -> StModuleBinding uid e
       | "module" ; "type" ; uid=UIDENT ; "=" ; e = module_type ; ";" -> StModuleType uid e
       | "local" ; l1 = structure ; "in" ; l2 = structure ; "end" ; ";" -> StLocal l1 l2
@@ -219,7 +227,7 @@ EXTEND
     ;
 
     structure: [ [
-        l = LIST0 structure_item -> l
+        l = LIST0 struct_item -> l
       ] ]
     ;
 
@@ -244,7 +252,7 @@ EXTEND
 
   utype_eoi : [ [ e = utype ; EOI -> e ] ] ;
   structure_eoi : [ [ e = structure ; EOI -> e ] ] ;
-  structure_item_eoi : [ [ e = structure_item ; EOI -> e ] ] ;
+  struct_item_eoi : [ [ e = struct_item ; EOI -> e ] ] ;
 END;
 
 value parse_utype = Grammar.Entry.parse utype ;
@@ -253,14 +261,20 @@ value parse_utype_eoi = Grammar.Entry.parse utype_eoi ;
 value parse_structure = Grammar.Entry.parse structure ;
 value parse_structure_eoi = Grammar.Entry.parse structure_eoi ;
 
-value parse_structure_item = Grammar.Entry.parse structure_item ;
-value parse_structure_item_eoi = Grammar.Entry.parse structure_item_eoi ;
+value parse_struct_item = Grammar.Entry.parse struct_item ;
+value parse_struct_item_eoi = Grammar.Entry.parse struct_item_eoi ;
 
 value parse_signature = Grammar.Entry.parse signature ;
 value parse_signature_eoi = Grammar.Entry.parse signature_eoi ;
 
-value parse_signature_item = Grammar.Entry.parse signature_item ;
-value parse_signature_item_eoi = Grammar.Entry.parse signature_item_eoi ;
+value parse_sig_item = Grammar.Entry.parse sig_item ;
+value parse_sig_item_eoi = Grammar.Entry.parse sig_item_eoi ;
+
+value parse_module_expr = Grammar.Entry.parse module_expr ;
+value parse_module_expr_eoi = Grammar.Entry.parse module_expr_eoi ;
+
+value parse_module_type = Grammar.Entry.parse module_type ;
+value parse_module_type_eoi = Grammar.Entry.parse module_type_eoi ;
 
 value parse_string pf s = do {
   input_file.val := s ;
