@@ -71,26 +71,26 @@ let check_closed_under env t =
 
 let elab env t =
   let rec elabrec (env,segacc) = function
-      Decls(true, l) ->
+      StTypes(true, l) ->
       let m = (RECD (l, env)) in
       List.iter (check_closed_under (m::env)) (List.map snd l) ;
       (m::env, m::segacc)
 
-    | Decls(false, l) ->
+    | StTypes(false, l) ->
       List.iter (check_closed_under env) (List.map snd l) ;
       let m = (D (l, env)) in
       (m::env, m::segacc)
 
-    | ModuleExpBinding(mid, Struct l) ->
+    | StModuleBinding(mid, Struct l) ->
       let (env', segacc') = List.fold_left elabrec (env,[]) l in
       let m = M(mid, segacc') in
       (m::env, m::segacc')
 
-    | Import(url,s) ->
+    | StImport(url,s) ->
       let t = Utconv.load_file url in
-      elabrec (env, segacc) (ModuleExpBinding (s, Struct [t]))
+      elabrec (env, segacc) (StModuleBinding (s, Struct [t]))
 
-    | Local(l1, l2) ->
+    | StLocal(l1, l2) ->
       let (env1, _) = List.fold_left elabrec (env, []) l1 in
       let (env2, segacc') = List.fold_left elabrec (env1, []) l2 in
       (env2, segacc' @ segacc)
@@ -170,6 +170,6 @@ and validate_atomic j env uty = match (j, uty) with
 
   | (_, MultipleOf _) -> false
 
-let env0 = Env.elab [] (Import ("lib/predefined.utj", "Predefined"))
+let env0 = Env.elab [] (StImport ("lib/predefined.utj", "Predefined"))
 
 let elab t = Env.elab env0 t

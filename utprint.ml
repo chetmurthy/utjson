@@ -12,8 +12,16 @@ value plist_with sep f sh pc l =
 
 value pr_utype = Eprinter.make "utype";
 value print_utype = Eprinter.apply pr_utype;
+
+value pr_module_expr = Eprinter.make "module_expr";
+value print_module_expr = Eprinter.apply pr_module_expr;
+value pr_module_type = Eprinter.make "module_type";
+value print_module_type = Eprinter.apply pr_module_type;
+
 value pr_structure_item = Eprinter.make "structure_item";
 value print_structure_item = Eprinter.apply pr_structure_item;
+value pr_signature_item = Eprinter.make "signature_item";
+value print_signature_item = Eprinter.apply pr_signature_item;
 value pr_base_type = Eprinter.make "base_type";
 value print_base_type = Eprinter.apply pr_base_type;
 value pr_atomic = Eprinter.make "atomic";
@@ -22,6 +30,7 @@ value print_atomic = Eprinter.apply pr_atomic;
 value qstring pc s =
   pprintf pc "\"%s\"" s
 ;
+value string pc s = pprintf pc "%s" s ;
 
 value print_size_constraint pc (lo,hi) =
   let open Bound in 
@@ -45,23 +54,47 @@ value print_id pc id = pprintf pc "%s" id ;
 
 value print_json pc j = pprintf pc "%s" (Yojson.Basic.to_string j) ;
 
+value print_module_path pc l = plist_with "." string 0 pc l ;
+
 EXTEND_PRINTER
+  pr_module_expr: [ [
+    Struct l -> pprintf pc "struct@;%p@;end" (plist_with "" print_structure_item 2) l
+  | FunctorApp me1 me2 ->  pprintf pc "%p(%p)" print_module_expr me1 print_module_expr me2
+  | ModulePath p -> print_module_path pc p
+  | Functor (id, mty) me ->  pprintf pc "functor (%s:%p) -> %p" id print_module_type mty print_module_expr me
+  ] ] ;
+  pr_module_type: [ [
+    Sig l -> pprintf pc "sig@;%p@;end" (plist_with "" print_signature_item 2) l
+  | FunctorType (id, mty1) mty2 -> pprintf pc "functor (%s:%p) -> %p" id print_module_type mty1 print_module_type mty2
+  ] ] ;
+  pr_signature_item: [ [
+    SiType s -> pprintf pc "%s;" s
+  | SiModuleBinding s mty -> 
+    pprintf pc "module %s : %p;" s print_module_type mty
+  | SiModuleType s mty ->
+    pprintf pc "module type %s = %p;" s print_module_type mty
+  ] ] ;
   pr_structure_item: [ [
-    Decls recflag l ->
+    StTypes recflag l ->
     pprintf pc "type%s %p;" (if recflag then " rec" else " nonrec")
       (Prtools.vlist2
          (fun pc (s,t) -> pprintf pc "%s = %p" s print_utype t)
          (fun pc (s,t) -> pprintf pc "and %s = %p" s print_utype t)
       ) l
-  | ModuleExpBinding id (Struct l) ->
-    pprintf pc "module %s = struct %p end;" id
-      (plist_with "" print_structure_item 0) l
-  | Import url id ->
+  | StModuleBinding id mexp ->
+    pprintf pc "module %s = %p;" id print_module_expr mexp
+  | StModuleType id mty ->
+    pprintf pc "module type %s = %p;" id print_module_type mty
+  | StImport url id ->
     pprintf pc "import %p as %s;" qstring url id
-  | Local l1 l2 ->
+  | StLocal l1 l2 ->
     pprintf pc "local %p in %p end;" 
       (plist_with "" print_structure_item 0) l1
       (plist_with "" print_structure_item 0) l2
+  | StOpen p ->
+    pprintf pc "open %p;" print_module_path p
+  | StInclude p ->
+    pprintf pc "include %p;" print_module_path p
   ] ] ;
 
   pr_utype:

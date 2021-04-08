@@ -49,18 +49,22 @@ and utype_t =
 [@@deriving show { with_path = false },eq]
 
 type struct_item_t =
-    Decls of bool * (string * utype_t) list
-  | ModuleExpBinding of string * module_expr_t
-  | Import of string * string
-  | Local of structure * structure
-  | Open of string list
+    StTypes of bool * (string * utype_t) list
+  | StModuleBinding of string * module_expr_t
+  | StImport of string * string
+  | StLocal of structure * structure
+  | StOpen of module_path_t
+  | StInclude of module_path_t
+  | StModuleType of string * module_type_t
+
+and module_path_t = string list
 
 and structure = struct_item_t list
 
 and module_expr_t =
     Struct of structure
   | FunctorApp of module_expr_t * module_expr_t
-  | ModuleName of string
+  | ModulePath of module_path_t
   | Functor of (string * module_type_t) * module_expr_t
 
 and module_type_t =
@@ -70,8 +74,9 @@ and module_type_t =
 and signature = sig_item_t list
 
 and sig_item_t =
-    SimpleTypeBinding of string
-  | ModuleTypeBinding of string * module_type_t
+    SiType of string
+  | SiModuleBinding of string * module_type_t
+  | SiModuleType of string * module_type_t
 
 [@@deriving show { with_path = false },eq]
 

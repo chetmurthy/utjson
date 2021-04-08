@@ -74,11 +74,19 @@ value (structure_eoi : Grammar.Entry.e structure) = Grammar.Entry.create g "stru
 value (structure_item : Grammar.Entry.e struct_item_t) = Grammar.Entry.create g "structure_item";
 value (structure_item_eoi : Grammar.Entry.e struct_item_t) = Grammar.Entry.create g "structure_item_eoi";
 
+value (signature : Grammar.Entry.e signature) = Grammar.Entry.create g "signature";
+value (signature_eoi : Grammar.Entry.e signature) = Grammar.Entry.create g "signature_eoi";
+
+value (signature_item : Grammar.Entry.e struct_item_t) = Grammar.Entry.create g "signature_item";
+value (signature_item_eoi : Grammar.Entry.e struct_item_t) = Grammar.Entry.create g "signature_item_eoi";
+
 EXTEND
   GLOBAL:
     utype utype_eoi
     structure structure_eoi
     structure_item structure_item_eoi
+    signature signature_eoi
+    signature_item signature_item_eoi
     ;
 
     base_type: [ [
@@ -172,15 +180,41 @@ EXTEND
       ] ]
     ;
 
+    module_type: [ [
+        "sig" ; l = signature ; "end" -> Sig l
+      | "functor" ; l = LIST1 module_param ; "->" ; m=module_type ->
+        List.fold_right (fun (s,mty) rhs -> FunctorType (s,mty) rhs) l m
+      ] ]
+    ;
+
+    module_path: [ [
+        p = LIST1 UIDENT SEP "." -> p
+      ] ]
+    ;
+
+    module_expr: [ [
+        "struct" ; l = structure ; "end" -> Struct l
+      | m1 = module_expr ; "(" ; m2 = module_expr ; ")" -> FunctorApp m1 m2
+      | "functor" ; l = LIST1 module_param ; "->" ; m=module_expr ->
+        List.fold_right (fun (s,mty) rhs -> Functor (s,mty) rhs) l m
+      | p = module_path -> ModulePath p
+      ] ]
+    ;
+    module_param: [ [
+        "(" ; id = UDENT ; mty = module_type ; ")" -> (id, mty)
+      ] ]
+    ;
+
     structure_item: [ [
-        "module" ; uid=UIDENT ; "=" ; "struct" ;
-        l = structure ; ";" -> ModuleExpBinding uid (Struct l)
-      | "local" ; l1 = structure ; "in" ; l2 = structure ; "end" ; ";" -> Local l1 l2
+        "module" ; uid=UIDENT ; "=" ; e = module_expr ; ";" -> StModuleBinding uid e
+      | "module" ; "type" ; uid=UIDENT ; "=" ; e = module_type ; ";" -> StModuleType uid e
+      | "local" ; l1 = structure ; "in" ; l2 = structure ; "end" ; ";" -> StLocal l1 l2
       | "type" ; rflag = [ "rec" -> True | "nonrec" -> False | -> False ] ;
         l = LIST1 [ id = LIDENT ; "=" ; t = utype -> (id, t) ] SEP "and" ;
-        ";" -> Decls rflag l
-      | "import" ; s=STRING ; "as"; uid=UIDENT ; ";" -> Import s uid
-      | "open" ; l = LIST1 UIDENT SEP "." ; ";" -> Open l
+        ";" -> StTypes rflag l
+      | "import" ; s=STRING ; "as"; uid=UIDENT ; ";" -> StImport s uid
+      | "open" ; p = module_path ; ";" -> StOpen p
+      | "include" ; p = module_path ; ";" -> StInclude p
       ] ]
     ;
 
@@ -221,6 +255,12 @@ value parse_structure_eoi = Grammar.Entry.parse structure_eoi ;
 
 value parse_structure_item = Grammar.Entry.parse structure_item ;
 value parse_structure_item_eoi = Grammar.Entry.parse structure_item_eoi ;
+
+value parse_signature = Grammar.Entry.parse signature ;
+value parse_signature_eoi = Grammar.Entry.parse signature_eoi ;
+
+value parse_signature_item = Grammar.Entry.parse signature_item ;
+value parse_signature_item_eoi = Grammar.Entry.parse signature_item_eoi ;
 
 value parse_string pf s = do {
   input_file.val := s ;

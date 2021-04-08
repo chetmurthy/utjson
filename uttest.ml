@@ -127,21 +127,21 @@ let parsing = "parsing" >::: [
       ]
       )
   ; "item" >:: (fun ctxt -> List.iter success_item [
-        (Decls(false,[("x",Simple JString)]), "type x = string ;")
-      ; ((Decls (false, [("x", (Simple JString)); ("y", (Simple JNumber))])),
+        (StTypes(false,[("x",Simple JString)]), "type x = string ;")
+      ; ((StTypes (false, [("x", (Simple JString)); ("y", (Simple JNumber))])),
          "type x = string and y = number ;")
-      ; ((Decls (true, [("x", (Simple JString)); ("y", (Simple JNumber))])),
+      ; ((StTypes (true, [("x", (Simple JString)); ("y", (Simple JNumber))])),
          "type rec x = string and y = number ;")
-      ; ((Decls (false, [("x", (Simple JString)); ("y", (Simple JNumber))])),
+      ; ((StTypes (false, [("x", (Simple JString)); ("y", (Simple JNumber))])),
          "type nonrec x = string and y = number ;")
-      ; ((Decls (false,
+      ; ((StTypes (false,
                  [("integer", (And ((Simple JNumber), (Atomic [(MultipleOf 1.)]))))])),
          "type integer = number && [ multipleOf 1.0 ; ] ;")
-      ; ((Local (
-          [(Import ("https://example.com/geographical-location.schema.json",
+      ; ((StLocal (
+          [(StImport ("https://example.com/geographical-location.schema.json",
                     "GeoLoc"))
           ],
-          [(Decls (false,
+          [(StTypes (false,
                    [("product",
                      (And ((Simple JObject),
                            (Atomic

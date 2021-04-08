@@ -417,12 +417,12 @@ let conv_type t =
      ) ;
    | _ -> ()) ;
   let t = conv_type0 t in
-  let l = List.map (fun (id, mid) -> Import(id, mid)) !imports in
+  let l = List.map (fun (id, mid) -> StImport(id, mid)) !imports in
   let l = if !locals = [] then l else
-      l@[Decls(true, List.rev !locals)] in
-  if l = [] then Decls(false, [("t", t)])
+      l@[StTypes(true, List.rev !locals)] in
+  if l = [] then StTypes(false, [("t", t)])
   else 
-    Local(l, [Decls(false, [("t", t)])])
+    StLocal(l, [StTypes(false, [("t", t)])])
 
 let load_file s =
   if Str.(string_match (regexp ".*\\.json$") s 0) then
@@ -431,5 +431,5 @@ let load_file s =
   else if Str.(string_match (regexp ".*\\.utj$") s 0) then
     match Utparse0.(parse_file parse_structure) s with
       [t] -> t
-    | l -> Local([], l)
+    | l -> StLocal([], l)
   else Fmt.(failwithf "load_file: format not recognized: %s" s)
