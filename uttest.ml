@@ -291,11 +291,13 @@ let successf (expectf, f) =
     (load_file expectf)
     (load_file f)
 
+let convert1 f =
+  let fp = "schemastore/src/schemas/json/"^f in
+  load_file fp
 
 let convert_check1 f =
-  let fp = "schemastore/src/schemas/json/"^f in
   f >:: (fun ctxt ->
-      ignore(load_file fp)
+      ignore(convert1 f)
     )
 
 let convert_check = "convert_check" >::: (List.map convert_check1 [
