@@ -371,9 +371,7 @@ let convert_check = "convert_check" >::: (List.map convert_check1 [
   ;"codecov.json"
 *)
   ;"codeship-services.json"
-(* jesus, if-then-else idiocy in a sequence of object members
   ;"codeship-steps.json"
-*)
   ;"coffeelint.json"
   ;"comet.json"
   ;"commands.json"
@@ -402,10 +400,8 @@ let convert_check = "convert_check" >::: (List.map convert_check1 [
   ;"dart-build.json"
 *)
   ;"dart-test.json"
-(* if-then-else?  again?
   ;"datalogic-scan2deploy-android.json"
   ;"datalogic-scan2deploy-ce.json"
-*)
   ;"debugsettings.json"
 (* extra members from intellij ?
   ;"dependabot-2.0.json"
@@ -446,9 +442,7 @@ let convert_check = "convert_check" >::: (List.map convert_check1 [
   ;"foxx-manifest.json"
   ;"function.json"
   ;"geojson.json"
-(* if-then-else
   ;"github-action.json"
-*)
   ;"github-funding.json"
   ;"github-workflow.json"
   ;"gitlab-ci.json"
@@ -576,9 +570,7 @@ let convert_check = "convert_check" >::: (List.map convert_check1 [
   ;"project-1.0.0-rc1.json"
   ;"project-1.0.0-rc2.json"
   ;"project.json"
-(* if-then-else
   ;"prometheus.json"
-*)
   ;"prometheus.rules.json"
 (* "defaultSnippets" -- is this like "examples" ?
   ;"proxies.json"

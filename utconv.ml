@@ -104,6 +104,7 @@ let xorList l =
   ; "contentMediaType";"contentEncoding"
   ; "const" ; "multipleOf"
   ; "dependencies"
+  ;"if"; "then"; "else"
   ]
 
   let rec conv_type_l (j : json) = match j with
@@ -371,6 +372,27 @@ let xorList l =
        | Some (`Float n)  -> [Atomic[MultipleOf n]]
        | Some v -> Fmt.(failwithf "conv_type: multipleOf did not have number payload: %a" pp_json v)
        | None -> []
+      )@
+      (match (assoc_opt "if" l,assoc_opt "then" l,assoc_opt "else" l) with
+         (Some ifj, Some thenj, Some elsej) ->
+         let ift = conv_type0 ifj in
+         [And(Impl(ift, conv_type0 thenj),
+              Impl(ift, conv_type0 elsej))]
+
+       | (Some ifj, Some thenj, None) ->
+         let ift = conv_type0 ifj in
+         [Impl(ift, conv_type0 thenj)]
+
+       | (Some _, None, Some _) ->
+         Fmt.(failwithf "conv_type: if-else with no then: %a" pp_json j)
+
+       | (None, Some _, None) ->
+         Fmt.(failwithf "conv_type: then with no if: %a" pp_json j)
+
+       | (None, None, Some _) ->
+         Fmt.(failwithf "conv_type: else with no if: %a" pp_json j)
+
+       | (None,None,None) -> []
       )
 
     | j -> Fmt.(failwithf "conv_type: %a" pp_json j)
