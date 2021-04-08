@@ -699,12 +699,12 @@ let convert = "convert" >::: [
          "schema-overrides/product-schema.json")
       ; ("schema-overrides/ansible-inventory.utj",
          "schemastore/src/schemas/json/ansible-inventory.json")
-      ; ("schema-overrides/apibuilder-MODIFIED.utj",
-         "schema-overrides/apibuilder-MODIFIED.json")
+      ; ("schema-overrides/apibuilder.utj",
+         "schema-overrides/apibuilder.json")
       ; ("schema-overrides/apple-app-site-association.utj",
          "schemastore/src/schemas/json/apple-app-site-association.json")
-      ; ("schema-overrides/appsettings-MODIFIED.utj",
-         "schema-overrides/appsettings-MODIFIED.json")
+      ; ("schema-overrides/appsettings.utj",
+         "schema-overrides/appsettings.json")
       ; ("schema-overrides/appsscript.utj",
          "schemastore/src/schemas/json/appsscript.json")
       ; ("schema-overrides/appveyor.utj",
