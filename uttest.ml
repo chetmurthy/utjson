@@ -299,25 +299,25 @@ let convert_check = "convert_check" >::: (List.map convert_check1 [
 *)
 let convert = "convert" >::: [
     "convert" >:: (fun ctxt -> List.iter successf [
-        ("json-schema-samples/product-schema-MODIFIED.utj",
-         "json-schema-samples/product-schema-MODIFIED.json")
-      ; ("json-schema-samples/ansible-inventory.utj",
+        ("schema-overrides/product-schema-MODIFIED.utj",
+         "schema-overrides/product-schema-MODIFIED.json")
+      ; ("schema-overrides/ansible-inventory.utj",
          "schemastore/src/schemas/json/ansible-inventory.json")
-      ; ("json-schema-samples/apibuilder-MODIFIED.utj",
-         "json-schema-samples/apibuilder-MODIFIED.json")
-      ; ("json-schema-samples/apple-app-site-association.utj",
+      ; ("schema-overrides/apibuilder-MODIFIED.utj",
+         "schema-overrides/apibuilder-MODIFIED.json")
+      ; ("schema-overrides/apple-app-site-association.utj",
          "schemastore/src/schemas/json/apple-app-site-association.json")
-      ; ("json-schema-samples/appsettings-MODIFIED.utj",
-         "json-schema-samples/appsettings-MODIFIED.json")
-      ; ("json-schema-samples/appsscript.utj",
+      ; ("schema-overrides/appsettings-MODIFIED.utj",
+         "schema-overrides/appsettings-MODIFIED.json")
+      ; ("schema-overrides/appsscript.utj",
          "schemastore/src/schemas/json/appsscript.json")
-      ; ("json-schema-samples/appveyor.utj",
+      ; ("schema-overrides/appveyor.utj",
          "schemastore/src/schemas/json/appveyor.json")
-      ; ("json-schema-samples/asmdef.utj",
+      ; ("schema-overrides/asmdef.utj",
          "schemastore/src/schemas/json/asmdef.json")
-      ; ("json-schema-samples/avro-avsc.utj",
+      ; ("schema-overrides/avro-avsc.utj",
          "schemastore/src/schemas/json/avro-avsc.json")
-      ; ("json-schema-samples/azure-iot-edgeagent-deployment-1.0.utj",
+      ; ("schema-overrides/azure-iot-edgeagent-deployment-1.0.utj",
          "schemastore/src/schemas/json/azure-iot-edgeagent-deployment-1.0.json")
       ]
       )

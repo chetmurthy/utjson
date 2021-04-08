@@ -170,6 +170,6 @@ and validate_atomic j env uty = match (j, uty) with
 
   | (_, MultipleOf _) -> false
 
-let env0 = Env.elab [] (Import ("json-schema-samples/predefined.utj", "Predefined"))
+let env0 = Env.elab [] (Import ("lib/predefined.utj", "Predefined"))
 
 let elab t = Env.elab env0 t
