@@ -7,7 +7,7 @@ and moduleSettings = object && [
 ] && [ required "image"; ]
 and env = object && [
     /^[^\+#$\s\.]+$/ : object && [ "value": number || string || boolean; ] && [ required "value"; ];
-] && [ sealed; ]
+] && (object && [ sealed; ])
 and createOptions = string && [ contentMediaType "application/json"; ];
 in
  type nonrec t = object && [
@@ -25,7 +25,7 @@ in
                             "password": string;
                             "address": string && [ /^[^\s]+$/ ];
 ] && [ required "username",  "password",  "address"; ];
-] && [ sealed; ];
+] && (object && [ sealed; ]);
 ];
 ] && [ required "type",  "settings"; ];
             "systemModules": object && [
@@ -41,7 +41,7 @@ in
                     "status": status;
                     "restartPolicy": restartPolicy;
 ] && [ required "type",  "settings",  "status",  "restartPolicy"; ];
-] && [ sealed; ] && [ required "edgeAgent",  "edgeHub"; ];
+] && (object && [ sealed; ]) && [ required "edgeAgent",  "edgeHub"; ];
             "modules": object && [
                 /^[a-zA-Z0-9_-]+$/ : object && [
                     "version": string;
@@ -51,8 +51,8 @@ in
                     "env": env;
                     "settings": moduleSettings;
 ] && [ required "type",  "status",  "restartPolicy",  "settings"; ];
-] && [ sealed; ];
+] && (object && [ sealed; ]);
 ] && [ required "schemaVersion",  "runtime",  "systemModules",  "modules"; ];
 ] && [ required "properties.desired"; ];
-] && [ sealed; ] && [ required "$edgeAgent"; ];
+] && (object && [ sealed; ]) && [ required "$edgeAgent"; ];
 end;

@@ -84,7 +84,8 @@ let xorList l =
 
   let documentation_keys = [
     "$schema"; "$id"; "title"; "description"; "$contact"; "$comment"
-    ; "examples" ; "documentation"; "enumDescriptions"
+    ; "examples"; "example" ; "documentation"; "enumDescriptions"
+    ; "deprecated"
   ]
   let known_keys = documentation_keys@[
     "$ref"
@@ -208,28 +209,39 @@ let xorList l =
            | None -> 0 in
          [And(Simple JObject, Atomic [(Size Bound.({it=min; exclusive = false}, {it=max; exclusive = false}))])]
       )@
-      (match (assoc_opt "minimum" l, assoc_opt "maximum" l) with
-         (None, None) -> []
-       | (min, max) ->
-         let min = match min with
-             Some (`Int n) -> Some (float_of_int n)
-           | Some (`Float f) -> Some f
-           | None -> None
-           | Some j -> Fmt.(failwithf "conv_type: minimum must be number: %a" pp_json j) in
-         let max = match max with
-             Some (`Int n) -> Some (float_of_int n)
-           | Some (`Float f) -> Some f
-           | None -> None
-           | Some j -> Fmt.(failwithf "conv_type: maximum must be number: %a" pp_json j) in
-         let exclMin = match assoc_opt "exclusiveMinimum" l with
-             None -> false
-           | Some (`Bool b) -> b
-           | Some j -> Fmt.(failwithf "conv_type: exclusiveMinimum must be bool: %a" pp_json j) in
-         let exclMax = match assoc_opt "exclusiveMaximum" l with
-             None -> false
-           | Some (`Bool b) -> b
-           | Some j -> Fmt.(failwithf "conv_type: exclusiveMaximum must be bool: %a" pp_json j) in
-         [And(Simple JString, Atomic [(NumberBound Bound.({it=min; exclusive = exclMin}, {it=max; exclusive = exclMax}))])]
+      (match (assoc_opt "minimum" l, assoc_opt "exclusiveMinimum" l,
+              assoc_opt "maximum" l, assoc_opt "exclusiveMaximum" l) with
+         (None, None, None, None) -> []
+       | (min, emin, max, emax) ->
+         let min = match (min,emin) with
+             (Some _, Some _) ->
+             Fmt.(failwithf "conv_type: cannot specify both minimum and exclusiveMinimum: %a" pp_json j)
+           | (None, None) ->
+             Bound.{it=None; exclusive = false}
+
+           | (Some (`Int n), None) -> Bound.{it=Some (float_of_int n); exclusive = false}
+           | (Some (`Float f), None) -> Bound.{it=Some f; exclusive = false}
+           | (Some j, None) -> Fmt.(failwithf "conv_type: minimum must be number: %a" pp_json j)
+
+           | (None, Some (`Int n)) -> Bound.{it=Some (float_of_int n); exclusive = true}
+           | (None, Some (`Float f)) -> Bound.{it=Some f; exclusive = true}
+           | (None, Some j) -> Fmt.(failwithf "conv_type: exclusiveMinimum must be number: %a" pp_json j) in
+
+         let max = match (max,emax) with
+             (Some _, Some _) ->
+             Fmt.(failwithf "conv_type: cannot specify both maximum and exclusiveMaximum: %a" pp_json j)
+           | (None, None) ->
+             Bound.{it=None; exclusive = false}
+
+           | (Some (`Int n), None) -> Bound.{it=Some (float_of_int n); exclusive = false}
+           | (Some (`Float f), None) -> Bound.{it=Some f; exclusive = false}
+           | (Some j, None) -> Fmt.(failwithf "conv_type: maximum must be number: %a" pp_json j)
+
+           | (None, Some (`Int n)) -> Bound.{it=Some (float_of_int n); exclusive = true}
+           | (None, Some (`Float f)) -> Bound.{it=Some f; exclusive = true}
+           | (None, Some j) -> Fmt.(failwithf "conv_type: exclusiveMaximum must be number: %a" pp_json j) in
+
+         [Atomic [NumberBound(min, max)]]
       )@
       (match assoc_opt "anyOf" l with
          Some (`List (_::_ as l)) ->

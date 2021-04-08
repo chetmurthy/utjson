@@ -22,7 +22,7 @@ let ne_frac = [%sedlex.regexp? '.' , (Plus digit)]
 let exp = [%sedlex.regexp? ('e' | 'E') , (Opt ('-' | '+')) , (Plus digit)]
 let decimal_float_number = [%sedlex.regexp? (Opt '-') , ((int , (Opt frac) , (Opt exp)) | (ne_frac, Opt exp))]
 
-let json_number = [%sedlex.regexp? int, Opt ne_frac, Opt exp]
+let json_number = [%sedlex.regexp? int, Opt frac, Opt exp]
 
 let lcletter = [%sedlex.regexp? 'a'..'z']
 let ucletter = [%sedlex.regexp? 'A'..'Z']

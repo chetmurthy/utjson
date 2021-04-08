@@ -1,18 +1,18 @@
-local type rec apidoc = object && [ "version": string; ] && [ sealed; ] && [ required "version"; ]
+local type rec apidoc = object && [ "version": string; ] && (object && [ sealed; ]) && [ required "version"; ]
 and info = object && [
     "contact": contact;
     "license": license;
-] && [ sealed; ]
+] && (object && [ sealed; ])
 and contact = object && [
     "name": string;
     "url": string;
     "email": string;
-] && [ sealed; ]
+] && (object && [ sealed; ])
 and license = object && [
     "name": string;
     "url": string;
-] && [ sealed; ] && [ required "name"; ]
-and import_ = object && [ "uri": string; ] && [ sealed; ] && [ required "uri"; ]
+] && (object && [ sealed; ]) && [ required "name"; ]
+and import_ = object && [ "uri": string; ] && (object && [ sealed; ]) && [ required "uri"; ]
 and header = object && [
     "name": string;
     "type": string;
@@ -21,12 +21,12 @@ and header = object && [
     "description": string;
     "attributes": array && [ of attribute; ];
     "deprecation": deprecation;
-] && [ sealed; ] && [ required "name",  "type"; ]
+] && (object && [ sealed; ]) && [ required "name",  "type"; ]
 and attribute = object && [
     "name": string;
     "value": object;
-] && [ sealed; ] && [ required "name",  "value"; ]
-and deprecation = object && [ "description": string; ] && [ sealed; ]
+] && (object && [ sealed; ]) && [ required "name",  "value"; ]
+and deprecation = object && [ "description": string; ] && (object && [ sealed; ])
 and enum_ = object && [
     /^[a-zA-Z0-9_]*$/ : object && [
         "plural": string;
@@ -34,7 +34,7 @@ and enum_ = object && [
         "values": array && [ of enumvalues; ];
         "attributes": array && [ of attribute; ];
         "deprecation": deprecation;
-] && [ sealed; ] && [ required "values"; ];
+] && (object && [ sealed; ]) && [ required "values"; ];
 ]
 and enumvalues = object && [
     "name": string;
@@ -42,7 +42,7 @@ and enumvalues = object && [
     "description": string;
     "attributes": array && [ of attribute; ];
     "deprecation": deprecation;
-] && [ sealed; ] && [ required "name"; ]
+] && (object && [ sealed; ]) && [ required "name"; ]
 and interface = object && [
     /^[a-zA-Z0-9_]*$/ : object && [
         "plural": string;
@@ -50,7 +50,7 @@ and interface = object && [
         "fields": array && [ of field; ];
         "attributes": array && [ of attribute; ];
         "deprecation": deprecation;
-] && [ sealed; ] && [ required "values"; ];
+] && (object && [ sealed; ]) && [ required "values"; ];
 ]
 and field = object && [
     "name": string && [ /^[a-zA-Z0-9_]*$/ ];
@@ -64,7 +64,7 @@ and field = object && [
     "attributes": array && [ of attribute; ];
     "deprecation": deprecation;
     "annotations": array && [ of string; ];
-] && [ sealed; ] && [ required "name",  "type"; ]
+] && (object && [ sealed; ]) && [ required "name",  "type"; ]
 and model = object && [
     /^[a-zA-Z0-9_]*$/ : object && [
         "description": string;
@@ -74,7 +74,7 @@ and model = object && [
         "attributes": array && [ of attribute; ];
         "deprecation": deprecation;
 ];
-] && [ sealed; ]
+] && (object && [ sealed; ])
 and union = object && [
     /^[a-zA-Z0-9_]*$/ : object && [
         "plural": string;
@@ -84,8 +84,8 @@ and union = object && [
         "types": array && [ of uniontype; ];
         "attributes": array && [ of attribute; ];
         "deprecation": deprecation;
-] && [ sealed; ] && [ required "types"; ];
-] && [ sealed; ]
+] && (object && [ sealed; ]) && [ required "types"; ];
+] && (object && [ sealed; ])
 and uniontype = object && [
     "type": string;
     "description": string;
@@ -93,7 +93,7 @@ and uniontype = object && [
     "discriminator_value": string;
     "attributes": array && [ of attribute; ];
     "deprecation": deprecation;
-] && [ sealed; ] && [ required "type"; ]
+] && (object && [ sealed; ]) && [ required "type"; ]
 and resource = object && [
     /^[a-zA-Z0-9_.]*$/ : object && [
         "path": string;
@@ -101,8 +101,8 @@ and resource = object && [
         "operations": array && [ of operation; ];
         "attributes": array && [ of attribute; ];
         "deprecation": deprecation;
-] && [ sealed; ] && [ required "operations"; ];
-] && [ sealed; ]
+] && (object && [ sealed; ]) && [ required "operations"; ];
+] && (object && [ sealed; ])
 and operation = object && [
     "method": string;
     "path": string;
@@ -112,7 +112,7 @@ and operation = object && [
     "responses": response;
     "attributes": array && [ of attribute; ];
     "deprecation": deprecation;
-] && [ sealed; ] && [ required "method"; ]
+] && (object && [ sealed; ]) && [ required "method"; ]
 and parameter = object && [
     "name": string && [ /^[a-zA-Z0-9_]*$/ ];
     "type": string;
@@ -125,7 +125,7 @@ and parameter = object && [
     "maximum": Predefined.integer;
     "attributes": array && [ of attribute; ];
     "deprecation": deprecation;
-] && [ sealed; ] && [ required "name",  "type"; ]
+] && (object && [ sealed; ]) && [ required "name",  "type"; ]
 and response = object && [
     /^[0-9]*$/ : object && [
         "type": string;
@@ -133,14 +133,14 @@ and response = object && [
         "description": string;
         "attributes": array && [ of attribute; ];
         "deprecation": deprecation;
-] && [ sealed; ] && [ required "type"; ];
-] && [ sealed; ]
+] && (object && [ sealed; ]) && [ required "type"; ];
+] && (object && [ sealed; ])
 and body = object && [
     "type": string;
     "description": string;
     "attributes": array && [ of attribute; ];
     "deprecation": deprecation;
-] && [ sealed; ] && [ required "type"; ]; in
+] && (object && [ sealed; ]) && [ required "type"; ]; in
 type nonrec t = [
     "name": string;
     "apidoc": apidoc;
@@ -157,5 +157,5 @@ type nonrec t = [
     "resources": resource;
     "attributes": array && [ of attribute; ];
     "annotations": array && [ of string; ];
-] && [ sealed; ] && [ required "name"; ]; end
+] && (object && [ sealed; ]) && [ required "name"; ]; end
 ;

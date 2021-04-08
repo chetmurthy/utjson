@@ -2,7 +2,7 @@ local import "json-schema-samples/geographical-location.schema.utj" as M0; in
   type nonrec t = object && [
     "productId": Predefined.integer;
     "productName": string;
-    "price": number;
+    "price": number && [ bounds (0.,max]; ];
     "tags": array && [ of string ; ] && [ unique ; ] && array && [ size [1,max] ; ];
     "dimensions": object && [
         "length": number;

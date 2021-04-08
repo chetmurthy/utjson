@@ -1,10 +1,10 @@
-local type rec possiblySecretString = string || number || object && [ "secure": string; ] && [ sealed; ]
+local type rec possiblySecretString = string || number || object && [ "secure": string; ] && (object && [ sealed; ])
 and commitFilter = object && [
     "message": string && [ format "regex"; ];
     "author": string && [ format "regex"; ] || string;
     "files": array && [ of string; ];
-] && [ sealed; ]
-and command = string xor object && [ "ps": string; ] && [ sealed; ] xor object && [ "pwsh": string; ] && [ sealed; ] xor object && [ "cmd": string; ] && [ sealed; ] xor object && [ "sh": string; ] && [ sealed; ]
+] && (object && [ sealed; ])
+and command = string xor object && [ "ps": string; ] && (object && [ sealed; ]) xor object && [ "pwsh": string; ] && (object && [ sealed; ]) xor object && [ "cmd": string; ] && (object && [ sealed; ]) xor object && [ "sh": string; ] && (object && [ sealed; ])
 and envVarHash = object && [ orelse possiblySecretString; ]
 and platform = [ enum "x86", "x64", "ARM", "ARM64", "Win32", "Any CPU"; ]
 and configuration = string
@@ -29,7 +29,7 @@ and job = [
     "branches": object && [
         "only": array && [ of string; ];
         "except": array && [ of string; ];
-] && [ sealed; ];
+] && (object && [ sealed; ]);
     "skip_tags": boolean;
     "skip_non_tags": boolean;
     "skip_commits": commitFilter;
@@ -51,7 +51,7 @@ and job = [
         "fast_finish": boolean;
         "allow_failures": array && [ of jobScalars; ];
         "exclude": array && [ of job; ];
-] && [ sealed; ];
+] && (object && [ sealed; ]);
     "cache": array && [ of string; ];
     "services": array && [
         of [
@@ -68,7 +68,7 @@ and job = [
         "assembly_version": string;
         "assembly_file_version": string;
         "assembly_informational_version": string;
-] && [ sealed; ];
+] && (object && [ sealed; ]);
     "nuget": object && [
         "account_feed": boolean;
         "project_feed": boolean;
@@ -86,7 +86,7 @@ and job = [
         "publish_nuget_symbols": boolean;
         "include_nuget_references": boolean;
         "verbosity": [ enum "quiet", "minimal", "normal", "detailed"; ];
-] && [ sealed; ];
+] && (object && [ sealed; ]);
     "before_build": array && [ of command; ];
     "before_package": array && [ of command; ];
     "after_build": array && [ of command; ];
@@ -96,19 +96,19 @@ and job = [
         "assemblies": object && [
             "only": array && [ of string; ];
             "except": array && [ of string; ];
-] && [ sealed; ];
+] && (object && [ sealed; ]);
         "categories": object && [
             "only": array && [ of string; ];
             "except": array && [ of string; ];
-] && [ sealed; ] xor array && [ of string xor array && [ of string; ]; ];
-] && [ sealed; ];
+] && (object && [ sealed; ]) xor array && [ of string xor array && [ of string; ]; ];
+] && (object && [ sealed; ]);
     "test_script": array && [ of command; ];
     "after_test": array && [ of command; ];
     "artifacts": array && [
         of object && [
             "path": string;
             "name": string;
-] && [ sealed; ] && [ required "path"; ];
+] && (object && [ sealed; ]) && [ required "path"; ];
 ];
     "before_deploy": array && [ of command; ];
     "deploy": [ enum false; ] xor array && [ of object; ];
