@@ -303,8 +303,8 @@ let convert_check = "convert_check" >::: (List.map convert_check1 [
 (*
   ;"ansible-playbook.json"
 *)
-(*
-;"ansible-role-2.0.json"
+(* BUG in schema
+  ;"ansible-role-2.0.json"
   ;"ansible-role-2.1.json"
   ;"ansible-role-2.2.json"
   ;"ansible-role-2.3.json"
@@ -351,15 +351,25 @@ let convert_check = "convert_check" >::: (List.map convert_check1 [
   ;"bungee-plugin.json"
   ;"chrome-manifest.json"
   ;"chutzpah.json"
+(* malformed, using JSON as structure
   ;"circleciconfig.json"
+*)
   ;"cirrus.json"
   ;"clasp.json"
   ;"cloudbuild.json"
-  ;"cloudify.json*"
+(* properties are listed but not in "properties" (e.g. "valid_values")
+  ;"cloudify.json"
+*)
+(* properties are listed but not in "properties"
   ;"cloud-sdk-pipeline-config-schema.json"
+*)
+(* properties are listed but not in "properties"
   ;"codecov.json"
+*)
   ;"codeship-services.json"
+(* jesus, if-then-else idiocy in a sequence of object members
   ;"codeship-steps.json"
+*)
   ;"coffeelint.json"
   ;"comet.json"
   ;"commands.json"
@@ -373,7 +383,9 @@ let convert_check = "convert_check" >::: (List.map convert_check1 [
   ;"container-structure-test.json"
   ;"content-security-policy-report-2.json"
   ;"cosmos-config.json"
+(* superfluous "scope" member as part of some types
   ;"creatomic.json"
+*)
   ;"cryproj.52.schema.json"
   ;"cryproj.53.schema.json"
   ;"cryproj.54.schema.json"
@@ -382,7 +394,9 @@ let convert_check = "convert_check" >::: (List.map convert_check1 [
   ;"cryproj.json"
   ;"csscomb.json"
   ;"csslintrc.json"
+(* properties are listed but not in "properties"
   ;"dart-build.json"
+*)
   ;"dart-test.json"
   ;"datalogic-scan2deploy-android.json"
   ;"datalogic-scan2deploy-ce.json"
@@ -651,9 +665,7 @@ let tests = "all" >::: [
   ; parsing
   ; printing
   ; convert
-(*
   ; convert_check
-*)
 ]
 
 if not !Sys.interactive then

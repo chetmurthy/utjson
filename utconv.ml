@@ -83,20 +83,26 @@ let xorList l =
     | v -> Fmt.(failwithf "conv_type: malformed type member: %a" pp_json v)
 
   let documentation_keys = [
-    "$schema"; "$id"; "title"; "description"; "$contact"
-    ; "examples"
+    "$schema"; "$id"; "title"; "description"; "$contact"; "$comment"
+    ; "examples" ; "documentation"; "enumDescriptions"
   ]
   let known_keys = documentation_keys@[
     "$ref"
-  ; "type"; "properties"; "required"; "patternProperties" ;
-    "minimum"; "maximum";
-    "exclusiveMinimum"; "exclusiveMaximum"; "minLength"; "maxLength";
-    "items"; "additionalProperties"; "minItems"; "maxItems"; "uniqueItems";
-    "id";
-    "definitions";
-    "enum"; "default";"pattern";"format";"propertyNames";
-    "anyOf";"allOf";"oneOf";"not";
-    "contentMediaType";"contentEncoding"
+  ; "type"; "properties"; "required"; "patternProperties"
+  ; "minimum"; "maximum"
+  ; "exclusiveMinimum"; "exclusiveMaximum"
+  ; "minLength"; "maxLength"
+  ; "items"; "additionalProperties"
+  ; "additionalItems"
+  ; "minItems"; "maxItems"
+  ; "minProperties"; "maxProperties"
+  ; "uniqueItems"; "id"
+  ; "definitions"
+  ; "enum"; "default";"pattern";"format";"propertyNames"
+  ; "anyOf";"allOf";"oneOf";"not"
+  ; "contentMediaType";"contentEncoding"
+  ; "const"
+  ; "dependencies"
   ]
 
   let rec conv_type_l (j : json) = match j with
@@ -147,7 +153,9 @@ let xorList l =
        | None -> []
       )@
       (match assoc_opt "items" l with
-         Some t ->
+         Some (`List l) ->
+         [Atomic [ArrayTuple (List.map conv_type0 l)]]
+       | Some (`Assoc _ as t) ->
          [Atomic [ArrayOf (conv_type0 t)]]
        | None -> []
       )@
@@ -157,17 +165,17 @@ let xorList l =
       )@
       (match (assoc_opt "minLength" l, assoc_opt "maxLength" l) with
          (None, None) -> []
-       | (None, Some _) -> Fmt.(failwithf "conv_type: maxLength requires minLength: %a" pp_json j)
-       | (Some min, max) ->
+       | (min, max) ->
          let min = match min with
-             `Int n -> n
-           | `Float f -> int_of_float f
-           | j -> Fmt.(failwithf "conv_type: minLength must be number: %a" pp_json j) in
+             Some (`Int n) -> n
+           | Some (`Float f) -> int_of_float f
+           | None -> 0
+           | Some j -> Fmt.(failwithf "conv_type: minLength must be number: %a" pp_json j) in
          let max = match max with
              None -> None
            | Some (`Int n) -> Some n
            | Some (`Float f) -> Some (int_of_float f)
-           | Some j -> Fmt.(failwithf "conv_type: minLength must be number: %a" pp_json j) in
+           | Some j -> Fmt.(failwithf "conv_type: maxLength must be number: %a" pp_json j) in
          [And(Simple JString, Atomic [(Size Bound.({it=min; exclusive = false}, {it=max; exclusive = false}))])]
       )@
       (match (assoc_opt "minItems" l, assoc_opt "maxItems" l) with
@@ -176,14 +184,29 @@ let xorList l =
          let max = match max with
              Some (`Int n) -> Some n
            | Some (`Float f) -> Some (int_of_float f)
-           | Some j -> Fmt.(failwithf "conv_type: minLength must be number: %a" pp_json j)
+           | Some j -> Fmt.(failwithf "conv_type: maxItems be number: %a" pp_json j)
            | None -> None in
          let min = match min with
              Some (`Int n) -> n
            | Some (`Float f) -> int_of_float f
-           | Some j -> Fmt.(failwithf "conv_type: minLength must be number: %a" pp_json j)
+           | Some j -> Fmt.(failwithf "conv_type: minItems must be number: %a" pp_json j)
            | None -> 0 in
          [And(Simple JArray, Atomic [(Size Bound.({it=min; exclusive = false}, {it=max; exclusive = false}))])]
+      )@
+      (match (assoc_opt "minProperties" l, assoc_opt "maxProperties" l) with
+         (None, None) -> []
+       | (min, max) ->
+         let max = match max with
+             Some (`Int n) -> Some n
+           | Some (`Float f) -> Some (int_of_float f)
+           | Some j -> Fmt.(failwithf "conv_type: maxProperties must be number: %a" pp_json j)
+           | None -> None in
+         let min = match min with
+             Some (`Int n) -> n
+           | Some (`Float f) -> int_of_float f
+           | Some j -> Fmt.(failwithf "conv_type: minProperties must be number: %a" pp_json j)
+           | None -> 0 in
+         [And(Simple JObject, Atomic [(Size Bound.({it=min; exclusive = false}, {it=max; exclusive = false}))])]
       )@
       (match (assoc_opt "minimum" l, assoc_opt "maximum" l) with
          (None, None) -> []
@@ -230,15 +253,22 @@ let xorList l =
        | None -> []
       )@
       (match assoc_opt "additionalProperties" l with
-         Some (`Bool b) -> [Atomic[Sealed (not b)]]
+         Some (`Bool b) -> [And(Simple JObject, Atomic[Sealed (not b)])]
        | Some (`Assoc _ as j) ->
          [Atomic [OrElse (andList (conv_type_l j))]]
        | Some v -> Fmt.(failwithf "conv_type: additionalProperties did not have bool or type payload: %a" pp_json v)
        | None -> []
       )@
+      (match assoc_opt "additionalItems" l with
+         Some (`Bool b) -> [And(Simple JArray, Atomic[Sealed (not b)])]
+       | Some (`Assoc _ as j) ->
+         [And(Simple JArray, Atomic [OrElse (andList (conv_type_l j))])]
+       | Some v -> Fmt.(failwithf "conv_type: additionalItems did not have bool or type payload: %a" pp_json v)
+       | None -> []
+      )@
       (match assoc_opt "required" l with
          Some (`List [])  ->
-         Fmt.(failwithf "conv_type: required had empty array payload: %a" pp_json j)
+         []
        | Some (`List l) when List.for_all isString l  ->
          [Atomic[FieldRequired (List.map (function `String s -> s | _ -> assert false) l)]]
        | Some v -> Fmt.(failwithf "conv_type: required did not have nonempty string array payload: %a" pp_json v)
@@ -248,6 +278,11 @@ let xorList l =
          Some (`List l)  ->
          [Atomic[Enum l]]
        | Some v -> Fmt.(failwithf "conv_type: enum did not have array payload: %a" pp_json v)
+       | None -> []
+      )@
+      (match assoc_opt "const" l with
+         Some j  ->
+         [Atomic[Enum [j]]]
        | None -> []
       )@
       (match assoc_opt "pattern" l with
@@ -283,6 +318,21 @@ let xorList l =
       (match assoc_opt "contentEncoding" l with
          Some (`String s)  -> [Atomic[ContentEncoding s]]
        | Some v -> Fmt.(failwithf "conv_type: contentEncoding did not have string payload: %a" pp_json v)
+       | None -> []
+      )@
+      (match assoc_opt "dependencies" l with
+         Some (`Assoc l)  ->
+         let l = List.map (fun (k, v) ->
+             match v with
+               `List fl when List.for_all isString fl ->
+               let fl = List.map (function `String s -> s | _ -> assert false) fl in
+               Impl(Atomic[FieldRequired [k]], Atomic[FieldRequired fl])
+             | (`Assoc _) as j ->
+               Impl(Atomic[FieldRequired [k]], conv_type0 j)
+             | v ->  Fmt.(failwithf "conv_type: rhs of a dependency was neither array nor object: %a" pp_json v)
+           ) l in
+         [andList l]
+       | Some v -> Fmt.(failwithf "conv_type: dependencies did not have object payload: %a" pp_json v)
        | None -> []
       )
 

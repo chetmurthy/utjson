@@ -42,6 +42,7 @@ and utype_t =
   | And of utype_t * utype_t
   | Or of utype_t * utype_t
   | Xor of utype_t * utype_t
+  | Impl of utype_t * utype_t
   | Not of utype_t
   | Atomic of atomic_utype_t list
   | Ref of string list * string

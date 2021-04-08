@@ -146,6 +146,9 @@ EXTEND
     | "&&" RIGHTA [
         t1 = utype ; "&&" ; t2 = utype -> And t1 t2
       ]
+    | "=>" RIGHTA [
+        t1 = utype ; "=>" ; t2 = utype -> Impl t1 t2
+      ]
     | "not" [
         "not" ; t = utype -> Not t
       ]

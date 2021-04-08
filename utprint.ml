@@ -71,6 +71,8 @@ EXTEND_PRINTER
       [ Xor x y -> pprintf pc "%p xor %p" next x curr y ]
     | "&&"
       [ And x y -> pprintf pc "%p && %p" next x curr y ]
+    | "=>"
+      [ Impl x y -> pprintf pc "%p => %p" next x curr y ]
     | "not"
       [ Not x -> pprintf pc "not %p" next x ]
     | "simple"
