@@ -50,12 +50,29 @@ and utype_t =
 
 type struct_item_t =
     Decls of bool * (string * utype_t) list
-  | Module of string * structure
+  | ModuleExpBinding of string * module_expr_t
   | Import of string * string
   | Local of structure * structure
   | Open of string list
 
 and structure = struct_item_t list
+
+and module_expr_t =
+    Struct of structure
+  | FunctorApp of module_expr_t * module_expr_t
+  | ModuleName of string
+  | Functor of (string * module_type_t) * module_expr_t
+
+and module_type_t =
+    Sig of signature
+  | FunctorType of (string * module_type_t) * module_type_t
+
+and signature = sig_item_t list
+
+and sig_item_t =
+    SimpleTypeBinding of string
+  | ModuleTypeBinding of string * module_type_t
+
 [@@deriving show { with_path = false },eq]
 
 type token =

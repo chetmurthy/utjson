@@ -53,7 +53,7 @@ EXTEND_PRINTER
          (fun pc (s,t) -> pprintf pc "%s = %p" s print_utype t)
          (fun pc (s,t) -> pprintf pc "and %s = %p" s print_utype t)
       ) l
-  | Module id l ->
+  | ModuleExpBinding id (Struct l) ->
     pprintf pc "module %s = struct %p end;" id
       (plist_with "" print_utype_structure_item 0) l
   | Import url id ->
