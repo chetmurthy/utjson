@@ -30,8 +30,8 @@ let assert_raises_exn_pattern ?msg pattern f =
 
 let of_string_exn s = s |> parse_string parse_utype_eoi
 let to_string t = print_utype Pprintf.empty_pc t
-let item_of_string_exn s = s |> parse_string parse_utype_structure_item_eoi
-let item_to_string t = print_utype_structure_item Pprintf.empty_pc t
+let item_of_string_exn s = s |> parse_string parse_structure_item_eoi
+let item_to_string t = print_structure_item Pprintf.empty_pc t
 
 let printer = show_utype_t
 let cmp = equal_utype_t
@@ -293,8 +293,8 @@ end ;
       )
   ]
 
-let item_of_string_exn s = s |> parse_string parse_utype_structure_item_eoi
-let item_to_string t = print_utype_structure_item Pprintf.empty_pc t
+let item_of_string_exn s = s |> parse_string parse_structure_item_eoi
+let item_to_string t = print_structure_item Pprintf.empty_pc t
 let item_printer x = "<<"^(show_struct_item_t x)^">>"
 let item_cmp = equal_struct_item_t
 

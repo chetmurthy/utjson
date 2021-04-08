@@ -12,8 +12,8 @@ value plist_with sep f sh pc l =
 
 value pr_utype = Eprinter.make "utype";
 value print_utype = Eprinter.apply pr_utype;
-value pr_utype_structure_item = Eprinter.make "utype_structure_item";
-value print_utype_structure_item = Eprinter.apply pr_utype_structure_item;
+value pr_structure_item = Eprinter.make "structure_item";
+value print_structure_item = Eprinter.apply pr_structure_item;
 value pr_base_type = Eprinter.make "base_type";
 value print_base_type = Eprinter.apply pr_base_type;
 value pr_atomic = Eprinter.make "atomic";
@@ -46,7 +46,7 @@ value print_id pc id = pprintf pc "%s" id ;
 value print_json pc j = pprintf pc "%s" (Yojson.Basic.to_string j) ;
 
 EXTEND_PRINTER
-  pr_utype_structure_item: [ [
+  pr_structure_item: [ [
     Decls recflag l ->
     pprintf pc "type%s %p;" (if recflag then " rec" else " nonrec")
       (Prtools.vlist2
@@ -55,13 +55,13 @@ EXTEND_PRINTER
       ) l
   | ModuleExpBinding id (Struct l) ->
     pprintf pc "module %s = struct %p end;" id
-      (plist_with "" print_utype_structure_item 0) l
+      (plist_with "" print_structure_item 0) l
   | Import url id ->
     pprintf pc "import %p as %s;" qstring url id
   | Local l1 l2 ->
     pprintf pc "local %p in %p end;" 
-      (plist_with "" print_utype_structure_item 0) l1
-      (plist_with "" print_utype_structure_item 0) l2
+      (plist_with "" print_structure_item 0) l1
+      (plist_with "" print_structure_item 0) l2
   ] ] ;
 
   pr_utype:

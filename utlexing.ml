@@ -59,7 +59,7 @@ let readn n lb =
   in rerec n
 
 let keywords = [
-  "module";"struct";"sig";"end";"local";"in";"of";"required";"unique";"size";"type";"and";"rec";"nonrec"
+  "module";"struct";"sig";"functor";"end";"local";"in";"of";"required";"unique";"size";"type";"and";"rec";"nonrec"
     ;"null";"string";"boolean";"number";"array";"object"
     ;"sealed";"unsealed";"bounds";"enum";"default"
     ;"true";"false";"not";"max";"min"
@@ -80,7 +80,7 @@ let rec rawtoken buf =
     | "{"|"}"
     | "="
     | ";"|","|"."
-    | "&&" | "||" | "=>"
+    | "&&" | "||" | "=>" | "->"
   ) -> (Spcl (Sedlexing.Latin1.lexeme buf), pos())
   | lident ->
     let s = Sedlexing.Latin1.lexeme buf in

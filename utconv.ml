@@ -429,7 +429,7 @@ let load_file s =
     let j = Yojson.Basic.from_file s in
     conv_type j
   else if Str.(string_match (regexp ".*\\.utj$") s 0) then
-    match Utparse0.(parse_file parse_utype_structure) s with
+    match Utparse0.(parse_file parse_structure) s with
       [t] -> t
     | l -> Local([], l)
   else Fmt.(failwithf "load_file: format not recognized: %s" s)

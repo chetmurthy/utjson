@@ -68,17 +68,17 @@ value g = Grammar.gcreate lexer;
 value (utype : Grammar.Entry.e utype_t) = Grammar.Entry.create g "utype";
 value (utype_eoi : Grammar.Entry.e utype_t) = Grammar.Entry.create g "utype_eoi";
 
-value (utype_structure : Grammar.Entry.e structure) = Grammar.Entry.create g "utype_structure";
-value (utype_structure_eoi : Grammar.Entry.e structure) = Grammar.Entry.create g "utype_structure_eoi";
+value (structure : Grammar.Entry.e structure) = Grammar.Entry.create g "structure";
+value (structure_eoi : Grammar.Entry.e structure) = Grammar.Entry.create g "structure_eoi";
 
-value (utype_structure_item : Grammar.Entry.e struct_item_t) = Grammar.Entry.create g "utype_structure_item";
-value (utype_structure_item_eoi : Grammar.Entry.e struct_item_t) = Grammar.Entry.create g "utype_structure_item_eoi";
+value (structure_item : Grammar.Entry.e struct_item_t) = Grammar.Entry.create g "structure_item";
+value (structure_item_eoi : Grammar.Entry.e struct_item_t) = Grammar.Entry.create g "structure_item_eoi";
 
 EXTEND
   GLOBAL:
     utype utype_eoi
-    utype_structure utype_structure_eoi
-    utype_structure_item utype_structure_item_eoi
+    structure structure_eoi
+    structure_item structure_item_eoi
     ;
 
     base_type: [ [
@@ -172,10 +172,10 @@ EXTEND
       ] ]
     ;
 
-    utype_structure_item: [ [
+    structure_item: [ [
         "module" ; uid=UIDENT ; "=" ; "struct" ;
-        l = utype_structure ; ";" -> ModuleExpBinding uid (Struct l)
-      | "local" ; l1 = utype_structure ; "in" ; l2 = utype_structure ; "end" ; ";" -> Local l1 l2
+        l = structure ; ";" -> ModuleExpBinding uid (Struct l)
+      | "local" ; l1 = structure ; "in" ; l2 = structure ; "end" ; ";" -> Local l1 l2
       | "type" ; rflag = [ "rec" -> True | "nonrec" -> False | -> False ] ;
         l = LIST1 [ id = LIDENT ; "=" ; t = utype -> (id, t) ] SEP "and" ;
         ";" -> Decls rflag l
@@ -184,8 +184,8 @@ EXTEND
       ] ]
     ;
 
-    utype_structure: [ [
-        l = LIST0 utype_structure_item -> l
+    structure: [ [
+        l = LIST0 structure_item -> l
       ] ]
     ;
 
@@ -209,18 +209,18 @@ EXTEND
   ;
 
   utype_eoi : [ [ e = utype ; EOI -> e ] ] ;
-  utype_structure_eoi : [ [ e = utype_structure ; EOI -> e ] ] ;
-  utype_structure_item_eoi : [ [ e = utype_structure_item ; EOI -> e ] ] ;
+  structure_eoi : [ [ e = structure ; EOI -> e ] ] ;
+  structure_item_eoi : [ [ e = structure_item ; EOI -> e ] ] ;
 END;
 
 value parse_utype = Grammar.Entry.parse utype ;
 value parse_utype_eoi = Grammar.Entry.parse utype_eoi ;
 
-value parse_utype_structure = Grammar.Entry.parse utype_structure ;
-value parse_utype_structure_eoi = Grammar.Entry.parse utype_structure_eoi ;
+value parse_structure = Grammar.Entry.parse structure ;
+value parse_structure_eoi = Grammar.Entry.parse structure_eoi ;
 
-value parse_utype_structure_item = Grammar.Entry.parse utype_structure_item ;
-value parse_utype_structure_item_eoi = Grammar.Entry.parse utype_structure_item_eoi ;
+value parse_structure_item = Grammar.Entry.parse structure_item ;
+value parse_structure_item_eoi = Grammar.Entry.parse structure_item_eoi ;
 
 value parse_string pf s = do {
   input_file.val := s ;
