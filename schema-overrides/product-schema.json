@@ -44,7 +44,7 @@
     },
     "warehouseLocation": {
       "description": "Coordinates of the warehouse where the product is located.",
-      "$ref": "https://example.com/geographical-location.schema.json"
+      "$ref": "json-schema-samples/geographical-location.schema.utj"
     }
   },
   "required": [ "productId", "productName", "price" ]

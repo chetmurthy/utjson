@@ -695,8 +695,8 @@ let convert_check = "convert_check" >::: (List.map convert_check1 [
 
 let convert = "convert" >::: [
     "convert" >:: (fun ctxt -> List.iter successf [
-        ("schema-overrides/product-schema-MODIFIED.utj",
-         "schema-overrides/product-schema-MODIFIED.json")
+        ("schema-overrides/product-schema.utj",
+         "schema-overrides/product-schema.json")
       ; ("schema-overrides/ansible-inventory.utj",
          "schemastore/src/schemas/json/ansible-inventory.json")
       ; ("schema-overrides/apibuilder-MODIFIED.utj",
