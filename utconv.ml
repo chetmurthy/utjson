@@ -85,7 +85,7 @@ let xorList l =
   let documentation_keys = [
     "$schema"; "$id"; "title"; "description"; "$contact"; "$comment"
     ; "examples"; "example" ; "documentation"; "enumDescriptions"
-    ; "deprecated"
+    ; "deprecated"; "version" ; "authors"
   ]
   let known_keys = documentation_keys@[
     "$ref"
@@ -98,11 +98,11 @@ let xorList l =
   ; "minItems"; "maxItems"
   ; "minProperties"; "maxProperties"
   ; "uniqueItems"; "id"
-  ; "definitions"
+  ; "definitions" ; "$defs"
   ; "enum"; "default";"pattern";"format";"propertyNames"
   ; "anyOf";"allOf";"oneOf";"not"
   ; "contentMediaType";"contentEncoding"
-  ; "const"
+  ; "const" ; "multipleOf"
   ; "dependencies"
   ]
 
@@ -116,6 +116,19 @@ let xorList l =
             Fmt.(failwithf "conv_type: unrecognized object-key %s in %a" k pp_json j)
         ) ;
       (match assoc_opt "definitions" l with
+         Some (`Assoc l) ->
+         l |> List.iter (fun (name, _) ->
+             forward_define_local name
+           ) ;
+         l |> List.iter (fun (name, t) ->
+             let t = conv_type0 t in
+             register_local_definition name t
+           )
+
+       | Some v -> Fmt.(failwithf "conv_type: malformed definitions member: %a" pp_json v)
+       | None -> ()
+      ) ;
+      (match assoc_opt "$defs" l with
          Some (`Assoc l) ->
          l |> List.iter (fun (name, _) ->
              forward_define_local name
@@ -162,6 +175,7 @@ let xorList l =
       )@
       (match assoc_opt "uniqueItems" l with
          Some (`Bool true) -> [Atomic [ArrayUnique]]
+       | Some (`Bool false) -> []
        | None -> []
       )@
       (match (assoc_opt "minLength" l, assoc_opt "maxLength" l) with
@@ -267,14 +281,18 @@ let xorList l =
       (match assoc_opt "additionalProperties" l with
          Some (`Bool b) -> [And(Simple JObject, Atomic[Sealed (not b)])]
        | Some (`Assoc _ as j) ->
-         [Atomic [OrElse (andList (conv_type_l j))]]
+         let l = conv_type_l j in
+         if l = [] then Fmt.(failwithf "additionalProperties %a yielded no type-constraints" pp_json j) ;
+         [Atomic [OrElse (andList l)]]
        | Some v -> Fmt.(failwithf "conv_type: additionalProperties did not have bool or type payload: %a" pp_json v)
        | None -> []
       )@
       (match assoc_opt "additionalItems" l with
          Some (`Bool b) -> [And(Simple JArray, Atomic[Sealed (not b)])]
        | Some (`Assoc _ as j) ->
-         [And(Simple JArray, Atomic [OrElse (andList (conv_type_l j))])]
+         let l = conv_type_l j in
+         if l = [] then Fmt.(failwithf "additionalItems %a yielded no type-constraints" pp_json j) ;
+         [And(Simple JArray, Atomic [OrElse (andList l)])]
        | Some v -> Fmt.(failwithf "conv_type: additionalItems did not have bool or type payload: %a" pp_json v)
        | None -> []
       )@
@@ -333,7 +351,8 @@ let xorList l =
        | None -> []
       )@
       (match assoc_opt "dependencies" l with
-         Some (`Assoc l)  ->
+         Some (`Assoc [])  -> []
+       | Some (`Assoc l)  ->
          let l = List.map (fun (k, v) ->
              match v with
                `List fl when List.for_all isString fl ->
@@ -345,6 +364,12 @@ let xorList l =
            ) l in
          [andList l]
        | Some v -> Fmt.(failwithf "conv_type: dependencies did not have object payload: %a" pp_json v)
+       | None -> []
+      )@
+      (match assoc_opt "multipleOf" l with
+         Some (`Int n)  -> [Atomic[MultipleOf (float_of_int n)]]
+       | Some (`Float n)  -> [Atomic[MultipleOf n]]
+       | Some v -> Fmt.(failwithf "conv_type: multipleOf did not have number payload: %a" pp_json v)
        | None -> []
       )
 

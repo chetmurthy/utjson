@@ -354,7 +354,9 @@ let convert_check = "convert_check" >::: (List.map convert_check1 [
 (* malformed, using JSON as structure
   ;"circleciconfig.json"
 *)
+(* "fileMatch" member at toplevel
   ;"cirrus.json"
+*)
   ;"clasp.json"
   ;"cloudbuild.json"
 (* properties are listed but not in "properties" (e.g. "valid_values")
@@ -442,7 +444,9 @@ let convert_check = "convert_check" >::: (List.map convert_check1 [
   ;"foxx-manifest.json"
   ;"function.json"
   ;"geojson.json"
+(* if-then-else
   ;"github-action.json"
+*)
   ;"github-funding.json"
   ;"github-workflow.json"
   ;"gitlab-ci.json"
@@ -458,23 +462,31 @@ let convert_check = "convert_check" >::: (List.map convert_check1 [
   ;"grunt-watch-task.json"
   ;"hadolint.json"
   ;"haxelib.json"
+(* intellij
   ;"helmfile.json"
+*)
   ;"hemtt-0.6.2.json"
   ;"host.json"
   ;"host-meta.json"
   ;"htmlhint.json"
   ;"httpmockrc.json"
+(* intellij
   ;"huskyrc.json"
+*)
   ;"imageoptimizer.json"
   ;"install.json"
   ;"io-package.json"
+(* "links" ?
   ;"jasonette.json"
+*)
   ;"jdt.json"
   ;"jekyll.json"
   ;"jovo-language-model.json"
   ;"jsbeautifyrc.json"
   ;"jsbeautifyrc-nested.json"
+(* extraneous definition -- should be an annotatiion
   ;"jsconfig.json"
+*)
   ;"jscsrc.json"
   ;"jsdoc-1.0.0.json"
   ;"jshintrc.json"
@@ -483,13 +495,17 @@ let convert_check = "convert_check" >::: (List.map convert_check1 [
   ;"jsone.json"
   ;"jsonld.json"
   ;"json-patch.json"
+(* properties are listed but not in "properties"
   ;"ksp-avc.json"
+*)
   ;"ksp-ckan.json"
   ;"kustomization.json"
   ;"launchsettings.json"
   ;"lerna.json"
   ;"libman.json"
+(* just definitions, no actual type
   ;"licenses.1.json"
+*)
   ;"lintstagedrc.schema.json"
   ;"local.settings.json"
   ;"lsdlschema-0.7.json"
@@ -506,16 +522,22 @@ let convert_check = "convert_check" >::: (List.map convert_check1 [
   ;"mtaext.json"
   ;"mta.json"
   ;"mycode.json"
+(* "fileMatch" member at toplevel
   ;"neoload.json"
+*)
   ;"nest-cli.json"
   ;"netlify.json"
   ;"nightwatch.json"
+(* "required" as a boolean member, not a list of fields
   ;"ninjs-1.0.json"
+*)
   ;"ninjs-1.1.json"
   ;"ninjs-1.2.json"
   ;"ninjs-1.3.json"
   ;"nodehawkrc.json"
+(* malformed schema in dependencies/nodeArgs
   ;"nodemon.json"
+*)
   ;"now.json"
   ;"npm-link-up.json"
   ;"npmpackagejsonlintrc.json"
@@ -528,7 +550,9 @@ let convert_check = "convert_check" >::: (List.map convert_check1 [
   ;"openweather.current.json"
   ;"openweather.roadrisk.json"
   ;"opspec-io-0.1.7.json"
+(* "tsType" ?
   ;"package.json"
+*)
   ;"package.manifest-7.0.0.json"
   ;"package.manifest-8.0.0.json"
   ;"package.manifest.json"
@@ -550,9 +574,13 @@ let convert_check = "convert_check" >::: (List.map convert_check1 [
   ;"project-1.0.0-rc1.json"
   ;"project-1.0.0-rc2.json"
   ;"project.json"
+(* if-then-else
   ;"prometheus.json"
+*)
   ;"prometheus.rules.json"
+(* "defaultSnippets" -- is this like "examples" ?
   ;"proxies.json"
+*)
   ;"pubspec.json"
   ;"pyrseas-0.8.json"
   ;"renovate.json"
@@ -581,13 +609,17 @@ let convert_check = "convert_check" >::: (List.map convert_check1 [
   ;"sarif-external-property-file.json"
   ;"sarif.json"
   ;"schema-catalog.json"
+(* exclusiveMinimum old style
   ;"schema-draft-v4.json"
+*)
   ;"schema-org-action.json"
   ;"schema-org-contact-point.json"
   ;"schema-org-place.json"
   ;"schema-org-thing.json"
   ;"semgrep.json"
+(* properties are listed but not in "properties"
   ;"servicehub.config.schema.json"
+*)
   ;"servicehub.service.schema.json"
   ;"settings.job.json"
   ;"solidaritySchema.json"
@@ -602,26 +634,40 @@ let convert_check = "convert_check" >::: (List.map convert_check1 [
   ;"stylintrc.json"
   ;"swagger-2.0.json"
   ;"swcrc.json"
+(* definitions foolishness
   ;"taskfile.json"
+*)
   ;"taurus.json"
   ;"template.json"
   ;"templatesources.json"
+(* "@comment"
   ;"toolinfo.1.1.0.json"
+*)
   ;"traefik-v2-file-provider.json"
   ;"traefik-v2.json"
+(* definition fuckery
   ;"travis.json"
+*)
+(* more "//" with a bunch of documentation
   ;"tsconfig.json"
+*)
   ;"tsd.json"
   ;"tsdrc.json"
   ;"ts-force-config.json"
+(* based on outdated draft
   ;"tslint.json"
+*)
   ;"tsoa.json"
   ;"typewiz.json"
   ;"typings.json"
   ;"typingsrc.json"
+(* properties are listed but not in "properties"
   ;"ui5-manifest.json"
+*)
   ;"up.json"
+(* looks like based on outdated schema draft
   ;"vega.json"
+*)
   ;"vega-lite.json"
   ;"vim-addon-info.json"
   ;"vs-2017.3.host.json"
@@ -677,9 +723,7 @@ let tests = "all" >::: [
   ; parsing
   ; printing
   ; convert
-(*
   ; convert_check
-*)
 ]
 
 if not !Sys.interactive then
