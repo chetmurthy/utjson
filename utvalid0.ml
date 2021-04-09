@@ -81,14 +81,14 @@ let elab env t =
       let m = (D (l, env)) in
       (m::env, m::segacc)
 
-    | StModuleBinding(mid, Struct l) ->
+    | StModuleBinding(mid, MeStruct l) ->
       let (env', segacc') = List.fold_left elabrec (env,[]) l in
       let m = M(mid, segacc') in
       (m::env, m::segacc')
 
     | StImport(url,s) ->
       let t = Utconv.load_file url in
-      elabrec (env, segacc) (StModuleBinding (s, Struct [t]))
+      elabrec (env, segacc) (StModuleBinding (s, MeStruct [t]))
 
     | StLocal(l1, l2) ->
       let (env1, _) = List.fold_left elabrec (env, []) l1 in

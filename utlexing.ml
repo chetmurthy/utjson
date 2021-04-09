@@ -63,7 +63,7 @@ let keywords = [
     ;"null";"string";"boolean";"number";"array";"object"
     ;"sealed";"unsealed";"bounds";"enum";"default"
     ;"true";"false";"not";"max";"min"
-    ;"import";"open";"as";"multipleOf";"format";"propertyNames";"orelse"
+    ;"import";"open";"include";"as";"multipleOf";"format";"propertyNames";"orelse"
     ;"xor"
     ;"contentMediaType";"contentEncoding"
   ]

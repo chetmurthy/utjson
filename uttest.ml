@@ -174,6 +174,15 @@ let parsing = "parsing" >::: [
       ; ((StTypes (false,
                  [("integer", (And ((Simple JNumber), (Atomic [(MultipleOf 1.)]))))])),
          "type integer = number && [ multipleOf 1.0 ; ] ;")
+      ; ((StOpen ["M"; "N"]),
+         "open M.N;")
+      ; ((StInclude ["M"; "N"]),
+         "include M.N;")
+      ; ((StModuleBinding ("M",
+                           (MeStruct [(StTypes (false, [("t", (Simple JObject))]))]))),
+         "module M = struct type t = object ; end;")
+      ; ((StModuleType ("MTY", (MtSig [(SiType "t")]))),
+         "module type MTY = sig t ; end;")
       ; ((StLocal (
           [(StImport ("https://example.com/geographical-location.schema.json",
                     "GeoLoc"))
@@ -240,16 +249,43 @@ end ;
 
       )
   ; "module_type" >:: (fun ctxt -> List.iter success_module_type [
+      (MtPath ["M";"N"],
+       "M.N")
+    ; ((MtSig []),
+       "sig end")
+    ; ((MtFunctorType (("M", (MtSig [(SiType "u")])), (MtSig [(SiType "t")]))),
+       "functor (M: sig u; end) -> sig t ; end")
+    ; ((MtSig
+          [(SiType "t"); (SiModuleBinding ("M", (MtPath ["MTY"])));
+           (SiModuleType ("MTY2", (MtSig [(SiType "u")])))]),
+       "sig t; module M : MTY ; module type MTY2 = sig u ; end ; end")
       ]
 
       )
   ; "module_expr" >:: (fun ctxt -> List.iter success_module_expr [
+      (MePath ["M";"N"],
+       "M.N")
+    ; ((MeFunctorApp ((MePath ["M"]), (MePath ["N"]))),
+       "M(N)")
+    ; ((MeFunctorApp ((MePath ["M"]),
+                      (MeStruct [(StTypes (false, [("t", (Simple JObject))]))]))),
+       "M(struct type t = object ; end)")
+    ; ((MeFunctor (("M1", (MtSig [])),
+                   (MeFunctor (("M2", (MtSig [])),
+                               (MeStruct [(StTypes (false, [("t", (Simple JObject))]))])))
+                  )),
+       "functor (M1: sig end)(M2:sig end) -> struct type t = object ; end")
       ]
 
       )
   ; "sig_item" >:: (fun ctxt -> List.iter success_sig_item [
-      ]
-
+      ((SiInclude ["M"; "N"]),
+       "include M.N;")
+    ; ((SiModuleBinding ("M", (MtPath ["MTY"]))),
+       "module M : MTY;")
+    ; ((SiModuleType ("MTY", (MtSig [(SiType "t")]))),
+       "module type MTY = sig t ; end;")
+    ]
       )
   ]
 

@@ -189,9 +189,10 @@ EXTEND
     ;
 
     module_type: [ [
-        "sig" ; l = signature ; "end" -> Sig l
+        "sig" ; l = signature ; "end" -> MtSig l
       | "functor" ; l = LIST1 module_param ; "->" ; m=module_type ->
-        List.fold_right (fun (s,mty) rhs -> FunctorType (s,mty) rhs) l m
+        List.fold_right (fun (s,mty) rhs -> MtFunctorType (s,mty) rhs) l m
+      | p = module_path -> MtPath p
       ] ]
     ;
 
@@ -201,15 +202,15 @@ EXTEND
     ;
 
     module_expr: [ [
-        "struct" ; l = structure ; "end" -> Struct l
-      | m1 = module_expr ; "(" ; m2 = module_expr ; ")" -> FunctorApp m1 m2
+        "struct" ; l = structure ; "end" -> MeStruct l
+      | m1 = module_expr ; "(" ; m2 = module_expr ; ")" -> MeFunctorApp m1 m2
       | "functor" ; l = LIST1 module_param ; "->" ; m=module_expr ->
-        List.fold_right (fun (s,mty) rhs -> Functor (s,mty) rhs) l m
-      | p = module_path -> ModulePath p
+        List.fold_right (fun (s,mty) rhs -> MeFunctor (s,mty) rhs) l m
+      | p = module_path -> MePath p
       ] ]
     ;
     module_param: [ [
-        "(" ; id = UDENT ; mty = module_type ; ")" -> (id, mty)
+        "(" ; id = UIDENT ; ":" ; mty = module_type ; ")" -> (id, mty)
       ] ]
     ;
 
@@ -225,9 +226,21 @@ EXTEND
       | "include" ; p = module_path ; ";" -> StInclude p
       ] ]
     ;
+    sig_item: [ [
+        s = LIDENT ; ";" -> SiType s
+      | "module" ; uid = UIDENT ; ":" ; mty=module_type ; ";" -> SiModuleBinding uid mty
+      | "module" ; "type" ; uid = UIDENT ; "=" ; mty=module_type ; ";" -> SiModuleType uid mty
+      | "include" ; p = module_path ; ";" -> SiInclude p
+      ] ]
+    ;
 
     structure: [ [
         l = LIST0 struct_item -> l
+      ] ]
+    ;
+
+    signature: [ [
+        l = LIST0 sig_item -> l
       ] ]
     ;
 
@@ -253,6 +266,9 @@ EXTEND
   utype_eoi : [ [ e = utype ; EOI -> e ] ] ;
   structure_eoi : [ [ e = structure ; EOI -> e ] ] ;
   struct_item_eoi : [ [ e = struct_item ; EOI -> e ] ] ;
+  sig_item_eoi : [ [ e = sig_item ; EOI -> e ] ] ;
+  module_expr_eoi : [ [ e = module_expr ; EOI -> e ] ] ;
+  module_type_eoi : [ [ e = module_type ; EOI -> e ] ] ;
 END;
 
 value parse_utype = Grammar.Entry.parse utype ;

@@ -62,14 +62,15 @@ and module_path_t = string list
 and structure = struct_item_t list
 
 and module_expr_t =
-    Struct of structure
-  | FunctorApp of module_expr_t * module_expr_t
-  | ModulePath of module_path_t
-  | Functor of (string * module_type_t) * module_expr_t
+    MeStruct of structure
+  | MeFunctorApp of module_expr_t * module_expr_t
+  | MePath of module_path_t
+  | MeFunctor of (string * module_type_t) * module_expr_t
 
 and module_type_t =
-    Sig of signature
-  | FunctorType of (string * module_type_t) * module_type_t
+    MtSig of signature
+  | MtFunctorType of (string * module_type_t) * module_type_t
+  | MtPath of module_path_t
 
 and signature = sig_item_t list
 
@@ -77,6 +78,7 @@ and sig_item_t =
     SiType of string
   | SiModuleBinding of string * module_type_t
   | SiModuleType of string * module_type_t
+  | SiInclude of module_path_t
 
 [@@deriving show { with_path = false },eq]
 

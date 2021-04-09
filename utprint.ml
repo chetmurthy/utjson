@@ -58,14 +58,15 @@ value print_module_path pc l = plist_with "." string 0 pc l ;
 
 EXTEND_PRINTER
   pr_module_expr: [ [
-    Struct l -> pprintf pc "struct@;%p@;end" (plist_with "" print_struct_item 2) l
-  | FunctorApp me1 me2 ->  pprintf pc "%p(%p)" print_module_expr me1 print_module_expr me2
-  | ModulePath p -> print_module_path pc p
-  | Functor (id, mty) me ->  pprintf pc "functor (%s:%p) -> %p" id print_module_type mty print_module_expr me
+    MeStruct l -> pprintf pc "struct@;%p@;end" (plist_with "" print_struct_item 2) l
+  | MeFunctorApp me1 me2 ->  pprintf pc "%p(%p)" print_module_expr me1 print_module_expr me2
+  | MePath p -> print_module_path pc p
+  | MeFunctor (id, mty) me ->  pprintf pc "functor (%s:%p) -> %p" id print_module_type mty print_module_expr me
   ] ] ;
   pr_module_type: [ [
-    Sig l -> pprintf pc "sig@;%p@;end" (plist_with "" print_sig_item 2) l
-  | FunctorType (id, mty1) mty2 -> pprintf pc "functor (%s:%p) -> %p" id print_module_type mty1 print_module_type mty2
+    MtSig l -> pprintf pc "sig@;%p@;end" (plist_with "" print_sig_item 2) l
+  | MtFunctorType (id, mty1) mty2 -> pprintf pc "functor (%s:%p) -> %p" id print_module_type mty1 print_module_type mty2
+  | MtPath p -> print_module_path pc p
   ] ] ;
   pr_sig_item: [ [
     SiType s -> pprintf pc "%s;" s
@@ -73,6 +74,8 @@ EXTEND_PRINTER
     pprintf pc "module %s : %p;" s print_module_type mty
   | SiModuleType s mty ->
     pprintf pc "module type %s = %p;" s print_module_type mty
+  | SiInclude p ->
+    pprintf pc "include %p;" print_module_path p
   ] ] ;
   pr_struct_item: [ [
     StTypes recflag l ->
