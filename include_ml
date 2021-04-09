@@ -41,13 +41,37 @@ open Utlexing ;;
 open Utparse0 ;;
 #load "utprint.cmo";;
 open Utprint ;;
+
+let top pp x = Fmt.(pf stdout "<< %s >>" (pp Pprintf.empty_pc x)) ;;
+
+let top_utype x = top print_utype x ;;
+#install_printer top_utype ;;
+
+let top_struct_item x = top print_struct_item x ;;
+#install_printer top_struct_item ;;
+
+let top_sig_item x = top print_sig_item x ;;
+#install_printer top_sig_item ;;
+
+let top_module_type x = top print_module_type x ;;
+#install_printer top_module_type ;;
+
+let top_module_expr x = top print_module_expr x ;;
+#install_printer top_module_expr ;;
+
 #load "utconv.cmo";;
 open Utconv ;;
+#load "uttypecheck.cmo";;
+open Uttypecheck ;;
 #load "utvalid0.cmo";;
 open Utvalid0.Env ;;
 open Utvalid0 ;;
-#load "uttest.cmo";;
-open Uttest ;;
+(*
+#load "syntax_test.cmo";;
+open Syntax_test ;;
+*)
+#load "typing_test.cmo";;
+open Typing_test ;;
 
 (*
 #use "jq_examples.ml";;

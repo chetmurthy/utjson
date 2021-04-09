@@ -8,6 +8,18 @@ syntax_test.cmx : \
     utprint.cmx \
     utparse0.cmx \
     utconv.cmx
+typing_test.cmo : \
+    utypes.cmo \
+    uttypecheck.cmo \
+    utprint.cmo \
+    utparse0.cmo \
+    utconv.cmo
+typing_test.cmx : \
+    utypes.cmx \
+    uttypecheck.cmx \
+    utprint.cmx \
+    utparse0.cmx \
+    utconv.cmx
 utconv.cmo : \
     utypes.cmo \
     ututil.cmo \

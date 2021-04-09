@@ -35,11 +35,17 @@ let traverse_mty p mty =
   in
   trec (p, mty)
 
-let lookup_mpath env (h::t as p) =
+let lookup_module env (h::t as p) =
   match Env.lookup env h with
-    Env.ModuleType _ -> Fmt.(failwith "lookup_mpath: path %a refers to a module_type" (list string) p)
-  | Env.Type _ -> Fmt.(failwith "lookup_mpath: internal error, path was %a" (list string) p)
+    Env.ModuleType _ -> Fmt.(failwith "lookup_module: path %a refers to a module_type" (list string) p)
+  | Env.Type _ -> Fmt.(failwith "lookup_module: internal error, path was %a" (list string) p)
   | Env.Module mty -> traverse_mty t mty
+
+let lookup_module_type env (h::t as p) =
+  match Env.lookup env h with
+    Env.Module _ -> Fmt.(failwith "lookup_module_type: path %a refers to a module" (list string) p)
+  | Env.Type _ -> Fmt.(failwith "lookup_module_type: internal error, path was %a" (list string) p)
+  | Env.ModuleType mty -> traverse_mty t mty
 
 let satisfies_constraint env ~lhs ~rhs =
   match (lhs, rhs) with
@@ -116,7 +122,7 @@ and tc_struct_item env = function
     tc_signature env l2
 
   | StOpen p as st ->
-    let mty = lookup_mpath env p in begin match mty with
+    let mty = lookup_module env p in begin match mty with
         MtSig l ->
         let (env, _) = tc_signature env l in
         (env, [])
@@ -125,7 +131,7 @@ and tc_struct_item env = function
     end
 
   | StInclude p as st ->
-    let mty = lookup_mpath env p in begin match mty with
+    let mty = lookup_module env p in begin match mty with
         MtSig l ->
         tc_signature env l
 
@@ -159,7 +165,7 @@ and tc_sig_item env = function
     let mty = tc_module_type env mty in
     (Env.push_module_type env (mid, mty), [SiModuleType (mid, mty)])
   | SiInclude p ->
-    let mty = lookup_mpath env p in begin match mty with
+    let mty = lookup_module env p in begin match mty with
         MtSig l ->
         tc_signature env l
       | _ -> Fmt.(failwith "tc_sig_item: cannot typecheck %a, path does not denote a module" (list string) p)
@@ -176,6 +182,9 @@ and tc_module_expr env = function
 
   | MeFunctorApp(me1,me2) as me -> begin match (tc_module_expr env me1, tc_module_expr env me2) with
       (MtFunctorType((mid, formal_mty), resmty), actual_mty) ->
+      let formal_mty = tc_module_type env formal_mty in
+      let actual_mty = tc_module_type env actual_mty in
+      let resmty = tc_module_type (Env.push_module env (mid, formal_mty)) resmty in
       satisfies_constraint env ~lhs:actual_mty ~rhs:formal_mty ;
       substitute (mid, actual_mty) resmty
 
@@ -183,7 +192,7 @@ and tc_module_expr env = function
     end
 
   | MePath p as st ->
-    lookup_mpath env p
+    lookup_module env p
 
   | MeFunctor((mid, argmty), me) ->
     let resmty = tc_module_expr (Env.push_module env (mid, argmty)) me in
@@ -198,5 +207,5 @@ and tc_module_type env = function
     let resty = tc_module_type (Env.push_module env (mid, argty)) resty in
     MtFunctorType ((mid, argty), resty)
   | MtPath p ->
-    lookup_mpath env p
+    lookup_module_type env p
 

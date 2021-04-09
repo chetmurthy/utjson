@@ -5,17 +5,21 @@ BASEPACKAGES=bos,uutf,fmt,camlp5.extprint,pcre,yaml
 PACKAGES=$(BASEPACKAGES),camlp5.extprint,camlp5.extend,camlp5.pprintf,pa_ppx.deriving_plugins.std,pa_ppx.base.link,pa_ppx.runtime,pa_ppx.testutils,sedlex
 
 OBJ=ututil.cmo utypes.cmo utlexing.cmo utparse0.cmo utprint.cmo utconv.cmo uttypecheck.cmo utvalid0.cmo
-OML=ututil.ml utypes.ml syntax_test.ml utconv.ml uttypecheck.ml utvalid0.ml
+OML=ututil.ml utypes.ml syntax_test.ml typing_test.ml utconv.ml uttypecheck.ml utvalid0.ml
 LEXML=utlexing.ml
 RML=utparse0.ml utprint.ml
 
-all: $(OBJ) syntax_test
+all: $(OBJ) syntax_test typing_test
 
 test:: all
 	rm -rf _build && mkdir -p _build
 	./syntax_test
+	./typing_test
 
 syntax_test: $(OBJ) syntax_test.cmo
+	$(OCAMLFIND) ocamlc $(DEBUG) -package $(PACKAGES),oUnit -linkpkg -linkall -syntax camlp5r $^ -o $@
+
+typing_test: $(OBJ) typing_test.cmo
 	$(OCAMLFIND) ocamlc $(DEBUG) -package $(PACKAGES),oUnit -linkpkg -linkall -syntax camlp5r $^ -o $@
 
 utparse0.cmo: utparse0.ml

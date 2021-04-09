@@ -15,17 +15,24 @@ value print_utype = Eprinter.apply pr_utype;
 
 value pr_module_expr = Eprinter.make "module_expr";
 value print_module_expr = Eprinter.apply pr_module_expr;
+
 value pr_module_type = Eprinter.make "module_type";
 value print_module_type = Eprinter.apply pr_module_type;
 
 value pr_struct_item = Eprinter.make "struct_item";
 value print_struct_item = Eprinter.apply pr_struct_item;
+
 value pr_sig_item = Eprinter.make "sig_item";
 value print_sig_item = Eprinter.apply pr_sig_item;
+
 value pr_base_type = Eprinter.make "base_type";
 value print_base_type = Eprinter.apply pr_base_type;
+
 value pr_atomic = Eprinter.make "atomic";
 value print_atomic = Eprinter.apply pr_atomic;
+
+value print_structure pc l = plist_with "" print_struct_item 2 pc l ;
+value print_signature pc l = plist_with "" print_sig_item 2 pc l ;
 
 value qstring pc s =
   pprintf pc "\"%s\"" s
@@ -58,13 +65,13 @@ value print_module_path pc l = plist_with "." string 0 pc l ;
 
 EXTEND_PRINTER
   pr_module_expr: [ [
-    MeStruct l -> pprintf pc "struct@;%p@;end" (plist_with "" print_struct_item 2) l
+    MeStruct l -> pprintf pc "struct@;%p@;end" print_structure l
   | MeFunctorApp me1 me2 ->  pprintf pc "%p(%p)" print_module_expr me1 print_module_expr me2
   | MePath p -> print_module_path pc p
   | MeFunctor (id, mty) me ->  pprintf pc "functor (%s:%p) -> %p" id print_module_type mty print_module_expr me
   ] ] ;
   pr_module_type: [ [
-    MtSig l -> pprintf pc "sig@;%p@;end" (plist_with "" print_sig_item 2) l
+    MtSig l -> pprintf pc "sig@;%p@;end" print_signature l
   | MtFunctorType (id, mty1) mty2 -> pprintf pc "functor (%s:%p) -> %p" id print_module_type mty1 print_module_type mty2
   | MtPath p -> print_module_path pc p
   ] ] ;
