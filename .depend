@@ -38,6 +38,14 @@ utconv.cmx : \
     utypes.cmx \
     ututil.cmx \
     utparse0.cmx
+uteval.cmo : \
+    utypes.cmo \
+    ututil.cmo \
+    uttypecheck.cmo
+uteval.cmx : \
+    utypes.cmx \
+    ututil.cmx \
+    uttypecheck.cmx
 uttypecheck.cmo : \
     utypes.cmo \
     ututil.cmo \
