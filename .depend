@@ -1,3 +1,13 @@
+syntax_test.cmo : \
+    utypes.cmo \
+    utprint.cmo \
+    utparse0.cmo \
+    utconv.cmo
+syntax_test.cmx : \
+    utypes.cmx \
+    utprint.cmx \
+    utparse0.cmx \
+    utconv.cmx
 utconv.cmo : \
     utypes.cmo \
     ututil.cmo \
@@ -6,16 +16,6 @@ utconv.cmx : \
     utypes.cmx \
     ututil.cmx \
     utparse0.cmx
-uttest.cmo : \
-    utypes.cmo \
-    utprint.cmo \
-    utparse0.cmo \
-    utconv.cmo
-uttest.cmx : \
-    utypes.cmx \
-    utprint.cmx \
-    utparse0.cmx \
-    utconv.cmx
 uttypecheck.cmo : \
     utypes.cmo \
     ututil.cmo \
