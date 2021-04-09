@@ -266,6 +266,7 @@ EXTEND
   utype_eoi : [ [ e = utype ; EOI -> e ] ] ;
   structure_eoi : [ [ e = structure ; EOI -> e ] ] ;
   struct_item_eoi : [ [ e = struct_item ; EOI -> e ] ] ;
+  signature_eoi : [ [ e = signature ; EOI -> e ] ] ;
   sig_item_eoi : [ [ e = sig_item ; EOI -> e ] ] ;
   module_expr_eoi : [ [ e = module_expr ; EOI -> e ] ] ;
   module_type_eoi : [ [ e = module_type ; EOI -> e ] ] ;

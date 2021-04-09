@@ -27,11 +27,11 @@ let traverse_mty p mty =
         match l |> List.find_map (function
               SiModuleBinding(h', mty) when h=h' -> Some mty
             | _ -> None) with
-          None -> Fmt.(failwith "lookup_mpath: cannot resolve, env lookup failure" (list string) p)
+          None -> Fmt.(failwith "traverse_mty: cannot resolve, env lookup failure" (list string) p)
         | Some mty ->
           trec (t, mty)
       end
-    | _ -> Fmt.(failwith "tc_struct_item: cannot resolve %a, intermediate path does not denote a module" (list string) p)
+    | _ -> Fmt.(failwith "traverse_mty: cannot resolve %a, intermediate path does not denote a module" (list string) p)
   in
   trec (p, mty)
 
@@ -46,11 +46,24 @@ let lookup_module env (h::t as p) =
   | Env.Type -> Fmt.(failwith "lookup_module: internal error, path was %a" (list string) p)
   | Env.Module mty -> traverse_mty t mty
 
-let lookup_module_type env (h::t as p) =
-  match Env.lookup env h with
-    Env.Module mty -> traverse_mty t mty
-  | Env.Type -> Fmt.(failwith "lookup_module_type: internal error, path was %a" (list string) p)
-  | Env.ModuleType mty -> traverse_mty t mty
+let lookup_module_type env p =
+  match p with
+    [h] -> begin match Env.lookup env h with
+        Env.ModuleType mty -> mty
+      | Env.Type _ | Env.Module _ -> Fmt.(failwithf "lookup_module_type: path %a did not map to module_type" (list string) p)
+    end
+  | [] -> Fmt.(failwithf "lookup_module_type: internal error")
+  | p ->
+    let (last, p) = sep_last p in
+    match lookup_module env p with
+      MtSig l -> begin
+        match l |> List.find_map (function
+              SiModuleType(h', mty) when last=h' -> Some mty
+            | _ -> None) with
+          None -> Fmt.(failwith "lookup_module_type: cannot resolve, env lookup failure" (list string) p)
+        | Some mty ->
+          mty
+      end
 
 let satisfies_constraint env ~lhs ~rhs =
   match (lhs, rhs) with
@@ -68,36 +81,7 @@ let fresh s =
     num = matched_group 2 s in
     let num = if num = "" then -1 else int_of_string num in
     prefix^(string_of_int (num+1))
-else Fmt.(failwithf "fresh: internal error")
-
-let substitute_module_type (mid, actual_mty) mty =
-  let rec subst_mt (mid, actual_mty) = function
-      MtSig l -> MtSig (List.map (subst_si (mid, actual_mty)) l)
-    | MtFunctorType ((mid', argmty), resmty)->
-      let resmty =
-        if mid = mid' then
-          let mid' = fresh mid in
-          subst_mt (mid, MtPath [mid']) resmty
-        else resmty in
-      let argmty = subst_mt (mid, actual_mty) argmty in
-      let resmty = subst_mt (mid, actual_mty) resmty in
-      MtFunctorType ((mid', argmty), resmty)
-
-    | MtPath (h::t) when mid = h ->
-      traverse_mty t actual_mty    
-
-    | MtPath _ as mty -> mty
-
-  and subst_si (mid, actual_mty) = function
-      SiType _ as si -> si
-    | SiModuleBinding (mid', mty) ->
-      SiModuleBinding (mid', subst_mt (mid, actual_mty) mty)
-
-    | SiModuleType  (mid', mty) ->
-      SiModuleType (mid', subst_mt (mid, actual_mty) mty)
-
-    | SiInclude _ -> Fmt.(failwithf "subst_si: internal error")
-  in subst_mt (mid, actual_mty) mty
+  else Fmt.(failwithf "fresh: internal error")
 
 let rec tc_utype env = function
     Simple _ as ut -> ut
@@ -232,7 +216,7 @@ and tc_module_expr env = function
       let actual_mty = tc_module_type env actual_mty in
       let resmty = tc_module_type (Env.push_module env (mid, formal_mty)) resmty in
       satisfies_constraint env ~lhs:actual_mty ~rhs:formal_mty ;
-      substitute_module_type (mid, actual_mty) resmty
+      resmty
 
       | (lhs, _) -> Fmt.(failwithf "tc_module_expr: type of lhs not a functor-type %a" pp_module_type_t lhs)
     end
