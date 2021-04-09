@@ -1,3 +1,13 @@
+schemastore_test.cmo : \
+    utypes.cmo \
+    utprint.cmo \
+    utparse0.cmo \
+    utconv.cmo
+schemastore_test.cmx : \
+    utypes.cmx \
+    utprint.cmx \
+    utparse0.cmx \
+    utconv.cmx
 syntax_test.cmo : \
     utypes.cmo \
     utprint.cmo \
