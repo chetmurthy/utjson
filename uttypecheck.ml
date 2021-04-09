@@ -48,7 +48,7 @@ let lookup_module env (h::t as p) =
 
 let lookup_module_type env (h::t as p) =
   match Env.lookup env h with
-    Env.Module _ -> Fmt.(failwith "lookup_module_type: path %a refers to a module" (list string) p)
+    Env.Module mty -> traverse_mty t mty
   | Env.Type -> Fmt.(failwith "lookup_module_type: internal error, path was %a" (list string) p)
   | Env.ModuleType mty -> traverse_mty t mty
 
