@@ -70,32 +70,34 @@ let fresh s =
     prefix^(string_of_int (num+1))
 else Fmt.(failwithf "fresh: internal error")
 
-let rec substitute (mid, actual_mty) = function
-    MtSig l -> MtSig (List.map (subst_sig_item (mid, actual_mty)) l)
-  | MtFunctorType ((mid', argmty), resmty)->
-    let resmty =
-      if mid = mid' then
-        let mid' = fresh mid in
-        substitute (mid, MtPath [mid']) resmty
-      else resmty in
-    let argmty = substitute (mid, actual_mty) argmty in
-    let resmty = substitute (mid, actual_mty) resmty in
-    MtFunctorType ((mid', argmty), resmty)
+let substitute_module_type (mid, actual_mty) mty =
+  let rec subst_mt (mid, actual_mty) = function
+      MtSig l -> MtSig (List.map (subst_si (mid, actual_mty)) l)
+    | MtFunctorType ((mid', argmty), resmty)->
+      let resmty =
+        if mid = mid' then
+          let mid' = fresh mid in
+          subst_mt (mid, MtPath [mid']) resmty
+        else resmty in
+      let argmty = subst_mt (mid, actual_mty) argmty in
+      let resmty = subst_mt (mid, actual_mty) resmty in
+      MtFunctorType ((mid', argmty), resmty)
 
-  | MtPath (h::t) when mid = h ->
-    traverse_mty t actual_mty    
+    | MtPath (h::t) when mid = h ->
+      traverse_mty t actual_mty    
 
-  | MtPath _ as mty -> mty
+    | MtPath _ as mty -> mty
 
-and subst_sig_item (mid, actual_mty) = function
-    SiType _ as si -> si
-  | SiModuleBinding (mid', mty) ->
-    SiModuleBinding (mid', substitute (mid, actual_mty) mty)
+  and subst_si (mid, actual_mty) = function
+      SiType _ as si -> si
+    | SiModuleBinding (mid', mty) ->
+      SiModuleBinding (mid', subst_mt (mid, actual_mty) mty)
 
-  | SiModuleType  (mid', mty) ->
-    SiModuleType (mid', substitute (mid, actual_mty) mty)
+    | SiModuleType  (mid', mty) ->
+      SiModuleType (mid', subst_mt (mid, actual_mty) mty)
 
-  | SiInclude _ -> Fmt.(failwithf "subst_sig_item: internal error")
+    | SiInclude _ -> Fmt.(failwithf "subst_si: internal error")
+  in subst_mt (mid, actual_mty) mty
 
 let rec tc_utype env = function
     Simple _ as ut -> ut
@@ -230,7 +232,7 @@ and tc_module_expr env = function
       let actual_mty = tc_module_type env actual_mty in
       let resmty = tc_module_type (Env.push_module env (mid, formal_mty)) resmty in
       satisfies_constraint env ~lhs:actual_mty ~rhs:formal_mty ;
-      substitute (mid, actual_mty) resmty
+      substitute_module_type (mid, actual_mty) resmty
 
       | (lhs, _) -> Fmt.(failwithf "tc_module_expr: type of lhs not a functor-type %a" pp_module_type_t lhs)
     end
