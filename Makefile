@@ -4,8 +4,8 @@ NOT_OCAMLFIND=not-ocamlfind
 BASEPACKAGES=bos,uutf,fmt,camlp5.extprint,pcre,yaml
 PACKAGES=$(BASEPACKAGES),camlp5.extprint,camlp5.extend,camlp5.pprintf,pa_ppx.deriving_plugins.std,pa_ppx.base.link,pa_ppx.runtime,pa_ppx.testutils,sedlex
 
-OBJ=ututil.cmo utypes.cmo utlexing.cmo utparse0.cmo utprint.cmo utconv.cmo utvalid0.cmo
-OML=ututil.ml utypes.ml uttest.ml utconv.ml utvalid0.ml
+OBJ=ututil.cmo utypes.cmo utlexing.cmo utparse0.cmo utprint.cmo utconv.cmo uttypecheck.cmo utvalid0.cmo
+OML=ututil.ml utypes.ml uttest.ml utconv.ml uttypecheck.ml utvalid0.ml
 LEXML=utlexing.ml
 RML=utparse0.ml utprint.ml
 

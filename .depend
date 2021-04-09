@@ -16,6 +16,14 @@ uttest.cmx : \
     utprint.cmx \
     utparse0.cmx \
     utconv.cmx
+uttypecheck.cmo : \
+    utypes.cmo \
+    ututil.cmo \
+    utconv.cmo
+uttypecheck.cmx : \
+    utypes.cmx \
+    ututil.cmx \
+    utconv.cmx
 ututil.cmo :
 ututil.cmx :
 utvalid0.cmo : \
