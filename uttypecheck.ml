@@ -35,16 +35,21 @@ let traverse_mty p mty =
   in
   trec (p, mty)
 
+let lookup_type env h =
+  match Env.lookup env h with
+    Env.Type -> ()
+  | _ ->  Fmt.(failwith "lookup_type: id %s refers to a module_type or module" h)
+
 let lookup_module env (h::t as p) =
   match Env.lookup env h with
     Env.ModuleType _ -> Fmt.(failwith "lookup_module: path %a refers to a module_type" (list string) p)
-  | Env.Type _ -> Fmt.(failwith "lookup_module: internal error, path was %a" (list string) p)
+  | Env.Type -> Fmt.(failwith "lookup_module: internal error, path was %a" (list string) p)
   | Env.Module mty -> traverse_mty t mty
 
 let lookup_module_type env (h::t as p) =
   match Env.lookup env h with
     Env.Module _ -> Fmt.(failwith "lookup_module_type: path %a refers to a module" (list string) p)
-  | Env.Type _ -> Fmt.(failwith "lookup_module_type: internal error, path was %a" (list string) p)
+  | Env.Type -> Fmt.(failwith "lookup_module_type: internal error, path was %a" (list string) p)
   | Env.ModuleType mty -> traverse_mty t mty
 
 let satisfies_constraint env ~lhs ~rhs =
@@ -93,7 +98,46 @@ and subst_sig_item (mid, actual_mty) = function
   | SiInclude _ -> Fmt.(failwithf "subst_sig_item: internal error")
 
 let rec tc_utype env = function
-  ut -> ut
+    Simple _ as ut -> ut
+  | And (ut1, ut2) -> And(tc_utype env ut1, tc_utype env ut2)
+  | Or (ut1, ut2) -> Or(tc_utype env ut1, tc_utype env ut2)
+  | Xor (ut1, ut2) -> Xor(tc_utype env ut1, tc_utype env ut2)
+  | Impl (ut1, ut2) -> Impl(tc_utype env ut1, tc_utype env ut2)
+  | Not ut -> Not(tc_utype env ut)
+  | Atomic l -> Atomic(List.map (tc_atomic_utype env) l)
+  | Ref ([], t) as ut ->
+    let _ = lookup_type env t in
+    ut
+
+  | Ref (mpath, t) as ut -> begin match lookup_module env mpath with
+        MtSig l ->
+        if List.mem (SiType t) l then
+          ut
+        else 
+          Fmt.(failwithf "tc_utype: utype %a not found in environment" pp_utype_t ut)
+      | _ -> Fmt.(failwithf "tc_utype: module-path %a did yield a signature" (list string) mpath)
+    end
+
+and tc_atomic_utype env = function
+    Field (s, ut) -> Field(s, tc_utype env ut)
+  | FieldRE (s, ut) -> FieldRE(s, tc_utype env ut)
+  | FieldRequired _ as ut -> ut
+  | ArrayOf ut -> ArrayOf(tc_utype env ut)
+  | ArrayTuple l -> ArrayTuple(List.map (tc_utype env) l)
+  | ArrayUnique as ut -> ut
+  | ArrayIndex (s, ut) -> ArrayIndex(s, tc_utype env ut)
+  | (Size _
+    | StringRE _
+    | NumberBound _
+    | Sealed _
+    | MultipleOf _
+    | ContentMediaType _
+    | ContentEncoding _
+    | Enum _
+    | Default _
+    | Format _) as ut -> ut
+  | OrElse ut -> OrElse(tc_utype env ut)
+  | PropertyNames ut -> PropertyNames(tc_utype env ut)
 
 and tc_struct_item env = function
     StTypes (recflag,l) ->
@@ -195,6 +239,7 @@ and tc_module_expr env = function
     lookup_module env p
 
   | MeFunctor((mid, argmty), me) ->
+    let argmty = tc_module_type env argmty in
     let resmty = tc_module_expr (Env.push_module env (mid, argmty)) me in
     MtFunctorType((mid, argmty), resmty)
 

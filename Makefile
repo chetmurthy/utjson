@@ -1,4 +1,4 @@
-
+DEBUG=-g
 OCAMLFIND=ocamlfind
 NOT_OCAMLFIND=not-ocamlfind
 BASEPACKAGES=bos,uutf,fmt,camlp5.extprint,pcre,yaml

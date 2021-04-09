@@ -77,7 +77,7 @@ let typing = "typing" >::: [
         let st = structure_of_string_exn {|
 module type Ext1 = sig extension ; end ;
 module ExtensibleTree = functor( M : Ext1 ) -> struct
-  type t = object && [ "data" : object ; "children" : array && [ of t ] ] && M.extension ;
+  type rec t = object && [ "data" : object ; "children" : array && [ of t ] ] && M.extension ;
 end ;
 
 module StrictTree = ExtensibleTree( struct type extension = [ sealed ] ; end ) ;
