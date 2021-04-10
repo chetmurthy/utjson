@@ -1,5 +1,5 @@
 schemastore_test.cmo : \
-    utypes.cmo \
+    utypes.cmi \
     utprint.cmo \
     utparse0.cmo \
     utconv.cmo
@@ -9,7 +9,7 @@ schemastore_test.cmx : \
     utparse0.cmx \
     utconv.cmx
 syntax_test.cmo : \
-    utypes.cmo \
+    utypes.cmi \
     utprint.cmo \
     utparse0.cmo \
     utconv.cmo
@@ -19,7 +19,7 @@ syntax_test.cmx : \
     utparse0.cmx \
     utconv.cmx
 typing_test.cmo : \
-    utypes.cmo \
+    utypes.cmi \
     uttypecheck.cmo \
     utprint.cmo \
     utparse0.cmo \
@@ -31,7 +31,7 @@ typing_test.cmx : \
     utparse0.cmx \
     utconv.cmx
 utconv.cmo : \
-    utypes.cmo \
+    utypes.cmi \
     ututil.cmo \
     utparse0.cmo
 utconv.cmx : \
@@ -39,7 +39,7 @@ utconv.cmx : \
     ututil.cmx \
     utparse0.cmx
 uteval.cmo : \
-    utypes.cmo \
+    utypes.cmi \
     ututil.cmo \
     uttypecheck.cmo
 uteval.cmx : \
@@ -47,7 +47,7 @@ uteval.cmx : \
     ututil.cmx \
     uttypecheck.cmx
 uttypecheck.cmo : \
-    utypes.cmo \
+    utypes.cmi \
     ututil.cmo \
     utconv.cmo
 uttypecheck.cmx : \
@@ -57,29 +57,35 @@ uttypecheck.cmx : \
 ututil.cmo :
 ututil.cmx :
 utvalid0.cmo : \
-    utypes.cmo \
+    utypes.cmi \
     ututil.cmo \
     utconv.cmo
 utvalid0.cmx : \
     utypes.cmx \
     ututil.cmx \
     utconv.cmx
-utypes.cmo :
-utypes.cmx :
+utmigrate.cmo : \
+    utypes.cmi
+utmigrate.cmx : \
+    utypes.cmx
+utypes.cmo : \
+    utypes.cmi
+utypes.cmx : \
+    utypes.cmi
 utlexing.cmo : \
-    utypes.cmo \
+    utypes.cmi \
     ututil.cmo
 utlexing.cmx : \
     utypes.cmx \
     ututil.cmx
 utparse0.cmo : \
-    utypes.cmo \
+    utypes.cmi \
     utlexing.cmo
 utparse0.cmx : \
     utypes.cmx \
     utlexing.cmx
 utprint.cmo : \
-    utypes.cmo \
+    utypes.cmi \
     utlexing.cmo
 utprint.cmx : \
     utypes.cmx \
