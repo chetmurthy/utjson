@@ -37,6 +37,11 @@ type atomic_utype_t =
   | ContentMediaType of string
   | ContentEncoding of string
 
+and module_path_t =
+    REL of string
+  | TOP of string
+  | DEREF of module_path_t * string
+
 and utype_t =
     Simple of base_type_t
   | And of utype_t * utype_t
@@ -45,7 +50,7 @@ and utype_t =
   | Impl of utype_t * utype_t
   | Not of utype_t
   | Atomic of atomic_utype_t list
-  | Ref of string list * string
+  | Ref of module_path_t option * string
 [@@deriving show { with_path = false },eq]
 
 type struct_item_t =
@@ -56,8 +61,6 @@ type struct_item_t =
   | StOpen of module_path_t
   | StInclude of module_path_t
   | StModuleType of string * module_type_t
-
-and module_path_t = string list
 
 and structure = struct_item_t list
 
@@ -70,7 +73,7 @@ and module_expr_t =
 and module_type_t =
     MtSig of signature
   | MtFunctorType of (string * module_type_t) * module_type_t
-  | MtPath of module_path_t
+  | MtPath of module_path_t option * string
 
 and signature = sig_item_t list
 
@@ -92,3 +95,5 @@ type token =
   | Float of string
   | Regexp of string
   | EOF
+
+val make_module_path : string list -> module_path_t

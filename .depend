@@ -56,21 +56,15 @@ uttypecheck.cmx : \
     utconv.cmx
 ututil.cmo :
 ututil.cmx :
-utvalid0.cmo : \
-    utypes.cmi \
-    ututil.cmo \
-    utconv.cmo
-utvalid0.cmx : \
-    utypes.cmx \
-    ututil.cmx \
-    utconv.cmx
 utmigrate.cmo : \
     utypes.cmi
 utmigrate.cmx : \
     utypes.cmx
 utypes.cmo : \
+    ututil.cmo \
     utypes.cmi
 utypes.cmx : \
+    ututil.cmx \
     utypes.cmi
 utlexing.cmo : \
     utypes.cmi \

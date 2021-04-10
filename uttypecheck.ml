@@ -20,47 +20,41 @@ module Env = struct
     | exception Not_found -> Fmt.(failwithf "Env.lookup: cannot find module id %s in type-environment" name)
 end
 
-let traverse_mty p mty =
-  let rec trec = function
-      ([], ty) -> ty
-    | (h::t, MtSig l) -> begin
-        match l |> List.find_map (function
-              SiModuleBinding(h', mty) when h=h' -> Some mty
-            | _ -> None) with
-          None -> Fmt.(failwith "traverse_mty: cannot resolve, env lookup failure" (list string) p)
-        | Some mty ->
-          trec (t, mty)
-      end
-    | _ -> Fmt.(failwith "traverse_mty: cannot resolve %a, intermediate path does not denote a module" (list string) p)
-  in
-  trec (p, mty)
-
 let lookup_type env h =
   match Env.lookup env h with
     Env.Type -> ()
   | _ ->  Fmt.(failwith "lookup_type: id %s refers to a module_type or module" h)
 
-let lookup_module env (h::t as p) =
-  match Env.lookup env h with
-    Env.ModuleType _ -> Fmt.(failwith "lookup_module: path %a refers to a module_type" (list string) p)
-  | Env.Type -> Fmt.(failwith "lookup_module: internal error, path was %a" (list string) p)
-  | Env.Module mty -> traverse_mty t mty
+let rec lookup_module env = function
+    REL h -> begin match Env.lookup env h with
+        Env.ModuleType _ -> Fmt.(failwithf "lookup_module: path %s refers to a module_type" h)
+      | Env.Type -> Fmt.(failwithf "lookup_module: internal error, path was %s" h)
+      | Env.Module mty -> mty
+    end
+  | TOP _ as p -> Fmt.(failwithf "TOP should never appear in a module_path here: %a" pp_module_path_t p)
+  | DEREF (p, id) -> begin match lookup_module env p with
+        MtSig l -> begin match l |> List.find_map (function
+            SiModuleBinding(h', mty) when id=h' -> Some mty
+          | _ -> None) with
+          None -> Fmt.(failwith "lookup_module: cannot resolve, env lookup failure" pp_module_path_t p)
+        | Some mty -> mty
+        end
+    end
+    
 
 let lookup_module_type env p =
   match p with
-    [h] -> begin match Env.lookup env h with
+    (None, h) -> begin match Env.lookup env h with
         Env.ModuleType mty -> mty
-      | Env.Type _ | Env.Module _ -> Fmt.(failwithf "lookup_module_type: path %a did not map to module_type" (list string) p)
+      | Env.Type | Env.Module _ -> Fmt.(failwithf "lookup_module_type: path %a did not map to module_type" string h)
     end
-  | [] -> Fmt.(failwithf "lookup_module_type: internal error")
-  | p ->
-    let (last, p) = sep_last p in
-    match lookup_module env p with
+  | (Some mp, h) ->
+    match lookup_module env mp with
       MtSig l -> begin
         match l |> List.find_map (function
-              SiModuleType(h', mty) when last=h' -> Some mty
+              SiModuleType(h', mty) when h=h' -> Some mty
             | _ -> None) with
-          None -> Fmt.(failwith "lookup_module_type: cannot resolve, env lookup failure" (list string) p)
+          None -> Fmt.(failwithf "lookup_module_type: cannot resolve, env lookup failure: %a.%s" pp_module_path_t mp h)
         | Some mty ->
           mty
       end
@@ -91,17 +85,17 @@ let rec tc_utype env = function
   | Impl (ut1, ut2) -> Impl(tc_utype env ut1, tc_utype env ut2)
   | Not ut -> Not(tc_utype env ut)
   | Atomic l -> Atomic(List.map (tc_atomic_utype env) l)
-  | Ref ([], t) as ut ->
+  | Ref (None, t) as ut ->
     let _ = lookup_type env t in
     ut
 
-  | Ref (mpath, t) as ut -> begin match lookup_module env mpath with
+  | Ref (Some mpath, t) as ut -> begin match lookup_module env mpath with
         MtSig l ->
         if List.mem (SiType t) l then
           ut
         else 
           Fmt.(failwithf "tc_utype: utype %a not found in environment" pp_utype_t ut)
-      | _ -> Fmt.(failwithf "tc_utype: module-path %a did yield a signature" (list string) mpath)
+      | _ -> Fmt.(failwithf "tc_utype: module-path %a did not yield a signature" pp_module_path_t mpath)
     end
 
 and tc_atomic_utype env = function
@@ -198,7 +192,7 @@ and tc_sig_item env = function
     let mty = lookup_module env p in begin match mty with
         MtSig l ->
         tc_signature env l
-      | _ -> Fmt.(failwith "tc_sig_item: cannot typecheck %a, path does not denote a module" (list string) p)
+      | _ -> Fmt.(failwith "tc_sig_item: cannot typecheck %a, path does not denote a module" pp_module_path_t p)
     end
 
 
@@ -237,6 +231,6 @@ and tc_module_type env = function
     let argty = tc_module_type env argty in
     let resty = tc_module_type (Env.push_module env (mid, argty)) resty in
     MtFunctorType ((mid, argty), resty)
-  | MtPath p ->
-    lookup_module_type env p
+  | MtPath (popt, id) ->
+    lookup_module_type env (popt,id)
 

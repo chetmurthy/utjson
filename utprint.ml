@@ -46,7 +46,11 @@ and print_id pc id = pprintf pc "%s" id
 
 and print_json pc j = pprintf pc "%s" (Yojson.Basic.to_string j)
 
-and print_module_path pc l = plist_with "." string 0 pc l 
+and print_module_path pc = fun [
+      REL h -> pprintf pc "%s" h
+    | TOP h -> pprintf pc ".%s" h
+    | DEREF p id -> pprintf pc "%p.%s" print_module_path p id
+    ]
 
 and pr_module_expr pc = fun [
     MeStruct l -> pprintf pc "struct@;%p@;end" print_structure l
@@ -57,7 +61,8 @@ and pr_module_expr pc = fun [
 and pr_module_type pc = fun [
     MtSig l -> pprintf pc "sig@;%p@;end" print_signature l
   | MtFunctorType (id, mty1) mty2 -> pprintf pc "functor (%s:%p) -> %p" id print_module_type mty1 print_module_type mty2
-  | MtPath p -> print_module_path pc p
+  | MtPath (Some p) id -> pprintf pc "%p.%s" print_module_path p id
+  | MtPath None id -> pprintf pc "%s" id
   ]
 and pr_sig_item pc = fun [
     SiType s -> pprintf pc "%s;" s
@@ -115,8 +120,8 @@ and pr_utype_not pc = fun [
 and pr_utype_simple pc = fun [
       Simple x -> pprintf pc "%p" print_base_type x
     | Atomic l -> pprintf pc "[@[<2>@;%p@;]@]" (Prtools.vlist print_atomic) l
-    | Ref [] id -> pprintf pc "%p" print_id id
-    | Ref l id -> pprintf pc "%p.%p" (plist_with "." print_id 0) l print_id id
+    | Ref None id -> pprintf pc "%p" print_id id
+    | Ref (Some p) id -> pprintf pc "%p.%p" print_module_path p print_id id
     | x -> pprintf pc "(%p)" print_utype x
     ]
 and pr_base_type pc  = fun [

@@ -47,14 +47,14 @@ let xorList l =
       r -> r
     | exception Not_found ->
       let mid = newmid() in
-      let r = Ref([mid],"t") in
+      let r = Ref(Some (REL mid),"t") in
       add_imports s mid ;
       add_uri2type s r ;
       r
 
   let locals = ref [] 
   let forward_define_local s =
-    add_uri2type (Printf.sprintf "#/definitions/%s" s) (Ref([], s)) ;
+    add_uri2type (Printf.sprintf "#/definitions/%s" s) (Ref(None, s)) ;
     ()
   let register_local_definition s t =
     locals := (s, t) :: !locals ;
@@ -78,8 +78,8 @@ let xorList l =
     | `String "number" -> [Simple JNumber]
     | `String "array" -> [Simple JArray]
     | `String "object" -> [Simple JObject]
-    | `String "integer" -> [Ref (["Predefined"], "integer")]
-    | `String "scalar" -> [Ref (["Predefined"], "scalar")]
+    | `String "integer" -> [Ref (Some(REL "Predefined"), "integer")]
+    | `String "scalar" -> [Ref (Some(REL "Predefined"), "scalar")]
     | v -> Fmt.(failwithf "conv_type: malformed type member: %a" pp_json v)
 
   let documentation_keys = [
@@ -110,7 +110,7 @@ let xorList l =
 
   let rec conv_type_l (j : json) = match j with
       `Assoc l when l |> List.for_all (fun (k,_) -> List.mem k documentation_keys) ->
-      [Ref (["Predefined"], "json")]
+      [Ref (Some(REL "Predefined"), "json")]
     | `Assoc l ->
       let keys = List.map fst l in
       keys |> List.iter (fun k ->

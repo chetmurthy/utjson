@@ -97,7 +97,7 @@ let simple = "simple" >::: [
 let parsing = "parsing" >::: [
     "utype" >:: (fun ctxt -> List.iter success [
         (Simple JString, "string")
-      ; ((Ref (["M"], "t")), "M.t")
+      ; ((Ref (Some (REL "M"), "t")), "M.t")
       ; ((Atomic
             [(Enum
                 [`List ([`Int (1); `Int (2)]); `Assoc ([("a", `Int (2))]);
@@ -114,7 +114,7 @@ let parsing = "parsing" >::: [
          {|[ "a": object ; "b" : object ;]|})
       ; ((And ((Simple JObject),
                (Atomic
-                  [(Field ("productid", (Ref ([], "integer"))));
+                  [(Field ("productid", (Ref (None, "integer"))));
                    (Field ("productName", (Simple JString)));
                    (Field ("price",
                            (And ((Simple JNumber),
@@ -174,9 +174,9 @@ let parsing = "parsing" >::: [
       ; ((StTypes (false,
                  [("integer", (And ((Simple JNumber), (Atomic [(MultipleOf 1.)]))))])),
          "type integer = number && [ multipleOf 1.0 ; ] ;")
-      ; ((StOpen ["M"; "N"]),
+      ; ((StOpen (DEREF (REL "M", "N"))),
          "open M.N;")
-      ; ((StInclude ["M"; "N"]),
+      ; ((StInclude (DEREF (REL "M", "N"))),
          "include M.N;")
       ; ((StModuleBinding ("M",
                            (MeStruct [(StTypes (false, [("t", (Simple JObject))]))]))),
@@ -191,7 +191,7 @@ let parsing = "parsing" >::: [
                    [("product",
                      (And ((Simple JObject),
                            (Atomic
-                              [(Field ("productid", (Ref ([], "integer"))));
+                              [(Field ("productid", (Ref (None, "integer"))));
                                (Field ("productName", (Simple JString)));
                                (Field ("price",
                                        (And ((Simple JNumber),
@@ -223,7 +223,7 @@ let parsing = "parsing" >::: [
                                       ));
                                (FieldRequired
                                   ["productid"; "productName"; "price"; "tags"]);
-                               (Field ("warehouseLocation", (Ref (["GeoLoc"], "latlong"))))
+                               (Field ("warehouseLocation", (Ref (Some (REL "GeoLoc"), "latlong"))))
                               ])
                           )))
                    ]
@@ -249,25 +249,25 @@ end ;
 
       )
   ; "module_type" >:: (fun ctxt -> List.iter success_module_type [
-      (MtPath ["M";"N"],
+      (MtPath (Some (REL "M"),"N"),
        "M.N")
     ; ((MtSig []),
        "sig end")
     ; ((MtFunctorType (("M", (MtSig [(SiType "u")])), (MtSig [(SiType "t")]))),
        "functor (M: sig u; end) -> sig t ; end")
     ; ((MtSig
-          [(SiType "t"); (SiModuleBinding ("M", (MtPath ["MTY"])));
+          [(SiType "t"); (SiModuleBinding ("M", (MtPath (None, "MTY"))));
            (SiModuleType ("MTY2", (MtSig [(SiType "u")])))]),
        "sig t; module M : MTY ; module type MTY2 = sig u ; end ; end")
       ]
 
       )
   ; "module_expr" >:: (fun ctxt -> List.iter success_module_expr [
-      (MePath ["M";"N"],
+      (MePath (DEREF (REL "M", "N")),
        "M.N")
-    ; ((MeFunctorApp ((MePath ["M"]), (MePath ["N"]))),
+    ; ((MeFunctorApp ((MePath (REL "M")), (MePath (REL "N")))),
        "M(N)")
-    ; ((MeFunctorApp ((MePath ["M"]),
+    ; ((MeFunctorApp ((MePath (REL "M")),
                       (MeStruct [(StTypes (false, [("t", (Simple JObject))]))]))),
        "M(struct type t = object ; end)")
     ; ((MeFunctor (("M1", (MtSig [])),
@@ -279,9 +279,9 @@ end ;
 
       )
   ; "sig_item" >:: (fun ctxt -> List.iter success_sig_item [
-      ((SiInclude ["M"; "N"]),
+      ((SiInclude (DEREF (REL "M", "N"))),
        "include M.N;")
-    ; ((SiModuleBinding ("M", (MtPath ["MTY"]))),
+    ; ((SiModuleBinding ("M", (MtPath (None, "MTY")))),
        "module M : MTY;")
     ; ((SiModuleType ("MTY", (MtSig [(SiType "t")]))),
        "module type MTY = sig t ; end;")
