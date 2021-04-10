@@ -10,13 +10,17 @@ schemastore_test.cmx : \
     utconv.cmx
 syntax_test.cmo : \
     utypes.cmi \
+    uttestutil.cmo \
     utprint.cmo \
     utparse0.cmo \
+    utio.cmo \
     utconv.cmo
 syntax_test.cmx : \
     utypes.cmx \
+    uttestutil.cmx \
     utprint.cmx \
     utparse0.cmx \
+    utio.cmx \
     utconv.cmx
 typing_test.cmo : \
     utypes.cmi \
@@ -41,11 +45,25 @@ utconv.cmx : \
 uteval.cmo : \
     utypes.cmi \
     ututil.cmo \
-    uttypecheck.cmo
+    uttypecheck.cmo \
+    utmigrate.cmo \
+    utconv.cmo
 uteval.cmx : \
     utypes.cmx \
     ututil.cmx \
-    uttypecheck.cmx
+    uttypecheck.cmx \
+    utmigrate.cmx \
+    utconv.cmx
+utio.cmo : \
+    utypes.cmi \
+    utprint.cmo \
+    utparse0.cmo
+utio.cmx : \
+    utypes.cmx \
+    utprint.cmx \
+    utparse0.cmx
+uttestutil.cmo :
+uttestutil.cmx :
 uttypecheck.cmo : \
     utypes.cmi \
     ututil.cmo \

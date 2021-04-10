@@ -31,10 +31,10 @@ print_string "================ START ================\n";; flush stdout ;;
 
 open Yojson.Basic ;;
 
-#load "utypes.cmo";;
-open Utypes ;;
 #load "ututil.cmo";;
 open Ututil ;;
+#load "utypes.cmo";;
+open Utypes ;;
 #load "utlexing.cmo";;
 open Utlexing ;;
 #load "utparse0.cmo";;
@@ -63,9 +63,8 @@ let top_module_expr x = top print_module_expr x ;;
 open Utconv ;;
 #load "uttypecheck.cmo";;
 open Uttypecheck ;;
-#load "utvalid0.cmo";;
-open Utvalid0.Env ;;
-open Utvalid0 ;;
+#load "uteval.cmo";;
+open Uteval ;;
 (*
 #load "syntax_test.cmo";;
 open Syntax_test ;;
@@ -76,11 +75,6 @@ open Typing_test ;;
 (*
 #use "jq_examples.ml";;
 *)
-
-let val1 schf jf =
-let j = Yojson.Basic.from_file jf in
-let e0 = elab (load_file schf) in
-let (t, e) = lookup e0 ["t"] in validate j e t ;;
 
 #print_length 1000;;
 #print_depth 1000;;
