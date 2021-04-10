@@ -10,72 +10,56 @@ value plist_with sep f sh pc l =
   pprintf pc "%p" (Prtools.plist f sh) l
 ;
 
-value pr_utype = Eprinter.make "utype";
-value print_utype = Eprinter.apply pr_utype;
-
-value pr_module_expr = Eprinter.make "module_expr";
-value print_module_expr = Eprinter.apply pr_module_expr;
-
-value pr_module_type = Eprinter.make "module_type";
-value print_module_type = Eprinter.apply pr_module_type;
-
-value pr_struct_item = Eprinter.make "struct_item";
-value print_struct_item = Eprinter.apply pr_struct_item;
-
-value pr_sig_item = Eprinter.make "sig_item";
-value print_sig_item = Eprinter.apply pr_sig_item;
-
-value pr_base_type = Eprinter.make "base_type";
-value print_base_type = Eprinter.apply pr_base_type;
-
-value pr_atomic = Eprinter.make "atomic";
-value print_atomic = Eprinter.apply pr_atomic;
-
-value print_structure pc l = plist_with "" print_struct_item 2 pc l ;
-value print_signature pc l = plist_with "" print_sig_item 2 pc l ;
-
 value qstring pc s =
   pprintf pc "\"%s\"" s
 ;
 value string pc s = pprintf pc "%s" s ;
 
-value print_size_constraint pc (lo,hi) =
+value rec print_utype pc x = pr_utype pc x
+and print_module_expr pc x = pr_module_expr pc x
+and print_module_type pc x = pr_module_type pc x
+and print_struct_item pc x = pr_struct_item pc x
+and print_sig_item pc x = pr_sig_item pc x
+and print_base_type pc x = pr_base_type pc x
+and print_atomic pc x = pr_atomic pc x
+and print_structure pc l = plist_with "" print_struct_item 2 pc l 
+and print_signature pc l = plist_with "" print_sig_item 2 pc l 
+
+and print_size_constraint pc (lo,hi) =
   let open Bound in 
   pprintf pc "%s%s,%s%s"
     (if lo.exclusive then "(" else "[")
     (string_of_int lo.it)
     (match hi.it with [ None -> "max" | Some n -> string_of_int n ])
     (if hi.exclusive then ")" else "]")
-;
 
-value print_range_constraint pc (lo,hi) =
+and print_range_constraint pc (lo,hi) =
   let open Bound in 
   pprintf pc "%s%s,%s%s"
     (if lo.exclusive then "(" else "[")
     (match lo.it with [ None -> "min" | Some n -> string_of_float n ])
     (match hi.it with [ None -> "max" | Some n -> string_of_float n ])
     (if hi.exclusive then ")" else "]")
-;
 
-value print_id pc id = pprintf pc "%s" id ;
 
-value print_json pc j = pprintf pc "%s" (Yojson.Basic.to_string j) ;
+and print_id pc id = pprintf pc "%s" id 
 
-value print_module_path pc l = plist_with "." string 0 pc l ;
+and print_json pc j = pprintf pc "%s" (Yojson.Basic.to_string j)
 
-EXTEND_PRINTER
-  pr_module_expr: [ [
+and print_module_path pc l = plist_with "." string 0 pc l 
+
+and pr_module_expr pc = fun [
     MeStruct l -> pprintf pc "struct@;%p@;end" print_structure l
   | MeFunctorApp me1 me2 ->  pprintf pc "%p(%p)" print_module_expr me1 print_module_expr me2
   | MePath p -> print_module_path pc p
   | MeFunctor (id, mty) me ->  pprintf pc "functor (%s:%p) -> %p" id print_module_type mty print_module_expr me
-  ] ] ;
-  pr_module_type: [ [
+  ]
+and pr_module_type pc = fun [
     MtSig l -> pprintf pc "sig@;%p@;end" print_signature l
   | MtFunctorType (id, mty1) mty2 -> pprintf pc "functor (%s:%p) -> %p" id print_module_type mty1 print_module_type mty2
   | MtPath p -> print_module_path pc p
-  ] ] ;
-  pr_sig_item: [ [
+  ]
+and pr_sig_item pc = fun [
     SiType s -> pprintf pc "%s;" s
   | SiModuleBinding s mty -> 
     pprintf pc "module %s : %p;" s print_module_type mty
@@ -83,8 +67,8 @@ EXTEND_PRINTER
     pprintf pc "module type %s = %p;" s print_module_type mty
   | SiInclude p ->
     pprintf pc "include %p;" print_module_path p
-  ] ] ;
-  pr_struct_item: [ [
+  ]
+and pr_struct_item pc = fun [
     StTypes recflag l ->
     pprintf pc "type%s %p;" (if recflag then " rec" else " nonrec")
       (Prtools.vlist2
@@ -105,55 +89,65 @@ EXTEND_PRINTER
     pprintf pc "open %p;" print_module_path p
   | StInclude p ->
     pprintf pc "include %p;" print_module_path p
-  ] ] ;
+  ]
+and pr_utype pc x = pr_utype_or pc x
 
-  pr_utype:
-    [ "||"
-      [ Or x y -> pprintf pc "%p || %p" next x curr y ]
-    | "xor"
-      [ Xor x y -> pprintf pc "%p xor %p" next x curr y ]
-    | "&&"
-      [ And x y -> pprintf pc "%p && %p" next x curr y ]
-    | "=>"
-      [ Impl x y -> pprintf pc "%p => %p" next x curr y ]
-    | "not"
-      [ Not x -> pprintf pc "not %p" next x ]
-    | "simple"
-      [ Simple x -> pprintf pc "%p" print_base_type x
-      | Atomic l -> pprintf pc "[@[<2>@;%p@;]@]" (Prtools.vlist print_atomic) l
-      | Ref [] id -> pprintf pc "%p" print_id id
-      | Ref l id -> pprintf pc "%p.%p" (plist_with "." print_id 0) l print_id id
-      | x -> pprintf pc "(%p)" print_utype x
-      ]
-    ] ;
-  pr_base_type:
-    [ [ JNull -> pprintf pc "null"
-      | JString -> pprintf pc "string"
-      | JBool -> pprintf pc "boolean"
-      | JNumber -> pprintf pc "number"
-      | JArray -> pprintf pc "array"
-      | JObject -> pprintf pc "object"
-    ] ] ;
-  pr_atomic:
-    [ [ Field s t -> pprintf pc "%p: %p;" qstring s print_utype t
-      | FieldRE re t -> pprintf pc "/%s/ : %p;" (Escape.regexp re) print_utype t
-      | FieldRequired l -> pprintf pc "required %p;" (plist_with ", " qstring 0) l
-      | ArrayOf t -> pprintf pc "of %p;" print_utype t
-      | ArrayTuple l -> pprintf pc "%p;" (plist_with " * " print_utype 0) l
-      | ArrayUnique -> pprintf pc "unique;"
-      | ArrayIndex n t -> pprintf pc "%d: %p" n print_utype t
-      | Size sc -> pprintf pc "size %p;" print_size_constraint sc
-      | StringRE re -> pprintf pc "/%s/" (Escape.regexp re)
-      | NumberBound rc -> pprintf pc "bounds %p;" print_range_constraint rc
-      | Sealed True -> pprintf pc "sealed;"
-      | Sealed False -> pprintf pc "unsealed;"
-      | OrElse t -> pprintf pc "orelse %p;" print_utype t
-      | Enum l -> pprintf pc "enum %p;" (plist_with "," print_json 0) l
-      | Default j -> pprintf pc "default %p;" print_json j
-      | Format s -> pprintf pc "format %p;" qstring s
-      | PropertyNames t -> pprintf pc "propertyNames %p;" print_utype t
-      | ContentMediaType s -> pprintf pc "contentMediaType %p;" qstring s
-      | ContentEncoding s -> pprintf pc "contentEncoding %p;" qstring s
-    ] ] ;
+and pr_utype_or pc = fun [
+      Or x y -> pprintf pc "%p || %p" pr_utype_xor x pr_utype_or y
+    | x -> pr_utype_xor pc x
+    ]
+and pr_utype_xor pc = fun [
+      Xor x y -> pprintf pc "%p xor %p" pr_utype_and x pr_utype_xor y
+    | x -> pr_utype_and pc x
+    ]
+and pr_utype_and pc = fun [
+      And x y -> pprintf pc "%p && %p" pr_utype_impl x pr_utype_and y
+    | x -> pr_utype_impl pc x
+    ]
+and pr_utype_impl pc = fun [
+      Impl x y -> pprintf pc "%p => %p" pr_utype_not x pr_utype_impl y
+    | x -> pr_utype_not pc x
+    ]
+and pr_utype_not pc = fun [
+      Not x -> pprintf pc "not %p" pr_utype_simple x
+    | x -> pr_utype_simple pc x
+    ]
+and pr_utype_simple pc = fun [
+      Simple x -> pprintf pc "%p" print_base_type x
+    | Atomic l -> pprintf pc "[@[<2>@;%p@;]@]" (Prtools.vlist print_atomic) l
+    | Ref [] id -> pprintf pc "%p" print_id id
+    | Ref l id -> pprintf pc "%p.%p" (plist_with "." print_id 0) l print_id id
+    | x -> pprintf pc "(%p)" print_utype x
+    ]
+and pr_base_type pc  = fun [
+    JNull -> pprintf pc "null"
+  | JString -> pprintf pc "string"
+  | JBool -> pprintf pc "boolean"
+  | JNumber -> pprintf pc "number"
+  | JArray -> pprintf pc "array"
+  | JObject -> pprintf pc "object"
+  ]
+and pr_atomic pc = fun [
+    Field s t -> pprintf pc "%p: %p;" qstring s print_utype t
+  | FieldRE re t -> pprintf pc "/%s/ : %p;" (Escape.regexp re) print_utype t
+  | FieldRequired l -> pprintf pc "required %p;" (plist_with ", " qstring 0) l
+  | ArrayOf t -> pprintf pc "of %p;" print_utype t
+  | ArrayTuple l -> pprintf pc "%p;" (plist_with " * " print_utype 0) l
+  | ArrayUnique -> pprintf pc "unique;"
+  | ArrayIndex n t -> pprintf pc "%d: %p" n print_utype t
+  | Size sc -> pprintf pc "size %p;" print_size_constraint sc
+  | StringRE re -> pprintf pc "/%s/" (Escape.regexp re)
+  | NumberBound rc -> pprintf pc "bounds %p;" print_range_constraint rc
+  | Sealed True -> pprintf pc "sealed;"
+  | Sealed False -> pprintf pc "unsealed;"
+  | OrElse t -> pprintf pc "orelse %p;" print_utype t
+  | Enum l -> pprintf pc "enum %p;" (plist_with "," print_json 0) l
+  | Default j -> pprintf pc "default %p;" print_json j
+  | Format s -> pprintf pc "format %p;" qstring s
+  | PropertyNames t -> pprintf pc "propertyNames %p;" print_utype t
+  | ContentMediaType s -> pprintf pc "contentMediaType %p;" qstring s
+  | ContentEncoding s -> pprintf pc "contentEncoding %p;" qstring s
+  | MultipleOf n ->  pprintf pc "multipleOf %f;" n
+  ]
+;
 
-END;
