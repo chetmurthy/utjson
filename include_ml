@@ -33,14 +33,20 @@ open Yojson.Basic ;;
 
 #load "ututil.cmo";;
 open Ututil ;;
+#load "uttestutil.cmo";;
+open Uttestutil ;;
 #load "utypes.cmo";;
 open Utypes ;;
 #load "utlexing.cmo";;
 open Utlexing ;;
+#load "utmigrate.cmo";;
+open Utmigrate ;;
 #load "utparse0.cmo";;
 open Utparse0 ;;
 #load "utprint.cmo";;
 open Utprint ;;
+#load "utio.cmo";;
+open Utio ;;
 
 let top pp x = Fmt.(pf stdout "<< %s >>" (pp Pprintf.empty_pc x)) ;;
 

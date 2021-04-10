@@ -10,12 +10,12 @@ open Utio
 open Utconv
 
 let success (expect, f) =
-  assert_equal ~msg:f ~printer:struct_item_printer ~cmp:struct_item_cmp
-    (struct_item_of_string_exn expect)
+  assert_equal ~msg:f ~printer:structure_printer ~cmp:structure_cmp
+    (structure_of_string_exn expect)
     (load_file f)
 
 let successf (expectf, f) =
-  assert_equal ~msg:f ~printer:struct_item_printer ~cmp:struct_item_cmp
+  assert_equal ~msg:f ~printer:structure_printer ~cmp:structure_cmp
     (load_file expectf)
     (load_file f)
 

@@ -420,16 +420,14 @@ let conv_type t =
   let l = List.map (fun (id, mid) -> StImport(id, mid)) !imports in
   let l = if !locals = [] then l else
       l@[StTypes(true, List.rev !locals)] in
-  if l = [] then StTypes(false, [("t", t)])
+  if l = [] then [StTypes(false, [("t", t)])]
   else 
-    StLocal(l, [StTypes(false, [("t", t)])])
+    [StLocal(l, [StTypes(false, [("t", t)])])]
 
 let load_file s =
   if Str.(string_match (regexp ".*\\.json$") s 0) then
     let j = Yojson.Basic.from_file s in
     conv_type j
   else if Str.(string_match (regexp ".*\\.utj$") s 0) then
-    match Utparse0.(parse_file parse_structure) s with
-      [t] -> t
-    | l -> StLocal([], l)
+    Utparse0.(parse_file parse_structure) s
   else Fmt.(failwithf "load_file: format not recognized: %s" s)

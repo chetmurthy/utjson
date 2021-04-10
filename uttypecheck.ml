@@ -136,8 +136,8 @@ and tc_struct_item env = function
     (Env.push_module env (mid, mty), [si])
 
   | StImport(fname, mid) ->
-    let t = Utconv.load_file fname in
-    let st = StModuleBinding (mid, MeStruct [t]) in
+    let stl = Utconv.load_file fname in
+    let st = StModuleBinding (mid, MeStruct stl) in
     tc_struct_item env st
 
   | StLocal (l1, l2) ->

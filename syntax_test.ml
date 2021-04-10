@@ -334,12 +334,12 @@ let item_printer x = "<<"^(show_struct_item_t x)^">>"
 let item_cmp = equal_struct_item_t
 
 let success (expect, f) =
-  assert_equal ~msg:f ~printer:item_printer ~cmp:item_cmp
-    (item_of_string_exn expect)
+  assert_equal ~msg:f ~printer:structure_printer ~cmp:structure_cmp
+    (structure_of_string_exn expect)
     (load_file f)
 
 let successf (expectf, f) =
-  assert_equal ~msg:f ~printer:item_printer ~cmp:item_cmp
+  assert_equal ~msg:f ~printer:structure_printer ~cmp:structure_cmp
     (load_file expectf)
     (load_file f)
 

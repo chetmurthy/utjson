@@ -71,8 +71,8 @@ let exec stl =
   let old_migrate_struct_item_t = dt.migrate_struct_item_t in
   let new_migrate_struct_item_t dt = function
       StImport (fname, mid) ->
-      let t = Utconv.load_file fname in
-      let st = StModuleBinding (mid, MeStruct [t]) in
+      let stl = Utconv.load_file fname in
+      let st = StModuleBinding (mid, MeStruct stl) in
       old_migrate_struct_item_t dt st
     | st -> old_migrate_struct_item_t dt st in
 
