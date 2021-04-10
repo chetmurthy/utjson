@@ -8,8 +8,10 @@ IMPORT_PACKAGES = pa_ppx_migrate,pa_ppx.import
 IMPORT_OCAMLCFLAGS = -ppopt -pa_import-I -ppopt . -ppopt -pa_passthru-debug
 
 
-OBJ=ututil.cmo utypes.cmo utlexing.cmo utmigrate.cmo utparse0.cmo utprint.cmo utio.cmo utconv.cmo uttypecheck.cmo uteval.cmo
-OML=ututil.ml uttestutil.ml syntax_test.ml schemastore_test.ml typing_test.ml utio.ml utconv.ml uttypecheck.ml uteval.ml
+OBJ=ututil.cmo utypes.cmo utlexing.cmo utmigrate.cmo utparse0.cmo utprint.cmo \
+    utio.cmo utconv.cmo uttypecheck.cmo uteval.cmo
+OML=ututil.ml uttestutil.ml utio.ml utconv.ml uttypecheck.ml uteval.ml \
+    syntax_test.ml schemastore_test.ml typing_test.ml
 IMPORT_OML=utypes.ml utmigrate.ml
 LEXML=utlexing.ml
 RML=utparse0.ml utprint.ml
@@ -29,6 +31,9 @@ typing_test: $(OBJ) uttestutil.cmo typing_test.cmo
 	$(OCAMLFIND) ocamlc $(DEBUG) $(OCAMLCFLAGS) -package $(PACKAGES),oUnit -linkpkg -linkall -syntax camlp5r $^ -o $@
 
 schemastore_test: $(OBJ) uttestutil.cmo schemastore_test.cmo
+	$(OCAMLFIND) ocamlc $(DEBUG) $(OCAMLCFLAGS) -package $(PACKAGES),oUnit -linkpkg -linkall -syntax camlp5r $^ -o $@
+
+eval_test: $(OBJ) uttestutil.cmo eval_test.cmo
 	$(OCAMLFIND) ocamlc $(DEBUG) $(OCAMLCFLAGS) -package $(PACKAGES),oUnit -linkpkg -linkall -syntax camlp5r $^ -o $@
 
 utmigrate.cmo: utmigrate.ml
