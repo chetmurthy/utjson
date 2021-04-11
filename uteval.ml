@@ -23,7 +23,9 @@ open Uttypecheck
    "module M = struct <contents of uri> end"
    also inlines all module-type-references in other module-types
 
-(3) remove "include" blocks, copying name-by-name
+(3) remove "include" items, copying name-by-name; typecheck
+    helpfully adorns "include" items with a signature, so
+    we can just use that to guide our copying.
 
 (5) map signature-constrained modules to a new module with just the
     entries that the signature lets thru.
@@ -89,7 +91,7 @@ let all_mids stl =
   let old_migrate_module_type_t = dt.migrate_module_type_t in
   let new_migrate_module_path_t dt mp = match mp with
       REL mid -> add_mid mid ; mp
-    | TOP _ -> Fmt.(failwithf "S3UnLocal: internal error %a" pp_module_path_t mp)
+    | TOP _ -> Fmt.(failwithf "Util.all_mids: internal error %a" pp_module_path_t mp)
     | DEREF(mp, mid) -> add_mid mid ;
       old_migrate_module_path_t dt mp in
   let new_migrate_struct_item_t dt st = match st with
@@ -161,6 +163,31 @@ end
     struct-items copying entry-by-entry. *)
 
 module S3ElimInclude = struct
+
+let exec stl =
+  let dt = make_dt () in
+  let old_migrate_struct_item_t = dt.migrate_struct_item_t in
+  let new_migrate_struct_item_t dt st = match st with
+      StInclude (mp, None) ->
+      Fmt.(failwithf "S3ElimInclude.exec: found unadorned StInclude (was typecheck already run?): %a"
+             pp_struct_item_t st)
+    | StInclude (mp, Some (MtSig l as mty)) ->
+      let stl = l |> List.map (function
+            SiType tid ->
+            StTypes(false, [(tid, Ref(Some mp, tid))])
+          | SiModuleBinding(mid, mty) ->
+            StModuleBinding(mid, MeCast(MePath(DEREF(mp, mid)), mty))
+          | SiModuleType(mid, mty) ->
+            StModuleType(mid, mty)
+          | SiInclude _ ->
+            Fmt.(failwithf "S3ElimInclude.exec: include with malformed module-type: %a" pp_struct_item_t st)) in
+      StLocal([], stl)
+    | StInclude (mp, Some _) ->
+      Fmt.(failwithf "S3ElimInclude.exec: internal error with StInclude: %a"
+             pp_struct_item_t st)
+    | _ -> old_migrate_struct_item_t dt st in
+  let dt = { dt with migrate_struct_item_t = new_migrate_struct_item_t } in
+  dt.migrate_structure dt stl
 
 end
 
