@@ -255,6 +255,14 @@ and tc_module_expr env = function
     let st = MeFunctor((mid, argmty), me) in
     (st, MtFunctorType((mid, argmty), resmty))
 
+  | MeCast(me, formal_mty) ->
+    let formal_mty = tc_module_type env formal_mty in
+    let (me, actual_mty) = tc_module_expr env me in
+    if not (satisfies_constraint env ~lhs:actual_mty ~rhs:formal_mty) then
+      Fmt.(failwithf "module-expr cast fails: module_expr (%a : %a) does not satisfy %a"
+             pp_module_expr_t me pp_module_type_t actual_mty pp_module_type_t formal_mty) ;
+    (MeCast(me, formal_mty), formal_mty)
+
 and tc_module_type env mt =
   let mt' = tc_module_type0 env mt in
   if not FMV.(closed module_type mt') then

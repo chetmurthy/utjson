@@ -26,12 +26,12 @@ local module Predefined = struct
   type nonrec integer = number && [ multipleOf 1.000000; ];
     type nonrec scalar = boolean || number || string;
     type nonrec json = null || scalar || array || object;
-  end; in  end;
+  end : sig integer; scalar; json; end; in  end;
 |} |> structure_of_string_exn )
         ({|
 local import "lib/predefined.utj" as Predefined; in
 end ;
-|} |> structure_of_string_exn |> S1Typecheck.exec)
+|} |> structure_of_string_exn |> S2Typecheck.exec)
       )
   ]
 
