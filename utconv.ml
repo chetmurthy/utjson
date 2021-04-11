@@ -34,7 +34,7 @@ let xorList l =
   let newmid () =
     let mid = Printf.sprintf "M%d" !counter in
     counter := 1 + !counter ;
-    MID.of_string mid
+    ID.of_string mid
 
   let uri2type = ref []
   let add_uri2type s r = uri2type := (s,r) :: !uri2type
@@ -47,14 +47,14 @@ let xorList l =
       r -> r
     | exception Not_found ->
       let mid = newmid() in
-      let r = Ref(Some (REL mid),"t") in
+      let r = Ref(Some (REL mid),(ID.of_string "t")) in
       add_imports s mid ;
       add_uri2type s r ;
       r
 
   let locals = ref [] 
   let forward_define_local s =
-    add_uri2type (Printf.sprintf "#/definitions/%s" s) (Ref(None, s)) ;
+    add_uri2type (Printf.sprintf "#/definitions/%s" s) (Ref(None, (ID.of_string s))) ;
     ()
   let register_local_definition s t =
     locals := (s, t) :: !locals ;
@@ -78,8 +78,8 @@ let xorList l =
     | `String "number" -> [Simple JNumber]
     | `String "array" -> [Simple JArray]
     | `String "object" -> [Simple JObject]
-    | `String "integer" -> [Ref (Some(REL (MID.of_string "Predefined")), "integer")]
-    | `String "scalar" -> [Ref (Some(REL (MID.of_string "Predefined")), "scalar")]
+    | `String "integer" -> [Ref (Some(REL (ID.of_string "Predefined")), (ID.of_string "integer"))]
+    | `String "scalar" -> [Ref (Some(REL (ID.of_string "Predefined")), (ID.of_string "scalar"))]
     | v -> Fmt.(failwithf "conv_type: malformed type member: %a" pp_json v)
 
   let documentation_keys = [
@@ -110,7 +110,7 @@ let xorList l =
 
   let rec conv_type_l (j : json) = match j with
       `Assoc l when l |> List.for_all (fun (k,_) -> List.mem k documentation_keys) ->
-      [Ref (Some(REL (MID.of_string "Predefined")), "json")]
+      [Ref (Some(REL (ID.of_string "Predefined")), (ID.of_string "json"))]
     | `Assoc l ->
       let keys = List.map fst l in
       keys |> List.iter (fun k ->
@@ -394,7 +394,7 @@ let xorList l =
         ) ;
       l |> List.iter (fun (name, t) ->
           let t = conv_type0 t in
-          register_local_definition name t
+          register_local_definition (ID.of_string name) t
         )
 
     | _ -> assert false
@@ -420,9 +420,9 @@ let conv_type t =
   let l = List.map (fun (id, mid) -> StImport(id, mid)) !imports in
   let l = if !locals = [] then l else
       l@[StTypes(true, List.rev !locals)] in
-  if l = [] then [StTypes(false, [("t", t)])]
+  if l = [] then [StTypes(false, [(ID.of_string "t", t)])]
   else 
-    [StLocal(l, [StTypes(false, [("t", t)])])]
+    [StLocal(l, [StTypes(false, [(ID.of_string "t", t)])])]
 
 let load_file s =
   if Str.(string_match (regexp ".*\\.json$") s 0) then

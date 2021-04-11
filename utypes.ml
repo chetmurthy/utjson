@@ -1,7 +1,7 @@
 open Ututil
 
-module MID = struct
-type t = [%import: Utypes.MID.t]
+module ID = struct
+type t = [%import: Utypes.ID.t]
 [@@deriving show { with_path = false },eq]
 
 let id_re = Str.regexp "^\\(.*[^0-9]\\)\\([0-9]*\\)$"

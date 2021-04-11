@@ -97,7 +97,7 @@ EXTEND
     module_type module_type_eoi
     ;
 
-    mid: [ [ uid = UIDENT -> MID.of_string uid ] ] ;
+    mid: [ [ uid = UIDENT -> ID.of_string uid ] ] ;
     base_type: [ [
         "null" -> JNull
       | "string" -> JString
@@ -173,10 +173,10 @@ EXTEND
         b = base_type -> Simple b
       | l = LIST0 [ s = mid ; "." -> s ] ; id = LIDENT ->
         match l with [
-          [] -> Ref None id
+          [] -> Ref None (ID.of_string id)
         | l ->
           let mp = make_module_path l in
-          Ref (Some mp) id
+          Ref (Some mp) (ID.of_string id)
         ]
       | "[" ; h = atomic_utype ; ";" ; l = atomic_utype_semi_list ; "]" -> Atomic [h::l]
       | "[" ; h = atomic_utype ; "]" -> Atomic [h]
@@ -203,7 +203,7 @@ EXTEND
         match p with [
           [] -> assert False
         | [h] -> MtPath None h
-        | (l : list MID.t) ->
+        | (l : list ID.t) ->
           let (last, l) = sep_last l in
           let p = make_module_path l in
           MtPath (Some p) last
@@ -246,7 +246,7 @@ EXTEND
       | "module" ; "type" ; uid=mid ; "=" ; e = module_type ; ";" -> StModuleType uid e
       | "local" ; l1 = structure ; "in" ; l2 = structure ; "end" ; ";" -> StLocal l1 l2
       | "type" ; rflag = [ "rec" -> True | "nonrec" -> False | -> False ] ;
-        l = LIST1 [ id = LIDENT ; "=" ; t = utype -> (id, t) ] SEP "and" ;
+        l = LIST1 [ id = LIDENT ; "=" ; t = utype -> (ID.of_string id, t) ] SEP "and" ;
         ";" -> StTypes rflag l
       | "import" ; s=STRING ; "as"; uid=mid ; ";" -> StImport s uid
       | "open" ; p = module_path ; ";" -> StOpen (make_module_path p)
@@ -255,7 +255,7 @@ EXTEND
       ] ]
     ;
     sig_item: [ [
-        s = LIDENT ; ";" -> SiType s
+        s = LIDENT ; ";" -> SiType (ID.of_string s)
       | "module" ; uid = mid ; ":" ; mty=module_type ; ";" -> SiModuleBinding uid mty
       | "module" ; "type" ; uid = mid ; "=" ; mty=module_type ; ";" -> SiModuleType uid mty
       | "include" ; p = module_path ; ";" -> SiInclude (make_module_path p)

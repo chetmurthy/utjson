@@ -42,14 +42,14 @@ and print_range_constraint pc (lo,hi) =
     (if hi.exclusive then ")" else "]")
 
 
-and print_id pc id = pprintf pc "%s" id 
+and print_id pc id = pprintf pc "%s" (ID.to_string id)
 
 and print_json pc j = pprintf pc "%s" (Yojson.Basic.to_string j)
 
 and print_module_path pc = fun [
-      REL h -> pprintf pc "%s" (MID.to_string h)
-    | TOP h -> pprintf pc ".%s" (MID.to_string h)
-    | DEREF p id -> pprintf pc "%p.%s" print_module_path p (MID.to_string id)
+      REL h -> pprintf pc "%s" (ID.to_string h)
+    | TOP h -> pprintf pc ".%s" (ID.to_string h)
+    | DEREF p id -> pprintf pc "%p.%s" print_module_path p (ID.to_string id)
     ]
 
 and pr_module_expr pc = fun [
@@ -60,22 +60,22 @@ and pr_module_expr pc = fun [
 and pr_module_expr_simple pc = fun [
     MeStruct l -> pprintf pc "struct@;%p@;end" print_structure l
   | MePath p -> print_module_path pc p
-  | MeFunctor (id, mty) me ->  pprintf pc "functor (%s:%p) -> %p" (MID.to_string id) print_module_type mty print_module_expr me
+  | MeFunctor (id, mty) me ->  pprintf pc "functor (%s:%p) -> %p" (ID.to_string id) print_module_type mty print_module_expr me
   | me -> pprintf pc "(%p)" print_module_expr me
   ]
 
 and pr_module_type pc = fun [
     MtSig l -> pprintf pc "sig@;%p@;end" print_signature l
-  | MtFunctorType (id, mty1) mty2 -> pprintf pc "functor (%s:%p) -> %p" (MID.to_string id) print_module_type mty1 print_module_type mty2
-  | MtPath (Some p) id -> pprintf pc "%p.%s" print_module_path p (MID.to_string id)
-  | MtPath None id -> pprintf pc "%s" (MID.to_string id)
+  | MtFunctorType (id, mty1) mty2 -> pprintf pc "functor (%s:%p) -> %p" (ID.to_string id) print_module_type mty1 print_module_type mty2
+  | MtPath (Some p) id -> pprintf pc "%p.%s" print_module_path p (ID.to_string id)
+  | MtPath None id -> pprintf pc "%s" (ID.to_string id)
   ]
 and pr_sig_item pc = fun [
-    SiType s -> pprintf pc "%s;" s
+    SiType s -> pprintf pc "%s;" (ID.to_string s)
   | SiModuleBinding s mty -> 
-    pprintf pc "module %s : %p;" (MID.to_string s) print_module_type mty
+    pprintf pc "module %s : %p;" (ID.to_string s) print_module_type mty
   | SiModuleType s mty ->
-    pprintf pc "module type %s = %p;" (MID.to_string s) print_module_type mty
+    pprintf pc "module type %s = %p;" (ID.to_string s) print_module_type mty
   | SiInclude p ->
     pprintf pc "include %p;" print_module_path p
   ]
@@ -83,15 +83,15 @@ and pr_struct_item pc = fun [
     StTypes recflag l ->
     pprintf pc "type%s %p;" (if recflag then " rec" else " nonrec")
       (Prtools.vlist2
-         (fun pc (s,t) -> pprintf pc "%s = %p" s print_utype t)
-         (fun pc (s,t) -> pprintf pc "and %s = %p" s print_utype t)
+         (fun pc (s,t) -> pprintf pc "%s = %p" (ID.to_string s) print_utype t)
+         (fun pc (s,t) -> pprintf pc "and %s = %p" (ID.to_string s) print_utype t)
       ) l
   | StModuleBinding id mexp ->
-    pprintf pc "module %s = %p;" (MID.to_string id) print_module_expr mexp
+    pprintf pc "module %s = %p;" (ID.to_string id) print_module_expr mexp
   | StModuleType id mty ->
-    pprintf pc "module type %s = %p;" (MID.to_string id) print_module_type mty
+    pprintf pc "module type %s = %p;" (ID.to_string id) print_module_type mty
   | StImport url id ->
-    pprintf pc "import %p as %s;" qstring url (MID.to_string id)
+    pprintf pc "import %p as %s;" qstring url (ID.to_string id)
   | StLocal l1 l2 ->
     pprintf pc "local %p in %p end;" 
       (plist_with "" print_struct_item 0) l1

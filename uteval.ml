@@ -29,8 +29,13 @@ open Uttypecheck
 
 (4) remove all StLocal, which had better be vacuous.
 
-(5) map signature-constrained modules to a new module with just the
+(5) NOT NEEDED: map signature-constrained modules to a new module with just the
     entries that the signature lets thru.
+
+    (a) every module-declaration of type a signature, has a cast with that signature
+
+    (b) So when we beta-reduce a functor, as long as its arguments are all named modules,
+        they will be signature-constrained (and hence not leak unwanted names).
 
 At this point, structs are:
 
@@ -133,7 +138,7 @@ module S1ElimLocal = struct
   let exec stl =
     let mids = ref (Util.all_mids stl) in
     let fresh s =
-      let s' = MID.fresh !mids (MID.of_string s) in
+      let s' = ID.fresh !mids (ID.of_string s) in
       mids := s' :: !mids ;
       s' in
     let dt = make_dt () in

@@ -9,7 +9,7 @@ module Env = struct
       Module of module_type_t
     | ModuleType of module_type_t
   [@@deriving show { with_path = false },eq]
-  type t = string list * (MID.t * binding_t) list
+  type t = ID.t list * (ID.t * binding_t) list
   [@@deriving show { with_path = false },eq]
 
   let mt = ([], [])
@@ -19,11 +19,11 @@ module Env = struct
 
   let lookup_type (tenv,_) name = match List.assoc name tenv with
       v -> v
-    | exception Not_found -> Fmt.(failwithf "Env.lookup_type: cannot find type %s in type-environment" name)
+    | exception Not_found -> Fmt.(failwithf "Env.lookup_type: cannot find type %s in type-environment" (ID.to_string name))
 
   let lookup (_, menv) name = match List.assoc name menv with
       v -> v
-    | exception Not_found -> Fmt.(failwithf "Env.lookup: cannot find module[_type] id %s in type-environment" (MID.to_string name))
+    | exception Not_found -> Fmt.(failwithf "Env.lookup: cannot find module[_type] id %s in type-environment" (ID.to_string name))
 
 end
 
@@ -70,11 +70,11 @@ end
 let lookup_type (tenv,_) h =
   if List.mem h tenv then ()
   else
-    Fmt.(failwith "lookup_type: id %s not found in type-environment" h)
+    Fmt.(failwith "lookup_type: id %s not found in type-environment" (ID.to_string h))
 
 let rec lookup_module env = function
     REL h -> begin match Env.lookup env h with
-        Env.ModuleType _ -> Fmt.(failwithf "lookup_module: path %s refers to a module_type" (MID.to_string h))
+        Env.ModuleType _ -> Fmt.(failwithf "lookup_module: path %s refers to a module_type" (ID.to_string h))
       | Env.Module mty -> mty
     end
   | TOP _ as p -> Fmt.(failwithf "TOP should never appear in a module_path here: %a" pp_module_path_t p)
@@ -92,7 +92,7 @@ let lookup_module_type env p =
   match p with
     (None, h) -> begin match Env.lookup env h with
         Env.ModuleType mty -> mty
-      | Env.Module _ -> Fmt.(failwithf "lookup_module_type: path %a did not map to module_type" string (MID.to_string h))
+      | Env.Module _ -> Fmt.(failwithf "lookup_module_type: path %a did not map to module_type" string (ID.to_string h))
     end
   | (Some mp, h) ->
     match lookup_module env mp with
@@ -100,7 +100,7 @@ let lookup_module_type env p =
         match l |> List.find_map (function
               SiModuleType(h', mty) when h=h' -> Some mty
             | _ -> None) with
-          None -> Fmt.(failwithf "lookup_module_type: cannot resolve, env lookup failure: %a.%s" pp_module_path_t mp (MID.to_string h))
+          None -> Fmt.(failwithf "lookup_module_type: cannot resolve, env lookup failure: %a.%s" pp_module_path_t mp (ID.to_string h))
         | Some mty ->
           mty
       end
