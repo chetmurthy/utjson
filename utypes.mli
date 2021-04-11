@@ -1,3 +1,11 @@
+module MID : sig
+type t = {prefix: string;  index: int}
+[@@deriving show { with_path = false },eq]
+
+val of_string : string -> t
+val to_string : t -> string
+val fresh : t list -> t -> t
+end
 
 type base_type_t =
   JNull | JString | JBool | JNumber | JArray | JObject
@@ -38,9 +46,9 @@ type atomic_utype_t =
   | ContentEncoding of string
 
 and module_path_t =
-    REL of string
-  | TOP of string
-  | DEREF of module_path_t * string
+    REL of MID.t
+  | TOP of MID.t
+  | DEREF of module_path_t * MID.t
 
 and utype_t =
     Simple of base_type_t
@@ -55,12 +63,12 @@ and utype_t =
 
 type struct_item_t =
     StTypes of bool * (string * utype_t) list
-  | StModuleBinding of string * module_expr_t
-  | StImport of string * string
+  | StModuleBinding of MID.t * module_expr_t
+  | StImport of string * MID.t
   | StLocal of structure * structure
   | StOpen of module_path_t
   | StInclude of module_path_t
-  | StModuleType of string * module_type_t
+  | StModuleType of MID.t * module_type_t
 
 and structure = struct_item_t list
 
@@ -68,20 +76,20 @@ and module_expr_t =
     MeStruct of structure
   | MeFunctorApp of module_expr_t * module_expr_t
   | MePath of module_path_t
-  | MeFunctor of (string * module_type_t) * module_expr_t
+  | MeFunctor of (MID.t * module_type_t) * module_expr_t
   | MeCast of module_expr_t * module_type_t
 
 and module_type_t =
     MtSig of signature
-  | MtFunctorType of (string * module_type_t) * module_type_t
-  | MtPath of module_path_t option * string
+  | MtFunctorType of (MID.t * module_type_t) * module_type_t
+  | MtPath of module_path_t option * MID.t
 
 and signature = sig_item_t list
 
 and sig_item_t =
     SiType of string
-  | SiModuleBinding of string * module_type_t
-  | SiModuleType of string * module_type_t
+  | SiModuleBinding of MID.t * module_type_t
+  | SiModuleType of MID.t * module_type_t
   | SiInclude of module_path_t
 
 [@@deriving show { with_path = false },eq]
@@ -97,4 +105,4 @@ type token =
   | Regexp of string
   | EOF
 
-val make_module_path : string list -> module_path_t
+val make_module_path : MID.t list -> module_path_t

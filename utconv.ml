@@ -34,7 +34,7 @@ let xorList l =
   let newmid () =
     let mid = Printf.sprintf "M%d" !counter in
     counter := 1 + !counter ;
-    mid
+    MID.of_string mid
 
   let uri2type = ref []
   let add_uri2type s r = uri2type := (s,r) :: !uri2type
@@ -78,8 +78,8 @@ let xorList l =
     | `String "number" -> [Simple JNumber]
     | `String "array" -> [Simple JArray]
     | `String "object" -> [Simple JObject]
-    | `String "integer" -> [Ref (Some(REL "Predefined"), "integer")]
-    | `String "scalar" -> [Ref (Some(REL "Predefined"), "scalar")]
+    | `String "integer" -> [Ref (Some(REL (MID.of_string "Predefined")), "integer")]
+    | `String "scalar" -> [Ref (Some(REL (MID.of_string "Predefined")), "scalar")]
     | v -> Fmt.(failwithf "conv_type: malformed type member: %a" pp_json v)
 
   let documentation_keys = [
@@ -110,7 +110,7 @@ let xorList l =
 
   let rec conv_type_l (j : json) = match j with
       `Assoc l when l |> List.for_all (fun (k,_) -> List.mem k documentation_keys) ->
-      [Ref (Some(REL "Predefined"), "json")]
+      [Ref (Some(REL (MID.of_string "Predefined")), "json")]
     | `Assoc l ->
       let keys = List.map fst l in
       keys |> List.iter (fun k ->

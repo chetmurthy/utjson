@@ -9,7 +9,7 @@ open Uttypecheck
    "import <uri> as M" in favor of
    "module M = struct <contents of uri> end"
 
-(2) inline all module-type-references in other module-types
+(2) [ALREADY DONE IN STEP 1] inline all module-type-references in other module-types
 
 (3) remove local...in...end blocks in favor of freshly-named module
 
@@ -84,52 +84,11 @@ let exec stl =
   dt.migrate_structure dt stl
 
 end
-(*
-module S2InlineModuleTypes = struct
 
-let rec lookup_module env = function
-    TOP _ as mp -> Fmt.(failwithf "S2InlineModuleTypes.lookup_module: forbidden %a" pp_module_path_t p)
-  | REL s -> begin match List.assoc s env with
-        v -> v
-      | exception Not_found -> Fmt.(failwithf "S2InlineModuleTypes.lookup_module: name %s not found" s)
-    end
-  | DEREF(mp, s) -> begin match lookup_module env mp with
-      Left me -> 
-    
-let rec inl_structure env stl =
-  let (env, revacc) = List.fold_left (fun (env,revacc) st ->
-      let (env,st) = inl_struct_item env st in
-      (env, st::revacc)
-    )
-      (env,[]) stl in
-  List.rev revacc
+(** convert local...in...end into an extra fresh module and rename
+    references. *)
 
-and inl_struct_item env st = match st with
-    StTypes _ -> (env, t)
-  | StModuleBinding(mid, me) ->
-    let me = inl_module_expr env me in
-    ((mid, Left me)::env, StModuleBinding(mid, me))
-  | StImport _ -> Fmt.(failwithf "S2InlineModuleTypes.inl_struct_item: internal error %a" pp_struct_item_t st)  
-  | StLocal (stl1, stl2) ->
-    let (env', stl1) = inl_structure env stl1 in
-    let (_, stl2 = inl_structure env' stl2 in
-    let newenv = List.fold_left (fun env -> function
-          StModuleBinding(mid, me) -> (mid, Left me)::env
-        | _ -> env)
-        env stl2 in
-    (ewenv, StLocal (stl1, stl2))
-
-  | StOpen of module_path_t
-  | StInclude of module_path_t
-  | StModuleType of string * module_type_t
-
-
-let exec stl =
-  inl_structure [] stl
-
-end
-*)
-module UnLocal = struct
+module S3UnLocal = struct
 
 end
 

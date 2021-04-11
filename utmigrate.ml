@@ -12,6 +12,7 @@ let _migrate_list subrw0 __dt__ l =
 
 type base_type_t = [%import: Utypes.base_type_t]
 and 'a bound_t = [%import: 'a Utypes.Bound.t]
+and mid_t = [%import: Utypes.MID.t]
 and size_constraint_t = [%import: Utypes.size_constraint_t
   [@with Bound.t := bound_t]
 ]
@@ -20,13 +21,23 @@ and range_constraint_t = [%import: Utypes.range_constraint_t
 ]
 and atomic_utype_t = [%import: Utypes.atomic_utype_t]
 and utype_t = [%import: Utypes.utype_t]
-and struct_item_t = [%import: Utypes.struct_item_t]
-and module_path_t = [%import: Utypes.module_path_t]
+and struct_item_t = [%import: Utypes.struct_item_t
+  [@with MID.t := mid_t]
+]
+and module_path_t = [%import: Utypes.module_path_t
+  [@with MID.t := mid_t]
+]
 and structure = [%import: Utypes.structure]
-and module_expr_t = [%import: Utypes.module_expr_t]
-and module_type_t = [%import: Utypes.module_type_t]
+and module_expr_t = [%import: Utypes.module_expr_t
+  [@with MID.t := mid_t]
+]
+and module_type_t = [%import: Utypes.module_type_t
+  [@with MID.t := mid_t]
+]
 and signature = [%import: Utypes.signature]
-and sig_item_t = [%import: Utypes.sig_item_t]
+and sig_item_t = [%import: Utypes.sig_item_t
+  [@with MID.t := mid_t]
+]
 [@@deriving migrate
     { optional = true
     ; dispatch_type = dispatch_table_t
@@ -39,6 +50,7 @@ and sig_item_t = [%import: Utypes.sig_item_t]
         ; types = [
             base_type_t
           ; bound_t
+          ; mid_t
           ; size_constraint_t
           ; range_constraint_t
           ; atomic_utype_t

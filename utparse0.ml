@@ -97,6 +97,7 @@ EXTEND
     module_type module_type_eoi
     ;
 
+    mid: [ [ uid = UIDENT -> MID.of_string uid ] ] ;
     base_type: [ [
         "null" -> JNull
       | "string" -> JString
@@ -170,7 +171,7 @@ EXTEND
       ]
     | "simple" [
         b = base_type -> Simple b
-      | l = LIST0 [ s = UIDENT ; "." -> s ] ; id = LIDENT ->
+      | l = LIST0 [ s = mid ; "." -> s ] ; id = LIDENT ->
         match l with [
           [] -> Ref None id
         | l ->
@@ -202,7 +203,7 @@ EXTEND
         match p with [
           [] -> assert False
         | [h] -> MtPath None h
-        | l ->
+        | (l : list MID.t) ->
           let (last, l) = sep_last l in
           let p = make_module_path l in
           MtPath (Some p) last
@@ -211,7 +212,7 @@ EXTEND
     ;
 
     module_path: [ [
-        p = LIST1 UIDENT SEP "." -> p
+        p = LIST1 mid SEP "." -> p
       ] ]
     ;
 
@@ -236,26 +237,26 @@ EXTEND
     ]
     ;
     module_param: [ [
-        "(" ; id = UIDENT ; ":" ; mty = module_type ; ")" -> (id, mty)
+        "(" ; id = mid ; ":" ; mty = module_type ; ")" -> (id, mty)
       ] ]
     ;
 
     struct_item: [ [
-        "module" ; uid=UIDENT ; "=" ; e = module_expr ; ";" -> StModuleBinding uid e
-      | "module" ; "type" ; uid=UIDENT ; "=" ; e = module_type ; ";" -> StModuleType uid e
+        "module" ; uid=mid ; "=" ; e = module_expr ; ";" -> StModuleBinding uid e
+      | "module" ; "type" ; uid=mid ; "=" ; e = module_type ; ";" -> StModuleType uid e
       | "local" ; l1 = structure ; "in" ; l2 = structure ; "end" ; ";" -> StLocal l1 l2
       | "type" ; rflag = [ "rec" -> True | "nonrec" -> False | -> False ] ;
         l = LIST1 [ id = LIDENT ; "=" ; t = utype -> (id, t) ] SEP "and" ;
         ";" -> StTypes rflag l
-      | "import" ; s=STRING ; "as"; uid=UIDENT ; ";" -> StImport s uid
+      | "import" ; s=STRING ; "as"; uid=mid ; ";" -> StImport s uid
       | "open" ; p = module_path ; ";" -> StOpen (make_module_path p)
       | "include" ; p = module_path ; ";" -> StInclude (make_module_path p)
       ] ]
     ;
     sig_item: [ [
         s = LIDENT ; ";" -> SiType s
-      | "module" ; uid = UIDENT ; ":" ; mty=module_type ; ";" -> SiModuleBinding uid mty
-      | "module" ; "type" ; uid = UIDENT ; "=" ; mty=module_type ; ";" -> SiModuleType uid mty
+      | "module" ; uid = mid ; ":" ; mty=module_type ; ";" -> SiModuleBinding uid mty
+      | "module" ; "type" ; uid = mid ; "=" ; mty=module_type ; ";" -> SiModuleType uid mty
       | "include" ; p = module_path ; ";" -> SiInclude (make_module_path p)
       ] ]
     ;
