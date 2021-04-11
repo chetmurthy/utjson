@@ -1,3 +1,21 @@
+eval_test.cmo : \
+    utypes.cmi \
+    uttypecheck.cmo \
+    uttestutil.cmo \
+    utprint.cmo \
+    utparse0.cmo \
+    utio.cmo \
+    uteval.cmo \
+    utconv.cmo
+eval_test.cmx : \
+    utypes.cmx \
+    uttypecheck.cmx \
+    uttestutil.cmx \
+    utprint.cmx \
+    utparse0.cmx \
+    utio.cmx \
+    uteval.cmx \
+    utconv.cmx
 schemastore_test.cmo : \
     utypes.cmi \
     uttestutil.cmo \

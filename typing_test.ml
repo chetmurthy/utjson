@@ -7,6 +7,7 @@ open Utypes
 open Utparse0
 open Utprint
 open Utio
+open Utio.Debug
 open Utconv
 open Uttypecheck
 

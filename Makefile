@@ -11,18 +11,19 @@ IMPORT_OCAMLCFLAGS = -ppopt -pa_import-I -ppopt . -ppopt -pa_passthru-debug
 OBJ=ututil.cmo utypes.cmo utlexing.cmo utmigrate.cmo utparse0.cmo utprint.cmo \
     utio.cmo utconv.cmo uttypecheck.cmo uteval.cmo
 OML=ututil.ml uttestutil.ml utio.ml utconv.ml uttypecheck.ml uteval.ml \
-    syntax_test.ml schemastore_test.ml typing_test.ml
+    syntax_test.ml schemastore_test.ml typing_test.ml eval_test.ml
 IMPORT_OML=utypes.ml utmigrate.ml
 LEXML=utlexing.ml
 RML=utparse0.ml utprint.ml
 
-all: $(OBJ) syntax_test typing_test schemastore_test
+all: $(OBJ) syntax_test typing_test schemastore_test eval_test
 
 test:: all
 	rm -rf _build && mkdir -p _build
 	./syntax_test
 	./typing_test
 	./schemastore_test
+	./eval_test
 
 syntax_test: $(OBJ) uttestutil.cmo syntax_test.cmo
 	$(OCAMLFIND) ocamlc $(DEBUG) $(OCAMLCFLAGS) -package $(PACKAGES),oUnit -linkpkg -linkall -syntax camlp5r $^ -o $@

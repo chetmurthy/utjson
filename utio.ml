@@ -23,6 +23,7 @@ let module_expr_to_string t = print_module_expr Pprintf.empty_pc t
 let module_type_of_string_exn s = s |> parse_string parse_module_type_eoi
 let module_type_to_string t = print_module_type Pprintf.empty_pc t
 
+module Debug = struct
 let printer = show_utype_t
 let cmp = equal_utype_t
 
@@ -44,3 +45,16 @@ let signature_cmp = equal_signature
 
 let structure_printer x = "<<"^(show_structure x)^">>"
 let structure_cmp = equal_structure
+end
+
+
+module Normal = struct
+include Debug
+let printer x  = "<<"^(to_string x)^">>"
+let struct_item_printer x = "<<"^(struct_item_to_string x)^">>"
+let module_expr_printer x = "<<"^(module_expr_to_string x)^">>"
+let module_type_printer x = "<<"^(module_type_to_string x)^">>"
+let sig_item_printer x = "<<"^(sig_item_to_string x)^">>"
+let signature_printer x = "<<"^(signature_to_string x)^">>"
+let structure_printer x = "<<"^(structure_to_string x)^">>"
+end
