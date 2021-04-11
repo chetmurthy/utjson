@@ -96,8 +96,10 @@ and pr_struct_item pc = fun [
     pprintf pc "local %p in %p end;" 
       (plist_with "" print_struct_item 0) l1
       (plist_with "" print_struct_item 0) l2
-  | StOpen p ->
+  | StOpen p None ->
     pprintf pc "open %p;" print_module_path p
+  | StOpen p (Some ty) ->
+    pprintf pc "open %p : %p;" print_module_path p print_module_type ty
   | StInclude p None ->
     pprintf pc "include %p;" print_module_path p
   | StInclude p (Some ty) ->

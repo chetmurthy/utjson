@@ -177,8 +177,16 @@ and tc_struct_item env = function
     let st = StLocal (stl1, stl2) in
     (env, (st, sil2))
 
-  | StOpen p as st ->
-    let mty = lookup_module env p in begin match mty with
+  | StOpen (p, formal_mty) as st ->
+    let formal_mty = Option.map (tc_module_type env) formal_mty in
+    let actual_mty = lookup_module env p in
+    formal_mty |> Option.iter (fun formal_mty ->
+        if not (satisfies_constraint env ~lhs:actual_mty ~rhs:formal_mty) then
+          Fmt.(failwithf "tc_struct_item: open (%a : %a) does not satisfy %a"
+                 pp_module_path_t p pp_module_type_t actual_mty pp_module_type_t formal_mty)) ;
+    let mty = match formal_mty with Some mty -> mty | None -> actual_mty in
+    let st = StOpen (p, Some mty) in
+    begin match mty with
         MtSig l ->
         let (env, _) = tc_signature env l in
         (env, (st,[]))

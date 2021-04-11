@@ -33,6 +33,23 @@ local import "lib/predefined.utj" as Predefined; in
 end ;
 |} |> structure_of_string_exn |> S2Typecheck.exec)
       )
+  ; "open" >:: (fun ctxt -> 
+        assert_equal ~printer:Normal.structure_printer ~cmp:structure_cmp
+        ({|
+module M = struct
+  type nonrec t = object;
+end : sig t; end;
+type nonrec t = array;
+open M : sig t; end;
+type nonrec u = t;
+|} |> structure_of_string_exn )
+        ({|
+module M = struct type t = object ; end ;
+type t = array ;
+open M ;
+type u = t ;
+|} |> structure_of_string_exn |> S2Typecheck.exec)
+      )
   ]
 
 

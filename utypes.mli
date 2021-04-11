@@ -66,7 +66,7 @@ type struct_item_t =
   | StModuleBinding of ID.t * module_expr_t
   | StImport of string * ID.t
   | StLocal of structure * structure
-  | StOpen of module_path_t
+  | StOpen of module_path_t * module_type_t option
   | StInclude of module_path_t * module_type_t option
   | StModuleType of ID.t * module_type_t
 

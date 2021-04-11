@@ -249,7 +249,8 @@ EXTEND
         l = LIST1 [ id = LIDENT ; "=" ; t = utype -> (ID.of_string id, t) ] SEP "and" ;
         ";" -> StTypes rflag l
       | "import" ; s=STRING ; "as"; uid=mid ; ";" -> StImport s uid
-      | "open" ; p = module_path ; ";" -> StOpen (make_module_path p)
+      | "open" ; p = module_path ; ";" -> StOpen (make_module_path p) None
+      | "open" ; p = module_path ; ":" ; t = module_type ; ";" -> StOpen (make_module_path p) (Some t)
       | "include" ; p = module_path ; ";" -> StInclude (make_module_path p) None
       | "include" ; p = module_path ; ":" ; t = module_type ; ";" -> StInclude (make_module_path p) (Some t)
       ] ]

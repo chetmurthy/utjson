@@ -125,7 +125,7 @@ let parsing = "parsing" >::: [
       ; ((StTypes (false,
                  [(ID.of_string "integer", (And ((Simple JNumber), (Atomic [(MultipleOf 1.)]))))])),
          "type integer = number && [ multipleOf 1.0 ; ] ;")
-      ; ((StOpen (DEREF (REL (ID.of_string "M"), (ID.of_string "N")))),
+      ; ((StOpen (DEREF (REL (ID.of_string "M"), (ID.of_string "N")), None)),
          "open M.N;")
       ; ((StInclude (DEREF (REL (ID.of_string "M"), (ID.of_string "N")), None)),
          "include M.N;")
