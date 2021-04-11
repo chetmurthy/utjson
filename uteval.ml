@@ -23,7 +23,7 @@ open Uttypecheck
    "module M = struct <contents of uri> end"
    also inlines all module-type-references in other module-types
 
-(4) remove "include" blocks, copying name-by-name
+(3) remove "include" blocks, copying name-by-name
 
 (5) map signature-constrained modules to a new module with just the
     entries that the signature lets thru.
@@ -139,7 +139,7 @@ module S1ElimLocal = struct
         let mid = fresh "LOCAL" in
         let st = StLocal([],
                          [StModuleBinding(mid, MeStruct stl1);
-                          StInclude (REL mid)]
+                          StInclude(REL mid, None)]
                          @stl2) in
         old_migrate_struct_item_t dt st
       | _ -> old_migrate_struct_item_t dt st in
@@ -157,54 +157,10 @@ let exec stl =
 
 end
 
-(** convert local...in...end into an extra fresh module and rename
-    references. *)
+(** remove "include <modulepath>" and replace with
+    struct-items copying entry-by-entry. *)
 
-module S3UnLocal = struct
-
-let all_mids stl =
-  let dt = make_dt () in
-  let mids = ref [] in
-  let add_mid mid = mids := mid:: !mids in
-  let old_migrate_module_path_t = dt.migrate_module_path_t in
-  let old_migrate_struct_item_t = dt.migrate_struct_item_t in
-  let old_migrate_sig_item_t = dt.migrate_sig_item_t in
-  let old_migrate_module_expr_t = dt.migrate_module_expr_t in
-  let old_migrate_module_type_t = dt.migrate_module_type_t in
-  let new_migrate_module_path_t dt mp = match mp with
-      REL mid -> add_mid mid ; mp
-    | TOP _ -> Fmt.(failwithf "S3UnLocal: internal error %a" pp_module_path_t mp)
-    | DEREF(mp, mid) -> add_mid mid ;
-      old_migrate_module_path_t dt mp in
-  let new_migrate_struct_item_t dt st = match st with
-      StModuleBinding (mid, _) -> add_mid mid ;
-      old_migrate_struct_item_t dt st
-    | StImport (_, mid) -> add_mid mid ;
-      old_migrate_struct_item_t dt st
-    | StModuleType (mid, _) ->  add_mid mid ;
-      old_migrate_struct_item_t dt st
-    | _ -> old_migrate_struct_item_t dt st in
-  let new_migrate_sig_item_t dt si = match si with
-      SiModuleBinding (mid, _) -> add_mid mid ;
-      old_migrate_sig_item_t dt si
-    | SiModuleType (mid, _) -> add_mid mid ;
-      old_migrate_sig_item_t dt si
-    | _ -> old_migrate_sig_item_t dt si in
-  let new_migrate_module_expr_t dt me = match me with
-      MeFunctor ((mid, _), _) -> add_mid mid ;
-      old_migrate_module_expr_t dt me
-    | _ -> old_migrate_module_expr_t dt me in
-  let new_migrate_module_type_t dt mt = match mt with
-      MtFunctorType ((mid, _), _) -> add_mid mid ;
-      old_migrate_module_type_t dt mt
-    | _ -> old_migrate_module_type_t dt mt in
-  let dt = { dt with
-             migrate_module_path_t = new_migrate_module_path_t ;
-             migrate_struct_item_t = new_migrate_struct_item_t ;
-             migrate_sig_item_t = new_migrate_sig_item_t ;
-             migrate_module_expr_t = new_migrate_module_expr_t ;
-             migrate_module_type_t = new_migrate_module_type_t } in
-  List.sort_uniq Stdlib.compare (dt.migrate_structure dt stl)
+module S3ElimInclude = struct
 
 end
 

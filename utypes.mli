@@ -67,7 +67,7 @@ type struct_item_t =
   | StImport of string * MID.t
   | StLocal of structure * structure
   | StOpen of module_path_t
-  | StInclude of module_path_t
+  | StInclude of module_path_t * module_type_t option
   | StModuleType of MID.t * module_type_t
 
 and structure = struct_item_t list

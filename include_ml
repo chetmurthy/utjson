@@ -75,8 +75,12 @@ open Uteval ;;
 #load "syntax_test.cmo";;
 open Syntax_test ;;
 *)
+(*
 #load "typing_test.cmo";;
 open Typing_test ;;
+*)
+#load "eval_test.cmo";;
+open Eval_test ;;
 
 (*
 #use "jq_examples.ml";;

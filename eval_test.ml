@@ -45,7 +45,7 @@ local  in
    type nonrec t1 = object;
    type nonrec t2 = object;
   end : sig t1; t2; end;
-  include LOCAL0;
+  include LOCAL0 : sig t1; t2; end;
   type nonrec t3 = t1 && [ "a": t2; ];
  end;
 |} |> structure_of_string_exn )

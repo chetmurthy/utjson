@@ -127,7 +127,7 @@ let parsing = "parsing" >::: [
          "type integer = number && [ multipleOf 1.0 ; ] ;")
       ; ((StOpen (DEREF (REL (MID.of_string "M"), (MID.of_string "N")))),
          "open M.N;")
-      ; ((StInclude (DEREF (REL (MID.of_string "M"), (MID.of_string "N")))),
+      ; ((StInclude (DEREF (REL (MID.of_string "M"), (MID.of_string "N")), None)),
          "include M.N;")
       ; ((StModuleBinding (MID.of_string "M",
                            (MeStruct [(StTypes (false, [("t", (Simple JObject))]))]))),

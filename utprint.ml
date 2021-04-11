@@ -98,8 +98,10 @@ and pr_struct_item pc = fun [
       (plist_with "" print_struct_item 0) l2
   | StOpen p ->
     pprintf pc "open %p;" print_module_path p
-  | StInclude p ->
+  | StInclude p None ->
     pprintf pc "include %p;" print_module_path p
+  | StInclude p (Some ty) ->
+    pprintf pc "include %p : %p;" print_module_path p print_module_type ty
   ]
 and pr_utype pc x = pr_utype_or pc x
 
