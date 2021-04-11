@@ -1,6 +1,7 @@
 open Asttools
 open Ututil
 open Utypes
+open Utmigrate
 
 
 module Env = struct
@@ -77,47 +78,25 @@ let fresh s =
     prefix^(string_of_int (num+1))
   else Fmt.(failwithf "fresh: internal error")
 
-let rec tc_utype env = function
-    Simple _ as ut -> ut
-  | And (ut1, ut2) -> And(tc_utype env ut1, tc_utype env ut2)
-  | Or (ut1, ut2) -> Or(tc_utype env ut1, tc_utype env ut2)
-  | Xor (ut1, ut2) -> Xor(tc_utype env ut1, tc_utype env ut2)
-  | Impl (ut1, ut2) -> Impl(tc_utype env ut1, tc_utype env ut2)
-  | Not ut -> Not(tc_utype env ut)
-  | Atomic l -> Atomic(List.map (tc_atomic_utype env) l)
-  | Ref (None, t) as ut ->
-    let _ = lookup_type env t in
-    ut
+let rec tc_utype env ut =
+  let dt = make_dt () in
+  let old_migrate_utype_t = dt.migrate_utype_t in
+  let new_migrate_utype_t dt = function
+      Ref (None, t) as ut ->
+      let _ = lookup_type env t in
+      ut
 
-  | Ref (Some mpath, t) as ut -> begin match lookup_module env mpath with
-        MtSig l ->
-        if List.mem (SiType t) l then
-          ut
-        else 
-          Fmt.(failwithf "tc_utype: utype %a not found in environment" pp_utype_t ut)
-      | _ -> Fmt.(failwithf "tc_utype: module-path %a did not yield a signature" pp_module_path_t mpath)
-    end
-
-and tc_atomic_utype env = function
-    Field (s, ut) -> Field(s, tc_utype env ut)
-  | FieldRE (s, ut) -> FieldRE(s, tc_utype env ut)
-  | FieldRequired _ as ut -> ut
-  | ArrayOf ut -> ArrayOf(tc_utype env ut)
-  | ArrayTuple l -> ArrayTuple(List.map (tc_utype env) l)
-  | ArrayUnique as ut -> ut
-  | ArrayIndex (s, ut) -> ArrayIndex(s, tc_utype env ut)
-  | (Size _
-    | StringRE _
-    | NumberBound _
-    | Sealed _
-    | MultipleOf _
-    | ContentMediaType _
-    | ContentEncoding _
-    | Enum _
-    | Default _
-    | Format _) as ut -> ut
-  | OrElse ut -> OrElse(tc_utype env ut)
-  | PropertyNames ut -> PropertyNames(tc_utype env ut)
+    | Ref (Some mpath, t) as ut -> begin match lookup_module env mpath with
+          MtSig l ->
+          if List.mem (SiType t) l then
+            ut
+          else 
+            Fmt.(failwithf "tc_utype: utype %a not found in environment" pp_utype_t ut)
+        | _ -> Fmt.(failwithf "tc_utype: module-path %a did not yield a signature" pp_module_path_t mpath)
+      end
+    | ut -> old_migrate_utype_t dt ut in
+  let dt = { dt with migrate_utype_t = new_migrate_utype_t } in
+  dt.migrate_utype_t dt ut
 
 and tc_struct_item env = function
     StTypes (recflag,l) ->
