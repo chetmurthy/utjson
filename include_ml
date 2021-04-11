@@ -48,21 +48,25 @@ open Utprint ;;
 #load "utio.cmo";;
 open Utio ;;
 
-let top pp x = Fmt.(pf stdout "<< %s >>" (pp Pprintf.empty_pc x)) ;;
+let top pp x = Fmt.(pf stdout "%s" (pp x)) ;;
 
-let top_utype x = top print_utype x ;;
+let top_id x = top Normal.id_printer x ;;
+(*
+#install_printer top_id ;;
+*)
+let top_utype x = top Normal.printer x ;;
 #install_printer top_utype ;;
 
-let top_struct_item x = top print_struct_item x ;;
+let top_struct_item x = top Normal.struct_item_printer x ;;
 #install_printer top_struct_item ;;
 
-let top_sig_item x = top print_sig_item x ;;
+let top_sig_item x = top Normal.sig_item_printer x ;;
 #install_printer top_sig_item ;;
 
-let top_module_type x = top print_module_type x ;;
+let top_module_type x = top Normal.module_type_printer x ;;
 #install_printer top_module_type ;;
 
-let top_module_expr x = top print_module_expr x ;;
+let top_module_expr x = top Normal.module_expr_printer x ;;
 #install_printer top_module_expr ;;
 
 #load "utconv.cmo";;
@@ -81,6 +85,12 @@ open Typing_test ;;
 *)
 #load "eval_test.cmo";;
 open Eval_test ;;
+#trace ElimEmptyLocal.exec ;;
+#trace S1ElimImport.exec ;;
+#trace S2ElimLocal.exec ;;
+#trace S3NameFunctorAppSubterms.exec ;;
+#trace S4Typecheck.exec ;;
+#trace S5ElimInclude.exec ;;
 
 (*
 #use "jq_examples.ml";;

@@ -20,7 +20,7 @@ let to_string {prefix=s; index=n} =
 
 let fresh l {prefix=s;index=n} =
   let nums = l |> List.filter_map (fun {prefix=s';index=m} ->
-      if s=s' then Some n else None) in
+      if s=s' then Some m else None) in
   let maxnum = List.fold_left max n nums in
   {prefix=s; index=maxnum+1}
 end
