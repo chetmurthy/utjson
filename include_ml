@@ -51,9 +51,8 @@ open Utio ;;
 let top pp x = Fmt.(pf stdout "%s" (pp x)) ;;
 
 let top_id x = top Normal.id_printer x ;;
-(*
 #install_printer top_id ;;
-*)
+
 let top_utype x = top Normal.printer x ;;
 #install_printer top_utype ;;
 

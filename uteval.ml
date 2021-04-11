@@ -1,6 +1,7 @@
 open Asttools
 open Ututil
 open Utypes
+open Utio
 open Utmigrate
 open Uttypecheck
 
@@ -52,11 +53,11 @@ At this point, structs are:
   (c) open
   (d) module-types
 
-module-expressions are:
+module-exprs are:
 
   (a) structs
   (b) functors
-  (c) functor-applications
+  (c) functor-applications to named/cast args
 
 (7) in all structures, replace instances of repeated names by:
 
@@ -290,6 +291,52 @@ let exec stl =
              pp_struct_item_t st)
     | _ -> old_migrate_struct_item_t dt st in
   let dt = { dt with migrate_struct_item_t = new_migrate_struct_item_t } in
+  dt.migrate_structure dt stl
+
+end
+
+(** rename names that are overridden later in the same structure *)
+
+module S7RenameOverridden = struct
+
+let st_overrides_names st = match st with
+    StTypes (_, l) -> (List.map fst l, [])
+  | StModuleBinding (mid, _) -> ([], [mid])
+  | StModuleType (mid, _) -> ([], [mid])
+  | StOpen (_, Some (MtSig sil)) ->
+    List.fold_left (fun (tlist, mlist) -> function
+          SiType tid -> (tid::tlist, mlist)
+        | SiModuleBinding (mid, _) -> (tlist, mid::mlist)
+        | SiModuleType (mid, _) -> (tlist, mid::mlist)
+        | SiInclude _  as si ->
+          Fmt.(failwithf "S7RenameOverridden.st_overrides_names: sig-item should never appear in inferred type: %s"
+                 (sig_item_to_string si))
+      ) ([], []) sil
+
+  | (StImport _
+    | StLocal _
+    | StInclude _
+    | StOpen _
+    ) ->
+    Fmt.(failwithf "S7RenameOverridden.st_overrides_names: struct-item should have been eliminated: %s"
+           (struct_item_to_string st))
+(*
+let st_uses_names st = match st with
+*)
+let overrides_names stl =
+  List.fold_right (fun st ((tlist, mlist), rhs) ->
+      let (t,m) = st_overrides_names st in
+      ((List.sort_uniq Stdlib.compare (t@tlist), List.sort_uniq Stdlib.compare (m@mlist)), (st,(tlist, mlist))::rhs))
+    stl (([], []), [])
+
+let exec stl =
+  let dt = make_dt () in
+  let old_migrate_structure = dt.migrate_structure in
+  let new_migrate_structure dt stl =
+
+    stl in
+
+  let dt = { dt with migrate_structure = new_migrate_structure } in
   dt.migrate_structure dt stl
 
 end
