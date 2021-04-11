@@ -7,9 +7,12 @@ open Uttypecheck
 (* Plan of attack:
 
 (1) convert "local <st1> in <st2> end" to
-    "module <Fresh1> = struct <st1> end ;
+    "local in module <Fresh1> = struct <st1> end ;
      include <Fresh1> ;
-     <st2> ;"
+     <st2> ;
+     end ;"
+
+    the empty first part of the local will tell us we can erase it.
 
     The next phase will add a type-constraint to the module,
     so we can later use it to know which names in <st2> to rewrite
@@ -117,27 +120,34 @@ let all_mids stl =
              migrate_sig_item_t = new_migrate_sig_item_t ;
              migrate_module_expr_t = new_migrate_module_expr_t ;
              migrate_module_type_t = new_migrate_module_type_t } in
-  List.sort_uniq Stdlib.compare (dt.migrate_structure dt stl)
+  ignore (dt.migrate_structure dt stl) ;
+  List.sort_uniq Stdlib.compare !mids
 
 end
-(*
+
 module S1ElimLocal = struct
   let exec stl =
     let mids = ref (Util.all_mids stl) in
     let fresh s =
       let s' = MID.fresh !mids (MID.of_string s) in
-      all_mids := s' :: all_mids ;
+      mids := s' :: !mids ;
       s' in
     let dt = make_dt () in
     let old_migrate_struct_item_t = dt.migrate_struct_item_t in
     let new_migrate_struct_item_t dt st = match st with
         StLocal (stl1, stl2) ->
         let mid = fresh "LOCAL" in
-        St
-
+        let st = StLocal([],
+                         [StModuleBinding(mid, MeStruct stl1);
+                          StInclude (REL mid)]
+                         @stl2) in
+        old_migrate_struct_item_t dt st
+      | _ -> old_migrate_struct_item_t dt st in
+    let dt = { dt with migrate_struct_item_t = new_migrate_struct_item_t } in
+    dt.migrate_structure dt stl
 
 end
-*)
+
 
 module S2Typecheck = struct
 
