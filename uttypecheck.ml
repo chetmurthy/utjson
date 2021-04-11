@@ -9,7 +9,9 @@ module Env = struct
       Type
     | Module of module_type_t
     | ModuleType of module_type_t
+  [@@deriving show { with_path = false },eq]
   type t = (string * binding_t) list
+  [@@deriving show { with_path = false },eq]
 
   let mt = []
   let push_type env id = (id, Type)::env
@@ -19,7 +21,53 @@ module Env = struct
   let lookup env name = match List.assoc name env with
       v -> v
     | exception Not_found -> Fmt.(failwithf "Env.lookup: cannot find module id %s in type-environment" name)
+
+  let dom l = List.map fst l
+  let module_vars env =
+    env |> List.filter_map (function
+          (s, Module _) -> Some s
+        | _ -> None)
 end
+
+module FMV = struct
+  let rec module_type env = function
+      MtSig l ->
+      let (_, fv) = signature env l in
+      fv
+  | MtFunctorType ((mid, argty), resty) ->
+    let arg_fv = module_type env argty in
+    let res_fv = module_type (mid::env) resty in
+    arg_fv@res_fv
+  | MtPath (None, _) -> []
+  | MtPath(Some mp, _) -> module_path env mp
+
+  and module_path env = function
+      REL id  ->
+      if List.mem id env then [] else [id]
+    | TOP _ as mp -> Fmt.(failwith "FMV.module_path: internal error %a" pp_module_path_t mp)
+    | DEREF (mp, _) -> module_path env mp
+
+  and signature env sil = 
+    List.fold_left (fun (env, fv) si ->
+        let (env, si_fv) = sig_item env si in
+        (env, si_fv@fv)
+      ) (env, []) sil
+
+and sig_item env = function
+    SiType _ -> (env, [])
+  | SiModuleBinding(mid, mty) -> (env, module_type env mty)
+  | SiModuleType (mid, mty) -> (env, module_type env mty)
+  | SiInclude mp -> (env, module_path env mp)
+
+let closed_over f x l = 
+  x
+  |> f []
+  |> uniquize
+  |> List.for_all (fun x -> List.mem x l)
+
+let closed f x = closed_over f x []
+end
+
 
 let lookup_type env h =
   match Env.lookup env h with
@@ -107,28 +155,36 @@ and tc_struct_item env = function
     let l =
       l |> List.map (fun (id, ut) -> (id, tc_utype subenv ut)) in
     let newenv = List.fold_left (fun env (id, _) -> Env.push_type env id) env l in
-    (newenv, l |> List.map (fun (id, _) -> SiType id))
+    (newenv,
+     (StTypes(recflag, l),
+     l |> List.map (fun (id, _) -> SiType id)))
 
   | StModuleBinding (mid, me) ->
-    let mty = tc_module_expr env me in
+    let (me, mty) = tc_module_expr env me in
+    let me = match mty with
+        MtSig _ -> MeCast (me, mty)
+      | _ -> me in
+    let st = StModuleBinding (mid, me) in
     let si = SiModuleBinding(mid, mty) in
-    (Env.push_module env (mid, mty), [si])
+    (Env.push_module env (mid, mty), (st, [si]))
 
   | StImport(fname, mid) ->
     let stl = Utconv.load_file fname in
     let st = StModuleBinding (mid, MeStruct stl) in
     tc_struct_item env st
 
-  | StLocal (l1, l2) ->
-    let (env',_) = tc_structure env l1 in
-    let (_, l2) = tc_structure env' l2 in
-    tc_signature env l2
+  | StLocal (stl1, stl2) ->
+    let (env',(stl1, _)) = tc_structure env stl1 in
+    let (_, (stl2, sil2)) = tc_structure env' stl2 in
+    let (env, sil2) = tc_signature env sil2 in
+    let st = StLocal (stl1, stl2) in
+    (env, (st, sil2))
 
   | StOpen p as st ->
     let mty = lookup_module env p in begin match mty with
         MtSig l ->
         let (env, _) = tc_signature env l in
-        (env, [])
+        (env, (st,[]))
         
       | _ -> Fmt.(failwith "tc_struct_item: cannot typecheck %a, path does not denote a module" pp_struct_item_t st)
     end
@@ -136,21 +192,23 @@ and tc_struct_item env = function
   | StInclude p as st ->
     let mty = lookup_module env p in begin match mty with
         MtSig l ->
-        tc_signature env l
+        let (env, sil) = tc_signature env l in
+        (env, (st, sil))
 
       | _ -> Fmt.(failwith "tc_struct_item: cannot typecheck %a, path does not denote a module" pp_struct_item_t st)
     end
 
   | StModuleType (id, mty) ->
     let mty = tc_module_type env mty in
-    (Env.push_module_type env (id, mty), [SiModuleType (id, mty)])
+    let st = StModuleType (id, mty) in
+    (Env.push_module_type env (id, mty), (st, [SiModuleType (id, mty)]))
 
 and tc_structure env l =
-  let (env, acc) = List.fold_left (fun (env,acc) st ->
-      let (env', sil) = tc_struct_item env st in
-      (env', sil::acc))
-      (env, []) l in
-  (env, List.concat (List.rev acc))
+  let (env, stacc, siacc) = List.fold_left (fun (env,stacc, siacc) st ->
+      let (env', (st, sil)) = tc_struct_item env st in
+      (env', st::stacc, sil::siacc))
+      (env, [], []) l in
+  (env, (List.rev stacc, List.concat (List.rev siacc)))
 
 and tc_signature env l =
   let (env, acc) = List.fold_left (fun (env,acc) si ->
@@ -177,32 +235,37 @@ and tc_sig_item env = function
 
 and tc_module_expr env = function
     MeStruct l ->
-    l
-    |> List.fold_left (fun (env,acc) st ->
-        let (env', sil) = tc_struct_item env st in
-        (env, sil@acc)) (env, [])
-    |> (fun (_, acc) -> MtSig (List.rev acc))
+    let (_, (stl, sil)) = tc_structure env l in
+    (MeStruct stl, MtSig sil)
 
   | MeFunctorApp(me1,me2) as me -> begin match (tc_module_expr env me1, tc_module_expr env me2) with
-      (MtFunctorType((mid, formal_mty), resmty), actual_mty) ->
-      let formal_mty = tc_module_type env formal_mty in
-      let actual_mty = tc_module_type env actual_mty in
+      ((me1, MtFunctorType((mid, formal_mty), resmty)), (me2, actual_mty)) ->
       let resmty = tc_module_type (Env.push_module env (mid, formal_mty)) resmty in
-      satisfies_constraint env ~lhs:actual_mty ~rhs:formal_mty ;
-      resmty
+      if not (satisfies_constraint env ~lhs:actual_mty ~rhs:formal_mty) then
+        Fmt.(failwithf "functor-application fails: argument (%a : %a) does not satisfy %a"
+               pp_module_expr_t me2 pp_module_type_t actual_mty pp_module_type_t formal_mty) ;
+      (MeFunctorApp(me1,me2), resmty)
 
-      | (lhs, _) -> Fmt.(failwithf "tc_module_expr: type of lhs not a functor-type %a" pp_module_type_t lhs)
+      | ((_, lhs), _) -> Fmt.(failwithf "tc_module_expr: type of lhs not a functor-type %a" pp_module_type_t lhs)
     end
 
   | MePath p as st ->
-    lookup_module env p
+    (st, lookup_module env p)
 
   | MeFunctor((mid, argmty), me) ->
     let argmty = tc_module_type env argmty in
-    let resmty = tc_module_expr (Env.push_module env (mid, argmty)) me in
-    MtFunctorType((mid, argmty), resmty)
+    let (me, resmty) = tc_module_expr (Env.push_module env (mid, argmty)) me in
+    let st = MeFunctor((mid, argmty), me) in
+    (st, MtFunctorType((mid, argmty), resmty))
 
-and tc_module_type env = function
+and tc_module_type env mt =
+  let mt' = tc_module_type0 env mt in
+  if not FMV.(closed_over module_type mt' (Env.module_vars env)) then
+    Fmt.(failwithf "tc_module_type: result was not closed over module vars:\nenv: %a\nmt (original): %a\nmt (after tc): %a\n"
+           Env.pp env pp_module_type_t mt pp_module_type_t mt') ;
+  mt'
+
+and tc_module_type0 env = function
     MtSig l ->
     let (_, l) = tc_signature env l in
     MtSig l

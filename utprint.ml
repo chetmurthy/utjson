@@ -53,11 +53,17 @@ and print_module_path pc = fun [
     ]
 
 and pr_module_expr pc = fun [
+    MeFunctorApp me1 me2 ->  pprintf pc "%p(%p)" print_module_expr me1 print_module_expr me2
+  | MeCast me mt -> pprintf pc "%p : %p" print_module_expr me print_module_type mt
+  | me -> pr_module_expr_simple pc me
+  ]
+and pr_module_expr_simple pc = fun [
     MeStruct l -> pprintf pc "struct@;%p@;end" print_structure l
-  | MeFunctorApp me1 me2 ->  pprintf pc "%p(%p)" print_module_expr me1 print_module_expr me2
   | MePath p -> print_module_path pc p
   | MeFunctor (id, mty) me ->  pprintf pc "functor (%s:%p) -> %p" id print_module_type mty print_module_expr me
+  | me -> pprintf pc "(%p)" print_module_expr me
   ]
+
 and pr_module_type pc = fun [
     MtSig l -> pprintf pc "sig@;%p@;end" print_signature l
   | MtFunctorType (id, mty1) mty2 -> pprintf pc "functor (%s:%p) -> %p" id print_module_type mty1 print_module_type mty2

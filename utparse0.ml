@@ -215,9 +215,13 @@ EXTEND
       ] ]
     ;
 
-    module_expr: [ [
+    module_expr: [
+      "top" LEFTA [
+        m1 = module_expr ; "(" ; m2 = module_expr ; ")" -> MeFunctorApp m1 m2
+      | m1 = module_expr ; ":" ; mt = module_type -> MeCast m1 mt
+      ]
+    | "simple" [
         "struct" ; l = structure ; "end" -> MeStruct l
-      | m1 = module_expr ; "(" ; m2 = module_expr ; ")" -> MeFunctorApp m1 m2
       | "functor" ; l = LIST1 module_param ; "->" ; m=module_expr ->
         List.fold_right (fun (s,mty) rhs -> MeFunctor (s,mty) rhs) l m
       | p = module_path ->
@@ -227,7 +231,9 @@ EXTEND
           let p = make_module_path l in
           MePath p
         ]
-      ] ]
+      | "(" ; me = module_expr ; ")" -> me
+      ]
+    ]
     ;
     module_param: [ [
         "(" ; id = UIDENT ; ":" ; mty = module_type ; ")" -> (id, mty)

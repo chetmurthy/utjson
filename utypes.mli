@@ -69,6 +69,7 @@ and module_expr_t =
   | MeFunctorApp of module_expr_t * module_expr_t
   | MePath of module_path_t
   | MeFunctor of (string * module_type_t) * module_expr_t
+  | MeCast of module_expr_t * module_type_t
 
 and module_type_t =
     MtSig of signature
