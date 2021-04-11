@@ -85,12 +85,37 @@ end ;
       )
   ]
 
+let elim_empty_local = "elim_empty_local" >::: [
+    "simple" >:: (fun ctxt -> 
+        assert_equal ~printer:Normal.structure_printer ~cmp:structure_cmp
+        ({|
+module LOCAL0 = struct type nonrec t1 = object; type nonrec t2 = object;
+  end : sig t1; t2; end;
+  type nonrec t1 = LOCAL0.t1; type nonrec t2 = LOCAL0.t2;
+  type nonrec t3 = t1 && [ "a": t2; ];
+|} |> structure_of_string_exn )
+        ({|
+local type t1 = object ;
+type t2 = object ;
+in
+  type t3 = t1 && [ "a": t2 ] ;
+end ;
+|} |> structure_of_string_exn
+ |> S1ElimLocal.exec
+ |> S2Typecheck.exec
+ |> S3ElimInclude.exec
+ |> S4ElimEmptyLocal.exec
+)
+      )
+  ]
+
 
 let tests = "all" >::: [
     simple
   ; expand_import
   ; elim_local
   ; elim_include
+  ; elim_empty_local
 ]
 
 if not !Sys.interactive then

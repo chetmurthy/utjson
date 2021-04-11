@@ -27,6 +27,8 @@ open Uttypecheck
     helpfully adorns "include" items with a signature, so
     we can just use that to guide our copying.
 
+(4) remove all StLocal, which had better be vacuous.
+
 (5) map signature-constrained modules to a new module with just the
     entries that the signature lets thru.
 
@@ -189,6 +191,19 @@ let exec stl =
   let dt = { dt with migrate_struct_item_t = new_migrate_struct_item_t } in
   dt.migrate_structure dt stl
 
+end
+
+module S4ElimEmptyLocal = struct
+  let exec stl =
+    let dt = make_dt () in
+    let old_migrate_structure = dt.migrate_structure in
+    let new_migrate_structure dt stl =
+      let stl = old_migrate_structure dt stl in
+      stl |> List.concat_map (function
+            StLocal([], l) -> l
+          | st -> [st]) in
+    let dt = { dt with migrate_structure = new_migrate_structure } in
+    dt.migrate_structure dt stl
 end
 
 module Absolute = struct
