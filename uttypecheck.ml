@@ -260,7 +260,7 @@ and tc_module_expr env = function
 
 and tc_module_type env mt =
   let mt' = tc_module_type0 env mt in
-  if not FMV.(closed_over module_type mt' (Env.module_vars env)) then
+  if not FMV.(closed module_type mt') then
     Fmt.(failwithf "tc_module_type: result was not closed over module vars:\nenv: %a\nmt (original): %a\nmt (after tc): %a\n"
            Env.pp env pp_module_type_t mt pp_module_type_t mt') ;
   mt'

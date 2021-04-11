@@ -31,7 +31,7 @@ local module Predefined = struct
         ({|
 local import "lib/predefined.utj" as Predefined; in
 end ;
-|} |> structure_of_string_exn |> S1ExpandImport.exec)
+|} |> structure_of_string_exn |> S1Typecheck.exec)
       )
   ]
 

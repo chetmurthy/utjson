@@ -5,7 +5,9 @@ open Uttypecheck
 
 (* Plan of attack:
 
-(1) remove "import <uri> as M" in favor of module M = struct <contents of uri> end
+(1) typecheck, which will also remove
+   "import <uri> as M" in favor of
+   "module M = struct <contents of uri> end"
 
 (2) inline all module-type-references in other module-types
 
@@ -62,9 +64,9 @@ module-expressions are:
 
 *)
 
-(** Expand import <uri> as M to module M = struct <contents of uri> end *)
+(** Typecheck and expand import <uri> as M to module M = struct <contents of uri> end *)
 
-module S1ExpandImport = struct
+module S1Typecheck = struct
 
 let exec stl =
   let dt = Utmigrate.make_dt () in
