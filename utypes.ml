@@ -23,6 +23,8 @@ let fresh l {prefix=s;index=n} =
       if s=s' then Some m else None) in
   let maxnum = List.fold_left max n nums in
   {prefix=s; index=maxnum+1}
+
+let sort_uniq_list l = List.sort_uniq Stdlib.compare l
 end
 
 type base_type_t = [%import: Utypes.base_type_t]
@@ -52,3 +54,29 @@ let make_module_path l =
     [] -> Fmt.(failwithf "make_module_path: internal error, should never be called with []")
   | (h::t) ->
     List.fold_left (fun mp id -> DEREF(mp, id)) (REL h) t
+
+module Env = struct
+  type ('a, 'b, 'c) t = { t : (ID.t * 'a) list; m : (ID.t * 'b) list; mt : (ID.t * 'c) list; }
+  let mk ?(t = []) ?(m=[]) ?(mt=[]) () = { t ; m ; mt }
+  let add_t it newv = { it with t = newv:: it.t }
+  let add_m it newv = { it with m = newv:: it.m }
+  let add_mt it newv = { it with mt = newv:: it.mt }
+
+  let sort_uniq {t; m; mt} = {
+    t = ID.sort_uniq_list t
+  ; m = ID.sort_uniq_list m
+  ; mt = ID.sort_uniq_list mt
+  }
+  let merge n1 n2 = {
+    t = (n1.t @ n2.t)
+  ; m = (n1.m @ n2.m)
+  ; mt = (n1.mt @ n2.mt)
+  } |> sort_uniq
+
+  let sub n1 n2 = {
+    t = subtract n1.t n2.t
+  ; m = subtract n1.m n2.m
+  ; mt = subtract n1.mt n2.mt
+  }
+
+end

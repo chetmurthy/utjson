@@ -142,7 +142,7 @@ let all_mids stl =
              migrate_module_expr_t = new_migrate_module_expr_t ;
              migrate_module_type_t = new_migrate_module_type_t } in
   ignore (dt.migrate_structure dt stl) ;
-  List.sort_uniq Stdlib.compare !mids
+  ID.sort_uniq_list !mids
 
 module Fresh = struct
   type t = ID.t list ref
@@ -295,44 +295,164 @@ let exec stl =
 
 end
 
-(** rename names that are overridden later in the same structure *)
+(** rename names that are overridden later in the same structure
+    Since these names are overridden, they cannot be seen outside
+    the structure.  This means that this is a purely local
+    modification.
+ *)
 
 module S7RenameOverridden = struct
 
-let st_overrides_names st = match st with
-    StTypes (_, l) -> (List.map fst l, [])
-  | StModuleBinding (mid, _) -> ([], [mid])
-  | StModuleType (mid, _) -> ([], [mid])
-  | StOpen (_, Some (MtSig sil)) ->
-    List.fold_left (fun (tlist, mlist) -> function
-          SiType tid -> (tid::tlist, mlist)
-        | SiModuleBinding (mid, _) -> (tlist, mid::mlist)
-        | SiModuleType (mid, _) -> (tlist, mid::mlist)
-        | SiInclude _  as si ->
-          Fmt.(failwithf "S7RenameOverridden.st_overrides_names: sig-item should never appear in inferred type: %s"
-                 (sig_item_to_string si))
-      ) ([], []) sil
+module Env = Utypes.Env
+
+module UE = struct
+  type t = { uses : (unit, unit, unit) Env.t ; exports : (unit, unit, unit) Env.t }
+  let mk ?(uses=Env.mk()) ?(exports=Env.mk()) () = {
+    uses ; exports
+  }
+
+  let override_right ue1 ue2 =
+    { uses = Env.merge ue1.uses (Env.sub ue2.uses ue1.exports)
+    ; exports = Env.merge ue1.exports ue2.exports }
+
+  let clear_exports {uses; exports} = { uses ; exports = Env.mk() }
+
+  let merge ue1 ue2 = {
+    uses = Env.merge ue1.uses ue2.uses
+  ; exports = Env.merge ue1.exports ue2.exports
+  }
+end
+
+module UseExport = UE
+
+let utype_uses ut =
+  let dt = make_dt () in
+  let names = ref (Env.mk()) in
+  let add_tid tid = names := Env.add_t !names (tid,()) in
+  let add_mid mid = names := Env.add_m !names (mid,()) in
+  let old_migrate_utype_t = dt.migrate_utype_t in
+  let old_migrate_module_path_t = dt.migrate_module_path_t in
+  let new_migrate_utype_t dt ut = match ut with
+      Ref (None, tid) -> add_tid tid ; ut
+    | _ -> old_migrate_utype_t dt ut in
+  let new_migrate_module_path_t dt mp = match mp with
+    REL mid -> add_mid mid ; mp
+    | _ -> old_migrate_module_path_t dt mp in
+  let dt = { dt with
+             migrate_utype_t = new_migrate_utype_t
+           ; migrate_module_path_t = new_migrate_module_path_t } in
+  ignore (dt.migrate_utype_t dt ut) ;
+  Env.sort_uniq !names
+
+let rec me_uses me = match me with
+    MeStruct stl ->
+    let ue = List.fold_left (fun ue st ->
+        let st_ue = st_uses_exports st in
+        UE.override_right ue st_ue
+      ) (UE.mk()) stl in
+    ue.UE.uses
+
+  | MeFunctorApp (me1, me2) ->
+    let uses_me1 = me_uses me1 in
+    let uses_me2 = me_uses me2 in
+    Env.merge uses_me1 uses_me2
+
+  | MePath mp -> mp_uses mp
+
+  | MeFunctor ((mid, argmty), me) ->
+    assert FMV.(closed module_type argmty) ;
+    let uses_me = me_uses me in
+    Env.sub uses_me (Env.mk ~m:[mid,()] ())
+
+  | MeCast(me, mty) ->
+    assert FMV.(closed module_type mty) ;
+    me_uses me
+
+and mp_uses = function
+    REL mid -> Env.mk ~m:[mid,()] ()
+  | TOP _ as mp -> Fmt.(failwithf "mp_uses: internal error %a" pp_module_path_t mp)
+  | DEREF(mp, _) -> mp_uses mp
+
+and st_uses_exports st = match st with
+    StTypes (recflag, l) ->
+    let uses =
+      l
+      |> List.map (fun (_, ut) -> utype_uses ut)
+      |> List.fold_left Env.merge (Env.mk()) in
+    let uses = if recflag then
+        Env.sub uses (Env.mk ~t:(List.map (fun (id, _) -> (id, ())) l) ())
+      else uses in
+    UE.mk ~uses ~exports:(Env.mk ~t:(List.map (fun (id, _) -> (id, ())) l) ()) ()
+
+  | StModuleBinding (mid, me) ->
+    let uses = me_uses me in
+    UE.mk ~uses ~exports:(Env.mk ~m:[mid,()] ()) ()
+
+  | StModuleType (mid, mty) ->
+    assert FMV.(closed module_type mty) ;
+    UE.mk ~exports:(Env.mk ~m:[mid,()] ()) ()
+
+  | StOpen (mp, Some (MtSig sil as mty)) ->
+    assert FMV.(closed module_type mty) ;
+    let uses = mp_uses mp in
+    let exports = sil_exports sil in
+    UE.mk ~uses ~exports ()
 
   | (StImport _
     | StLocal _
     | StInclude _
     | StOpen _
     ) ->
-    Fmt.(failwithf "S7RenameOverridden.st_overrides_names: struct-item should have been eliminated: %s"
+    Fmt.(failwithf "S7RenameOverridden.st_uses_exports: struct-item should have been eliminated: %s"
            (struct_item_to_string st))
-(*
-let st_uses_names st = match st with
+
+and sil_exports sil =
+  List.fold_left (fun n -> function
+        SiType tid -> Env.add_t n (tid,())
+      | SiModuleBinding (mid, mty) ->
+        assert FMV.(closed module_type mty) ;
+        Env.add_m n (mid,())
+
+  | SiModuleType (mid, mty) ->
+    assert FMV.(closed module_type mty) ;
+    Env.add_m n (mid,())
+  | SiInclude _ as si ->
+    Fmt.(failwithf "sil_exports: internal error, unexpected %a" pp_sig_item_t si)
+    ) (Env.mk ()) sil
+
+let stl_uses_exports stl =
+  List.map (fun st -> (st, st_uses_exports st)) stl
+
+let stl_compute_accum stl_ue =
+  List.fold_right (fun (st, ue) (l, cum_e) ->
+      let new_cum_e = Env.merge cum_e ue.UE.exports in
+      (((st, ue),cum_e)::l, new_cum_e)
+    ) stl_ue ([], Env.mk ())
+
+(** strategy:
+
+    Each entry in stl_ue_accum has:
+    (1) the struct_item
+    (2) its UE (uses, exports) names
+    (3) the accumulated exported names of all struct_items
+        after it.  Call this the "accumulated tail exports"
+        (ATE).
+
+    If this entry exports a name, and the ATE has this name also,
+    then we need to rename it.  If the entry is a recursive definition,
+    then we need to take care during rename.
+
+    If this entry *uses* a name, then there should be a renaming passed in
+    in the env, which we will apply.
+
 *)
-let overrides_names stl =
-  List.fold_right (fun st ((tlist, mlist), rhs) ->
-      let (t,m) = st_overrides_names st in
-      ((List.sort_uniq Stdlib.compare (t@tlist), List.sort_uniq Stdlib.compare (m@mlist)), (st,(tlist, mlist))::rhs))
-    stl (([], []), [])
 
 let exec stl =
   let dt = make_dt () in
   let old_migrate_structure = dt.migrate_structure in
   let new_migrate_structure dt stl =
+    let stl_ue = stl_uses_exports stl in
+    let stl_ue_cum = stl_compute_accum stl_ue in
 
     stl in
 

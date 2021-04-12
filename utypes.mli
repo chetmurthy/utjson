@@ -5,6 +5,7 @@ type t = {prefix: string;  index: int}
 val of_string : string -> t
 val to_string : t -> string
 val fresh : t list -> t -> t
+val sort_uniq_list : t list -> t list
 end
 
 type base_type_t =
@@ -106,3 +107,16 @@ type token =
   | EOF
 
 val make_module_path : ID.t list -> module_path_t
+
+module Env :
+sig
+  type ('a, 'b, 'c) t = { t : (ID.t * 'a) list; m : (ID.t * 'b) list; mt : (ID.t * 'c) list; }
+  val mk :
+    ?t:(ID.t * 'a) list -> ?m:(ID.t * 'b) list -> ?mt:(ID.t * 'c) list -> unit -> ('a, 'b, 'c) t
+  val add_t : ('a, 'b, 'c) t -> (ID.t * 'a) -> ('a, 'b, 'c) t
+  val add_m : ('a, 'b, 'c) t -> (ID.t * 'b) -> ('a, 'b, 'c) t
+  val add_mt : ('a, 'b, 'c) t -> (ID.t * 'c) -> ('a, 'b, 'c) t
+  val sort_uniq : ('a, 'b, 'c) t -> ('a, 'b, 'c) t
+  val merge : ('a, 'b, 'c) t -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t
+  val sub : ('a, 'b, 'c) t -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t
+end
