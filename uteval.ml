@@ -258,7 +258,7 @@ end
 module S4Typecheck = struct
 
 let exec stl = 
-  let (_, (stl, _)) = tc_structure Env.mt stl in
+  let (_, (stl, _)) = tc_structure TEnv.mt stl in
   stl
 
 end

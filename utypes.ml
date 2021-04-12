@@ -57,6 +57,7 @@ let make_module_path l =
 
 module Env = struct
   type ('a, 'b, 'c) t = { t : (ID.t * 'a) list; m : (ID.t * 'b) list; mt : (ID.t * 'c) list; }
+  [@@deriving show { with_path = false },eq]
   let mk ?(t = []) ?(m=[]) ?(mt=[]) () = { t ; m ; mt }
   let add_t it newv = { it with t = newv:: it.t }
   let add_m it newv = { it with m = newv:: it.m }
@@ -79,4 +80,10 @@ module Env = struct
   ; mt = subtract n1.mt n2.mt
   }
 
+  let lookup_t t k = List.assoc_opt k t.t
+  let lookup_m t k = List.assoc_opt k t.m
+  let lookup_mt t k = List.assoc_opt k t.mt
+  let has_t t k = List.mem_assoc k t.t
+  let has_m t k = List.mem_assoc k t.m
+  let has_mt t k = List.mem_assoc k t.mt
 end

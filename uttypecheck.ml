@@ -4,27 +4,25 @@ open Utypes
 open Utmigrate
 
 
-module Env = struct
-  type binding_t =
-      Module of module_type_t
-    | ModuleType of module_type_t
-  [@@deriving show { with_path = false },eq]
-  type t = ID.t list * (ID.t * binding_t) list
+module TEnv = struct
+  type t = (unit, module_type_t, module_type_t) Env.t
   [@@deriving show { with_path = false },eq]
 
-  let mt = ([], [])
-  let push_type (tenv, menv) id = (id::tenv, menv)
-  let push_module (tenv, menv) (id, mty) = (tenv, (id, Module mty)::menv)
-  let push_module_type (tenv, menv) (id, mty) = (tenv, (id, ModuleType mty)::menv)
+  let mt = Env.mk ()
+  let push_type t id = Env.add_t t (id,())
+  let push_module t (id, mty) = Env.add_m t (id, mty)
+  let push_module_type t (id, mty) = Env.add_mt t (id, mty)
 
-  let lookup_type (tenv,_) name = match List.assoc name tenv with
-      v -> v
-    | exception Not_found -> Fmt.(failwithf "Env.lookup_type: cannot find type %s in type-environment" (ID.to_string name))
+  let lookup_type t name = match Env.lookup_t t name with
+      Some v -> v
+    | None -> Fmt.(failwithf "Env.lookup_type: cannot find type %s in type-environment" (ID.to_string name))
 
-  let lookup (_, menv) name = match List.assoc name menv with
-      v -> v
-    | exception Not_found -> Fmt.(failwithf "Env.lookup: cannot find module[_type] id %s in type-environment" (ID.to_string name))
-
+  let lookup_module t name = match Env.lookup_m t name with
+      Some v -> v
+    | None -> Fmt.(failwithf "Env.lookup_module: cannot find module id %s in type-environment" (ID.to_string name))
+  let lookup_module_type t name = match Env.lookup_mt t name with
+      Some v -> v
+    | None -> Fmt.(failwithf "Env.lookup_module: cannot find module_type id %s in type-environment" (ID.to_string name))
 end
 
 module FMV = struct
@@ -66,17 +64,13 @@ let closed_over f x l =
 let closed f x = closed_over f x []
 end
 
-
-let lookup_type (tenv,_) h =
-  if List.mem h tenv then ()
+let check_has_type t h =
+  if Env.has_t t h then ()
   else
-    Fmt.(failwith "lookup_type: id %s not found in type-environment" (ID.to_string h))
+    Fmt.(failwith "check_has_type: id %s not found in type-environment" (ID.to_string h))
 
 let rec lookup_module env = function
-    REL h -> begin match Env.lookup env h with
-        Env.ModuleType _ -> Fmt.(failwithf "lookup_module: path %s refers to a module_type" (ID.to_string h))
-      | Env.Module mty -> mty
-    end
+    REL h -> TEnv.lookup_module env h
   | TOP _ as p -> Fmt.(failwithf "TOP should never appear in a module_path here: %a" pp_module_path_t p)
   | DEREF (p, id) -> begin match lookup_module env p with
         MtSig l -> begin match l |> List.find_map (function
@@ -85,15 +79,13 @@ let rec lookup_module env = function
           None -> Fmt.(failwith "lookup_module: cannot resolve, env lookup failure" pp_module_path_t p)
         | Some mty -> mty
         end
+      | mty -> Fmt.(failwith "lookup_module: path %a resolves to type %a" pp_module_path_t p pp_module_type_t mty)
     end
     
 
 let lookup_module_type env p =
   match p with
-    (None, h) -> begin match Env.lookup env h with
-        Env.ModuleType mty -> mty
-      | Env.Module _ -> Fmt.(failwithf "lookup_module_type: path %a did not map to module_type" string (ID.to_string h))
-    end
+    (None, h) -> TEnv.lookup_module_type env h
   | (Some mp, h) ->
     match lookup_module env mp with
       MtSig l -> begin
@@ -104,6 +96,8 @@ let lookup_module_type env p =
         | Some mty ->
           mty
       end
+    | mty -> Fmt.(failwith "lookup_module_type: path %a resolves to type %a" pp_module_path_t mp pp_module_type_t mty)
+
 
 let satisfies_constraint env ~lhs ~rhs =
   match (lhs, rhs) with
@@ -128,7 +122,7 @@ let rec tc_utype env ut =
   let old_migrate_utype_t = dt.migrate_utype_t in
   let new_migrate_utype_t dt = function
       Ref (None, t) as ut ->
-      let _ = lookup_type env t in
+      check_has_type env t ;
       ut
 
     | Ref (Some mpath, t) as ut -> begin match lookup_module env mpath with
@@ -146,12 +140,12 @@ let rec tc_utype env ut =
 and tc_struct_item env = function
     StTypes (recflag,l) ->
     let subenv = if recflag then
-        l |> List.fold_left (fun env (id, _) -> Env.push_type env id)
+        l |> List.fold_left (fun env (id, _) -> TEnv.push_type env id)
           env
     else env in
     let l =
       l |> List.map (fun (id, ut) -> (id, tc_utype subenv ut)) in
-    let newenv = List.fold_left (fun env (id, _) -> Env.push_type env id) env l in
+    let newenv = List.fold_left (fun env (id, _) -> TEnv.push_type env id) env l in
     (newenv,
      (StTypes(recflag, l),
      l |> List.map (fun (id, _) -> SiType id)))
@@ -163,7 +157,7 @@ and tc_struct_item env = function
       | _ -> me in
     let st = StModuleBinding (mid, me) in
     let si = SiModuleBinding(mid, mty) in
-    (Env.push_module env (mid, mty), (st, [si]))
+    (TEnv.push_module env (mid, mty), (st, [si]))
 
   | StImport(fname, mid) ->
     let stl = Utconv.load_file fname in
@@ -214,7 +208,7 @@ and tc_struct_item env = function
   | StModuleType (id, mty) ->
     let mty = tc_module_type env mty in
     let st = StModuleType (id, mty) in
-    (Env.push_module_type env (id, mty), (st, [SiModuleType (id, mty)]))
+    (TEnv.push_module_type env (id, mty), (st, [SiModuleType (id, mty)]))
 
 and tc_structure env l =
   let (env, stacc, siacc) = List.fold_left (fun (env,stacc, siacc) st ->
@@ -231,13 +225,13 @@ and tc_signature env l =
   (env, List.concat (List.rev acc))
   
 and tc_sig_item env = function
-    SiType s as si -> (Env.push_type env s, [si])
+    SiType s as si -> (TEnv.push_type env s, [si])
   | SiModuleBinding (mid, mty) ->
     let mty = tc_module_type env mty in
-    (Env.push_module env (mid, mty), [SiModuleBinding (mid, mty)])
+    (TEnv.push_module env (mid, mty), [SiModuleBinding (mid, mty)])
   | SiModuleType (mid, mty) ->
     let mty = tc_module_type env mty in
-    (Env.push_module_type env (mid, mty), [SiModuleType (mid, mty)])
+    (TEnv.push_module_type env (mid, mty), [SiModuleType (mid, mty)])
   | SiInclude p ->
     let mty = lookup_module env p in begin match mty with
         MtSig l ->
@@ -253,7 +247,7 @@ and tc_module_expr env = function
 
   | MeFunctorApp(me1,me2) as me -> begin match (tc_module_expr env me1, tc_module_expr env me2) with
       ((me1, MtFunctorType((mid, formal_mty), resmty)), (me2, actual_mty)) ->
-      let resmty = tc_module_type (Env.push_module env (mid, formal_mty)) resmty in
+      let resmty = tc_module_type (TEnv.push_module env (mid, formal_mty)) resmty in
       if not (satisfies_constraint env ~lhs:actual_mty ~rhs:formal_mty) then
         Fmt.(failwithf "functor-application fails: argument (%a : %a) does not satisfy %a"
                pp_module_expr_t me2 pp_module_type_t actual_mty pp_module_type_t formal_mty) ;
@@ -267,7 +261,7 @@ and tc_module_expr env = function
 
   | MeFunctor((mid, argmty), me) ->
     let argmty = tc_module_type env argmty in
-    let (me, resmty) = tc_module_expr (Env.push_module env (mid, argmty)) me in
+    let (me, resmty) = tc_module_expr (TEnv.push_module env (mid, argmty)) me in
     let st = MeFunctor((mid, argmty), me) in
     (st, MtFunctorType((mid, argmty), resmty))
 
@@ -283,7 +277,7 @@ and tc_module_type env mt =
   let mt' = tc_module_type0 env mt in
   if not FMV.(closed module_type mt') then
     Fmt.(failwithf "tc_module_type: result was not closed over module vars:\nenv: %a\nmt (original): %a\nmt (after tc): %a\n"
-           Env.pp env pp_module_type_t mt pp_module_type_t mt') ;
+           TEnv.pp env pp_module_type_t mt pp_module_type_t mt') ;
   mt'
 
 and tc_module_type0 env = function
@@ -292,7 +286,7 @@ and tc_module_type0 env = function
     MtSig l
   | MtFunctorType ((mid, argty), resty) ->
     let argty = tc_module_type env argty in
-    let resty = tc_module_type (Env.push_module env (mid, argty)) resty in
+    let resty = tc_module_type (TEnv.push_module env (mid, argty)) resty in
     MtFunctorType ((mid, argty), resty)
   | MtPath (popt, id) ->
     lookup_module_type env (popt,id)
