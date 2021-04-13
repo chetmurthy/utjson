@@ -75,9 +75,9 @@ module Env = struct
   } |> sort_uniq
 
   let sub n1 n2 = {
-    t = subtract n1.t n2.t
-  ; m = subtract n1.m n2.m
-  ; mt = subtract n1.mt n2.mt
+    t = n1.t |> List.(filter (fun (id,_) -> not (mem_assoc id n2.t)))
+  ; m = n1.m |> List.(filter (fun (id,_) -> not (mem_assoc id n2.m)))
+  ; mt = n1.mt |> List.(filter (fun (id,_) -> not (mem_assoc id n2.mt)))
   }
 
   let lookup_t t k = List.assoc_opt k t.t
@@ -86,4 +86,25 @@ module Env = struct
   let has_t t k = List.mem_assoc k t.t
   let has_m t k = List.mem_assoc k t.m
   let has_mt t k = List.mem_assoc k t.mt
+
+  let merge n1 n2 = {
+    t = (n1.t @ n2.t)
+  ; m = (n1.m @ n2.m)
+  ; mt = (n1.mt @ n2.mt)
+  } |> sort_uniq
+
+  let intersect n1 n2 = {
+    t = n1.t |> List.(filter (fun (id,_) -> (mem_assoc id n2.t)))
+  ; m = n1.m |> List.(filter (fun (id,_) -> (mem_assoc id n2.m)))
+  ; mt = n1.mt |> List.(filter (fun (id,_) -> (mem_assoc id n2.mt)))
+  }
+
+  let empty = function
+      { t=[]; m=[]; mt=[] } -> true
+    | _ -> false
+  let nonempty x = not (empty x)
+
+  let dom_t {t; _} = List.map fst t
+  let dom_m {m; _} = List.map fst m
+  let dom_mt {mt; _} = List.map fst mt
 end

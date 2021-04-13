@@ -119,11 +119,17 @@ sig
   val add_mt : ('a, 'b, 'c) t -> (ID.t * 'c) -> ('a, 'b, 'c) t
   val sort_uniq : ('a, 'b, 'c) t -> ('a, 'b, 'c) t
   val merge : ('a, 'b, 'c) t -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t
-  val sub : ('a, 'b, 'c) t -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t
+  val sub : ('a, 'b, 'c) t -> ('d, 'e, 'f) t -> ('a, 'b, 'c) t
   val lookup_t : ('a, 'b, 'c) t -> ID.t -> 'a option
   val lookup_m : ('a, 'b, 'c) t -> ID.t -> 'b option
   val lookup_mt : ('a, 'b, 'c) t -> ID.t -> 'c option
   val has_t : ('a, 'b, 'c) t -> ID.t -> bool
   val has_m : ('a, 'b, 'c) t -> ID.t -> bool
   val has_mt : ('a, 'b, 'c) t -> ID.t -> bool
+  val empty : ('a, 'b, 'c) t -> bool
+  val nonempty : ('a, 'b, 'c) t -> bool
+  val intersect : ('a, 'b, 'c) t -> ('d, 'e, 'f) t -> ('a, 'b, 'c) t
+  val dom_t : ('a, 'b, 'c) t -> ID.t list
+  val dom_m : ('a, 'b, 'c) t -> ID.t list
+  val dom_mt : ('a, 'b, 'c) t -> ID.t list
 end

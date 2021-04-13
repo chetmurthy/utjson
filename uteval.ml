@@ -99,6 +99,30 @@ module-exprs are:
 
 module Util = struct
 
+let all_tids stl =
+  let dt = make_dt () in
+  let tids = ref [] in
+  let add_tid tid = tids := tid:: !tids in
+  let old_migrate_utype_t = dt.migrate_utype_t in
+  let old_migrate_struct_item_t = dt.migrate_struct_item_t in
+  let old_migrate_sig_item_t = dt.migrate_sig_item_t in
+  let new_migrate_utype_t dt ut = match ut with
+      Ref(_, tid) -> add_tid tid ; ut
+    | _ -> old_migrate_utype_t dt ut in
+  let new_migrate_struct_item_t dt st = match st with
+      StTypes (_, l) -> l |> List.iter (fun (tid, _) ->  add_tid tid) ;
+      old_migrate_struct_item_t dt st
+    | _ -> old_migrate_struct_item_t dt st in
+  let new_migrate_sig_item_t dt si = match si with
+      SiType tid -> add_tid tid ; si
+    | _ -> old_migrate_sig_item_t dt si in
+  let dt = { dt with
+             migrate_utype_t = new_migrate_utype_t ;
+             migrate_struct_item_t = new_migrate_struct_item_t ;
+             migrate_sig_item_t = new_migrate_sig_item_t } in
+  ignore (dt.migrate_structure dt stl) ;
+  ID.sort_uniq_list !tids
+
 let all_mids stl =
   let dt = make_dt () in
   let mids = ref [] in
@@ -148,7 +172,7 @@ module Fresh = struct
   type t = ID.t list ref
   let mk stl = ref (all_mids stl)
   let fresh t s =
-      let s' = ID.fresh !t (ID.of_string s) in
+      let s' = ID.fresh !t s in
       t := s' :: !t ;
       s'
 end
@@ -192,7 +216,7 @@ module S2ElimLocal = struct
     let new_migrate_struct_item_t dt st = match st with
         StLocal ([], _) -> st
       | StLocal ((_::_ as stl1), stl2) ->
-        let mid = Fresh.fresh mids "LOCAL" in
+        let mid = Fresh.fresh mids (ID.of_string "LOCAL") in
         let st = StLocal([],
                          [StModuleBinding(mid, MeStruct stl1);
                           StInclude(REL mid, None)]
@@ -221,7 +245,7 @@ module S3NameFunctorAppSubterms = struct
     and termrec acc me = match me with
         (MeStruct _
         | MeFunctor _) ->
-        let mid = Fresh.fresh mids "NAMED" in
+        let mid = Fresh.fresh mids (ID.of_string "NAMED") in
         let acc = (StModuleBinding(mid, me))::acc in
         (acc, MePath(REL mid))
       | MeFunctorApp (me1, me2) ->
@@ -302,7 +326,7 @@ end
  *)
 
 module S7RenameOverridden = struct
-
+open Util
 module Env = Utypes.Env
 
 module UE = struct
@@ -429,7 +453,7 @@ let stl_compute_accum stl_ue =
       (((st, ue),cum_e)::l, new_cum_e)
     ) stl_ue ([], Env.mk ())
 
-(** strategy:
+(** plan:
 
     Each entry in stl_ue_accum has:
     (1) the struct_item
@@ -438,14 +462,145 @@ let stl_compute_accum stl_ue =
         after it.  Call this the "accumulated tail exports"
         (ATE).
 
-    If this entry exports a name, and the ATE has this name also,
+    (4) If this entry exports a name, and the ATE has this name also,
     then we need to rename it.  If the entry is a recursive definition,
     then we need to take care during rename.
 
-    If this entry *uses* a name, then there should be a renaming passed in
+    This does not hold for "open"s, since they don't export names that
+    can be seen outside the following struct-items.
+
+    (5) If this entry *uses* a name, then there should be a renaming passed in
     in the env, which we will apply.
 
+    This does apply to "open"s, since they use a module-name.
+
+    By this point, all module-types are closed, so in step #4 we can just
+    rename the definition and not bother passing forward in an env.
+
+    This also means that there should be no uses of module-type-names in #5.
+
 *)
+
+let rename_ut env ut =
+  let dt = make_dt () in
+  let old_migrate_utype_t = dt.migrate_utype_t in
+  let new_migrate_utype_t dt ut = match ut with
+      Ref (None, tid) -> begin match Env.lookup_t env tid with
+          Some tid' -> Ref(None, tid')
+        | None -> ut
+      end
+    | _ -> old_migrate_utype_t dt ut in
+  let dt = { dt with migrate_utype_t = new_migrate_utype_t } in
+  dt.migrate_utype_t dt ut
+
+let rename_mp env mp =
+  let dt = make_dt () in
+  let old_migrate_module_path_t = dt.migrate_module_path_t in
+  let new_migrate_module_path_t dt mp = match mp with
+      REL mid -> begin match Env.(lookup_m env mid) with
+          Some v -> REL v
+        | None -> mp
+      end
+    | _ -> old_migrate_module_path_t dt mp in
+  let dt = { dt with migrate_module_path_t = new_migrate_module_path_t } in
+  dt.migrate_module_path_t dt mp
+
+let rec rename_st env st = match st with
+    StTypes(false, l) ->
+    StTypes(false, l |> List.map (fun (id, ut) -> (id, rename_ut env ut)))
+  | StTypes(true, l) ->
+    let env = Env.(sub env (mk ~t:(List.map (fun (id, _) -> (id, ())) l) ())) in
+    StTypes(true, l |> List.map (fun (id, ut) -> (id, rename_ut env ut)))
+  | StModuleBinding(mid, me) ->
+    let env = Env.(sub env (mk ~m:[mid,()] ())) in
+    StModuleBinding(mid, rename_me env me)
+  | StModuleType (mid, mty) ->
+    assert FMV.(closed module_type mty) ;
+    st
+  | StOpen (mp, Some mty) ->
+    StOpen (rename_mp env mp, Some mty)
+
+  | (StInclude _
+    | StOpen (_, None)
+    | StImport _
+    | StLocal _
+    ) -> Fmt.(failwithf "rename_st: forbidden struct_item: %a" pp_struct_item_t st)
+
+and rename_me env me = match me with
+    MeStruct l -> MeStruct (rename_structure env l)
+  | MeFunctorApp (me1, me2) -> MeFunctorApp (rename_me env me1, rename_me env me2)
+  | MePath mp -> MePath (rename_mp env mp)
+  | MeFunctor ((mid, mty), me) ->
+    assert FMV.(closed module_type mty) ;
+    let env' = Env.(sub env (mk ~m:[mid,()] ())) in
+    MeFunctor ((mid, mty), rename_me env' me)
+  | MeCast (me, mt) ->
+    assert FMV.(closed module_type mt) ;
+    MeCast (rename_me env me, mt)
+
+and rename_structure env l =
+  let (_, acc) = List.fold_left (fun (env, acc) st ->
+      let st = rename_st env st in
+      let exports = (st_uses_exports st).UE.exports in
+      let env' = Env.(sub env exports) in
+      (env', st::acc)
+    ) (env, []) l in
+  List.rev acc
+
+let rebind_st allnames exports_and_overridden (env, st) = match st with
+    StTypes(false, l) ->
+    let (env, revacc) = List.fold_left (fun (env, revacc) (tid, ut) ->
+        if Env.has_t exports_and_overridden tid then
+          let tid' = Fresh.fresh allnames tid in
+          (Env.add_t env (tid, tid'), (tid', ut)::revacc)
+        else (env, (tid, ut)::revacc)
+      ) (env, []) l in
+    (env, StTypes(false, List.rev revacc))
+  | StTypes(true, l) ->
+    let torebind = Env.(intersect exports_and_overridden (mk ~t:l ())) in
+    let renv =
+      torebind
+      |> Env.dom_t
+      |> List.map (fun tid -> (tid, Fresh.fresh allnames tid))
+      |> (fun l -> Env.mk ~t:l ()) in
+    let l = l |> List.map (fun (tid, ut) ->
+        let tid = match Env.lookup_t renv tid with
+            Some tid' -> tid'
+          | None -> tid in
+        let ut = rename_ut renv ut in
+        (tid, ut)) in
+    (Env.merge renv env, StTypes(true, l))
+
+  | StModuleBinding(mid, me) ->
+    assert Env.(has_m exports_and_overridden mid) ;
+    let mid' = Fresh.fresh allnames mid in
+    (Env.(add_m env (mid, mid')), StModuleBinding(mid', me))
+
+  | StModuleType (_, mty) ->
+    assert FMV.(closed module_type mty) ;
+    (env, st)
+
+  | StOpen (mp, Some _) -> (env, st)
+
+  | (StInclude _
+    | StOpen (_, None)
+    | StImport _
+    | StLocal _
+    ) -> Fmt.(failwithf "rebind_st: forbidden struct_item: %a" pp_struct_item_t st)
+
+let rename_members allnames stl_ue_accum =
+  let rename1 (renenv, acc) ((st, ue), rhs_export_accum) =
+    let uses_and_overridden = Env.(intersect ue.UE.uses rhs_export_accum) in
+    let exports_and_overridden = Env.(intersect ue.UE.exports rhs_export_accum) in
+    let st = if Env.nonempty uses_and_overridden then
+        rename_st renenv st
+      else st in
+    let (renenv, st) = if Env.nonempty exports_and_overridden then
+        rebind_st allnames exports_and_overridden (renenv, st)
+      else (renenv, st) in
+    (renenv, st::acc) in
+  let (_, revacc) = List.fold_left rename1 (Env.mk(), []) stl_ue_accum in
+  List.rev revacc
 
 let exec stl =
   let dt = make_dt () in
