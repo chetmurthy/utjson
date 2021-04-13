@@ -123,6 +123,16 @@ module M = F(struct type t = object ; end)(functor(M:sig end) -> struct end) ;
       )
   ]
 
+let s5_doit x =
+  x
+  |> structure_of_string_exn
+  |> S1ElimImport.exec
+  |> S2ElimLocal.exec
+  |> ElimEmptyLocal.exec
+  |> S3NameFunctorAppSubterms.exec
+  |> S4Typecheck.exec
+  |> S5ElimInclude.exec
+       
 let s5_elim_include = "step-5-elim_include" >::: [
     "simple" >:: (fun ctxt -> 
         assert_equal ~printer:Normal.structure_printer ~cmp:structure_cmp
@@ -143,16 +153,21 @@ type t2 = object ;
 in
   type t3 = t1 && [ "a": t2 ] ;
 end ;
-|} |> structure_of_string_exn
-         |> S1ElimImport.exec
-         |> S2ElimLocal.exec
-         |> ElimEmptyLocal.exec
-         |> S3NameFunctorAppSubterms.exec
-         |> S4Typecheck.exec
-         |> S5ElimInclude.exec
+|} |> s5_doit
         )
       )
   ]
+
+let s6_doit x =
+  x
+  |> structure_of_string_exn
+  |> S1ElimImport.exec
+  |> S2ElimLocal.exec
+  |> ElimEmptyLocal.exec
+  |> S3NameFunctorAppSubterms.exec
+  |> S4Typecheck.exec
+  |> S5ElimInclude.exec
+  |> ElimEmptyLocal.exec
 
 let s6_elim_empty_local = "step-6-elim_empty_local" >::: [
     "simple" >:: (fun ctxt -> 
@@ -169,17 +184,21 @@ type t2 = object ;
 in
   type t3 = t1 && [ "a": t2 ] ;
 end ;
-|} |> structure_of_string_exn
-         |> S1ElimImport.exec
-         |> S2ElimLocal.exec
-         |> ElimEmptyLocal.exec
-         |> S3NameFunctorAppSubterms.exec
-         |> S4Typecheck.exec
-         |> S5ElimInclude.exec
-         |> ElimEmptyLocal.exec
-)
+|} |> s6_doit)
       )
   ]
+
+let s7_doit x =
+  x
+  |> structure_of_string_exn
+  |> S1ElimImport.exec
+  |> S2ElimLocal.exec
+  |> ElimEmptyLocal.exec
+  |> S3NameFunctorAppSubterms.exec
+  |> S4Typecheck.exec
+  |> S5ElimInclude.exec
+  |> ElimEmptyLocal.exec
+  |> S7RenameOverridden.exec
 
 let s7_rename_overridden = "step-7-rename-overridden" >::: [
     "simple" >:: (fun ctxt -> 
@@ -195,18 +214,22 @@ type nonrec t2 = object;
 type nonrec u = t2;
 type nonrec t1 = array;
 type nonrec u = t1;
-|} |> structure_of_string_exn
-         |> S1ElimImport.exec
-         |> S2ElimLocal.exec
-         |> ElimEmptyLocal.exec
-         |> S3NameFunctorAppSubterms.exec
-         |> S4Typecheck.exec
-         |> S5ElimInclude.exec
-         |> ElimEmptyLocal.exec
-         |> S7RenameOverridden.exec
-)
+|} |> s7_doit)
       )
   ]
+
+let s8_doit x =
+  x
+  |> structure_of_string_exn
+  |> S1ElimImport.exec
+  |> S2ElimLocal.exec
+  |> ElimEmptyLocal.exec
+  |> S3NameFunctorAppSubterms.exec
+  |> S4Typecheck.exec
+  |> S5ElimInclude.exec
+  |> ElimEmptyLocal.exec
+  |> S7RenameOverridden.exec
+  |> S8Absolute.exec
 
 let s8_absolute = "step-8-absolute" >::: [
     "simple" >:: (fun ctxt -> 
@@ -226,21 +249,26 @@ type nonrec u = t2;
 type nonrec t1 = array;
 type nonrec u = t1;
 end ;
-|} |> structure_of_string_exn
-         |> S1ElimImport.exec
-         |> S2ElimLocal.exec
-         |> ElimEmptyLocal.exec
-         |> S3NameFunctorAppSubterms.exec
-         |> S4Typecheck.exec
-         |> S5ElimInclude.exec
-         |> ElimEmptyLocal.exec
-         |> S7RenameOverridden.exec
-         |> S8Absolute.exec
+|} |> s8_doit
 )
       )
   ]
 
-let s8_elim_cast_cast = "step-8-elim-cast-cast" >::: [
+let s9_doit x =
+  x
+  |> structure_of_string_exn
+  |> S1ElimImport.exec
+  |> S2ElimLocal.exec
+  |> ElimEmptyLocal.exec
+  |> S3NameFunctorAppSubterms.exec
+  |> S4Typecheck.exec
+  |> S5ElimInclude.exec
+  |> ElimEmptyLocal.exec
+  |> S7RenameOverridden.exec
+  |> S8Absolute.exec
+  |> ElimCastCast.exec
+
+let s9_elim_cast_cast = "step-9-elim-cast-cast" >::: [
     "simple" >:: (fun ctxt -> 
         assert_equal ~printer:Normal.structure_printer ~cmp:structure_cmp
         ({|
@@ -254,21 +282,9 @@ module M = (struct
   type t = object ;
   type u = array ;
 end : sig t ; u ; end ) : sig t; end;
-|} |> structure_of_string_exn
-         |> S1ElimImport.exec
-         |> S2ElimLocal.exec
-         |> ElimEmptyLocal.exec
-         |> S3NameFunctorAppSubterms.exec
-         |> S4Typecheck.exec
-         |> S5ElimInclude.exec
-         |> ElimEmptyLocal.exec
-         |> S7RenameOverridden.exec
-         |> S8Absolute.exec
-         |> ElimCastCast.exec
-)
+|} |> s9_doit)
       )
   ]
-
 
 let tests = "all" >::: [
     simple
@@ -280,7 +296,7 @@ let tests = "all" >::: [
   ; s6_elim_empty_local
   ; s7_rename_overridden
   ; s8_absolute
-  ; s8_elim_cast_cast
+  ; s9_elim_cast_cast
 ]
 
 if not !Sys.interactive then

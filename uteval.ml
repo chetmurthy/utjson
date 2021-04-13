@@ -75,7 +75,9 @@ module-exprs are:
 (8) replace all relative module/type-references except those bound in
     functor-bodies by absolute module/type-references.
 
-(9) beta-reduce all functor-applications whose result is of type a sig...end.
+(9) eliminate cast-cast, viz. ( <me> : <mt> ) : <mt2>
+
+(10) beta-reduce all functor-applications whose result is of type a sig...end.
     Repeat until no more exist.  Since each functor-argument is already a module-name,
     and the functor-application is the RHS of a module-binding, no new module-binding
     needs to be created.
