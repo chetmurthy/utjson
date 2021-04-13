@@ -2,6 +2,7 @@ open Asttools ;
 open Pa_ppx_base.Pp_MLast ;
 open Pa_ppx_runtime.Exceptions ;
 open Utypes ;
+open Ututil ;
 open Utlexing ;
 
 type t += [
@@ -201,18 +202,15 @@ EXTEND
         List.fold_right (fun (s,mty) rhs -> MtFunctorType (s,mty) rhs) l m
       | p = module_path ->
         match p with [
-          [] -> assert False
-        | [h] -> MtPath None h
-        | (l : list ID.t) ->
-          let (last, l) = sep_last l in
-          let p = make_module_path l in
-          MtPath (Some p) last
+          TOP _ -> Fmt.(failwithf "module_type: cannot be a TOP module-id")
+        | REL h -> MtPath None h
+        | DEREF p last -> MtPath (Some p) last
         ]
       ] ]
     ;
 
     module_path: [ [
-        p = LIST1 mid SEP "." -> p
+        p = LIST1 mid SEP "." -> make_module_path p
       ] ]
     ;
 
@@ -225,13 +223,7 @@ EXTEND
         "struct" ; l = structure ; "end" -> MeStruct l
       | "functor" ; l = LIST1 module_param ; "->" ; m=module_expr ->
         List.fold_right (fun (s,mty) rhs -> MeFunctor (s,mty) rhs) l m
-      | p = module_path ->
-        match p with [
-          [] -> assert False
-        | l ->
-          let p = make_module_path l in
-          MePath p
-        ]
+      | p = module_path -> MePath p
       | "(" ; me = module_expr ; ")" -> me
       ]
     ]
@@ -249,17 +241,17 @@ EXTEND
         l = LIST1 [ id = LIDENT ; "=" ; t = utype -> (ID.of_string id, t) ] SEP "and" ;
         ";" -> StTypes rflag l
       | "import" ; s=STRING ; "as"; uid=mid ; ";" -> StImport s uid
-      | "open" ; p = module_path ; ";" -> StOpen (make_module_path p) None
-      | "open" ; p = module_path ; ":" ; t = module_type ; ";" -> StOpen (make_module_path p) (Some t)
-      | "include" ; p = module_path ; ";" -> StInclude (make_module_path p) None
-      | "include" ; p = module_path ; ":" ; t = module_type ; ";" -> StInclude (make_module_path p) (Some t)
+      | "open" ; p = module_path ; ";" -> StOpen p None
+      | "open" ; p = module_path ; ":" ; t = module_type ; ";" -> StOpen p (Some t)
+      | "include" ; p = module_path ; ";" -> StInclude p None
+      | "include" ; p = module_path ; ":" ; t = module_type ; ";" -> StInclude p (Some t)
       ] ]
     ;
     sig_item: [ [
         s = LIDENT ; ";" -> SiType (ID.of_string s)
       | "module" ; uid = mid ; ":" ; mty=module_type ; ";" -> SiModuleBinding uid mty
       | "module" ; "type" ; uid = mid ; "=" ; mty=module_type ; ";" -> SiModuleType uid mty
-      | "include" ; p = module_path ; ";" -> SiInclude (make_module_path p)
+      | "include" ; p = module_path ; ";" -> SiInclude p
       ] ]
     ;
 

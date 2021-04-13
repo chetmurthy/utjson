@@ -52,13 +52,12 @@ let top pp x = Fmt.(pf stdout "%s" (pp x)) ;;
 
 let top_id x = top Normal.id_printer x ;;
 #install_printer top_id ;;
-
 let top_utype x = top Normal.printer x ;;
 #install_printer top_utype ;;
-
 let top_struct_item x = top Normal.struct_item_printer x ;;
+(*
 #install_printer top_struct_item ;;
-
+*)
 let top_sig_item x = top Normal.sig_item_printer x ;;
 #install_printer top_sig_item ;;
 
@@ -90,6 +89,8 @@ open Eval_test ;;
 #trace S3NameFunctorAppSubterms.exec ;;
 #trace S4Typecheck.exec ;;
 #trace S5ElimInclude.exec ;;
+#trace S7RenameOverridden.exec ;;
+#trace S8Absolute.exec ;;
 
 (*
 #use "jq_examples.ml";;

@@ -170,8 +170,10 @@ let s7_rename_overridden = "step-7-rename-overridden" >::: [
     "simple" >:: (fun ctxt -> 
         assert_equal ~printer:Normal.structure_printer ~cmp:structure_cmp
         ({|
-type nonrec t2 = object; type nonrec u0 = t2; type nonrec t1 = array;
-  type nonrec u = t1;
+type nonrec t2 = object;
+type nonrec u0 = t2;
+type nonrec t1 = array;
+type nonrec u = t1;
 |} |> structure_of_string_exn )
         ({|
 type nonrec t2 = object;
@@ -191,6 +193,38 @@ type nonrec u = t1;
       )
   ]
 
+let s8_absolute = "step-8-absolute" >::: [
+    "simple" >:: (fun ctxt -> 
+        assert_equal ~printer:Normal.structure_printer ~cmp:structure_cmp
+        ({|
+module M = struct
+  type nonrec t2 = object;
+  type nonrec u0 = .M.t2;
+  type nonrec t1 = array;
+  type nonrec u = .M.t1;
+end : sig t2; u; t1; u; end;
+|} |> structure_of_string_exn )
+        ({|
+module M = struct
+type nonrec t2 = object;
+type nonrec u = t2;
+type nonrec t1 = array;
+type nonrec u = t1;
+end ;
+|} |> structure_of_string_exn
+         |> S1ElimImport.exec
+         |> S2ElimLocal.exec
+         |> ElimEmptyLocal.exec
+         |> S3NameFunctorAppSubterms.exec
+         |> S4Typecheck.exec
+         |> S5ElimInclude.exec
+         |> ElimEmptyLocal.exec
+         |> S7RenameOverridden.exec
+         |> S8Absolute.exec
+)
+      )
+  ]
+
 
 let tests = "all" >::: [
     simple
@@ -201,6 +235,7 @@ let tests = "all" >::: [
   ; s5_elim_include
   ; s6_elim_empty_local
   ; s7_rename_overridden
+  ; s8_absolute
 ]
 
 if not !Sys.interactive then
