@@ -170,7 +170,7 @@ let all_mids stl =
 
 module Fresh = struct
   type t = ID.t list ref
-  let mk stl = ref (all_mids stl)
+  let mk stl = ref (ID.sort_uniq_list ((all_mids stl)@(all_tids stl)))
   let fresh t s =
       let s' = ID.fresh !t s in
       t := s' :: !t ;
@@ -603,12 +603,14 @@ let rename_members allnames stl_ue_accum =
   List.rev revacc
 
 let exec stl =
+  let fresh = Fresh.mk stl in   
   let dt = make_dt () in
   let old_migrate_structure = dt.migrate_structure in
   let new_migrate_structure dt stl =
+    let stl = old_migrate_structure dt stl in
     let stl_ue = stl_uses_exports stl in
-    let stl_ue_cum = stl_compute_accum stl_ue in
-
+    let (stl_ue_cum, _) = stl_compute_accum stl_ue in
+    let stl = rename_members fresh stl_ue_cum in
     stl in
 
   let dt = { dt with migrate_structure = new_migrate_structure } in
