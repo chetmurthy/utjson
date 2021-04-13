@@ -106,7 +106,7 @@ type token =
   | Regexp of string
   | EOF
 
-val make_module_path : ID.t list -> module_path_t
+val make_module_path : bool -> ID.t list -> module_path_t
 
 module Env :
 sig

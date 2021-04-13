@@ -49,11 +49,11 @@ type range_constraint_t = [%import: Utypes.range_constraint_t]
 
 type token = [%import: Utypes.token]
 
-let make_module_path l =
+let make_module_path abs l =
   match l with 
     [] -> Fmt.(failwithf "make_module_path: internal error, should never be called with []")
   | (h::t) ->
-    List.fold_left (fun mp id -> DEREF(mp, id)) (REL h) t
+    List.fold_left (fun mp id -> DEREF(mp, id)) (if abs then TOP h else REL h) t
 
 module Env = struct
   type ('a, 'b, 'c) t = { t : (ID.t * 'a) list; m : (ID.t * 'b) list; mt : (ID.t * 'c) list; }

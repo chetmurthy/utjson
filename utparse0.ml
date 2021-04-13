@@ -172,13 +172,7 @@ EXTEND
       ]
     | "simple" [
         b = base_type -> Simple b
-      | l = LIST0 [ s = mid ; "." -> s ] ; id = LIDENT ->
-        match l with [
-          [] -> Ref None (ID.of_string id)
-        | l ->
-          let mp = make_module_path l in
-          Ref (Some mp) (ID.of_string id)
-        ]
+      | (mpopt, tid) = tid_path -> Ref mpopt tid
       | "[" ; h = atomic_utype ; ";" ; l = atomic_utype_semi_list ; "]" -> Atomic [h::l]
       | "[" ; h = atomic_utype ; "]" -> Atomic [h]
       | "(" ; t = utype ; ")" -> t
@@ -209,8 +203,22 @@ EXTEND
       ] ]
     ;
 
+    tid_path: [ [
+        l = LIST0 [ s = mid ; "." -> s ] ; id = LIDENT ->
+        match l with [
+          [] -> (None, ID.of_string id)
+        | l ->
+          let mp = make_module_path False l in
+          (Some mp, ID.of_string id)
+        ]
+      | "." ; l = LIST1 [ s = mid ; "." -> s ] ; id = LIDENT ->
+        (Some (make_module_path True l), ID.of_string id)
+      ] ]
+    ;
+
     module_path: [ [
-        p = LIST1 mid SEP "." -> make_module_path p
+        p = LIST1 mid SEP "." -> make_module_path False p
+      | "." ; p = LIST1 mid SEP "." -> make_module_path True p
       ] ]
     ;
 
