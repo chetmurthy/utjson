@@ -79,6 +79,10 @@ module Env = struct
   ; m = n1.m |> List.(filter (fun (id,_) -> not (mem_assoc id n2.m)))
   ; mt = n1.mt |> List.(filter (fun (id,_) -> not (mem_assoc id n2.mt)))
   }
+  let sub_tids n l =
+    sub n (mk ~t:(l |> List.map (fun id -> (id, ()))) ())
+  let sub_mids n l =
+    sub n (mk ~m:(l |> List.map (fun id -> (id, ()))) ())
 
   let lookup_t t k = List.assoc_opt k t.t
   let lookup_m t k = List.assoc_opt k t.m

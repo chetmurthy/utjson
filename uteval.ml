@@ -192,6 +192,17 @@ module ElimEmptyLocal = struct
     dt.migrate_structure dt stl
 end
 
+module ElimCastCast = struct
+  let exec stl =
+    let dt = make_dt () in
+    let old_migrate_module_expr_t = dt.migrate_module_expr_t in
+    let new_migrate_module_expr_t dt me = match old_migrate_module_expr_t dt me with
+        MeCast(MeCast(me, _), mt) -> MeCast(me, mt)
+      | me -> me in
+    let dt = { dt with migrate_module_expr_t = new_migrate_module_expr_t } in
+    dt.migrate_structure dt stl
+end
+
 module S1ElimImport = struct
   open Util
   let exec stl =
@@ -628,7 +639,7 @@ let subst_ut env ut =
   let old_migrate_utype_t = dt.migrate_utype_t in
   let new_migrate_utype_t dt ut = match ut with
       Ref(None, tid) -> begin match Env.(lookup_t env tid) with
-          None -> Fmt.(failwithf "S8Absolute.subst_ut: tid %a not found in env %a" ID.pp tid pp_abs_env_t env)
+          None -> ut
         | Some ut -> ut
       end
     | _ -> old_migrate_utype_t dt ut in
@@ -655,34 +666,48 @@ let rec abs_me prefix env me = match me with
 
   | MeFunctorApp(me1, me2) ->
     MeFunctorApp(abs_me prefix env me1, abs_me prefix env me2)
+
   | MePath mp -> MePath(abs_mp env mp)
+
   | MeFunctor((mid, mty), me) ->
     let env = Env.(add_m env (mid, REL mid)) in
-    MeFunctor((mid, mty), abs_me prefix env me)
+    MeFunctor((mid, mty), abs_me None env me)
+
   | MeCast(me, mt) ->
     MeCast(abs_me prefix env me, mt)
 
-and abs_st prefix env st = match st with
-    StTypes(false, l) ->
+and abs_st prefix env st = match (prefix, st) with
+    (Some mpopt, StTypes(false, l)) ->
     let l = l |> List.map (fun (tid, ut) ->
         (tid, subst_ut env ut)) in
-    let env' = Env.mk ~t:(l |> List.map (fun (tid, _) -> (tid, Ref (prefix, tid)))) () in 
+    let env' = Env.mk ~t:(l |> List.map (fun (tid, _) -> (tid, Ref (mpopt, tid)))) () in 
     let env = Env.(merge env' env) in
     (env, StTypes(false, l))
-  | StTypes(true, l) ->
-    let env' = Env.mk ~t:(l |> List.map (fun (tid, _) -> (tid, Ref (prefix, tid)))) () in 
+  | (Some mpopt, StTypes(true, l)) ->
+    let env' = Env.mk ~t:(l |> List.map (fun (tid, _) -> (tid, Ref (mpopt, tid)))) () in 
     let env = Env.(merge env' env) in
     let l = l |> List.map (fun (tid, ut) ->
         (tid, subst_ut env ut)) in
     (env, StTypes(false, l))
 
-  | StModuleBinding(mid, me) ->
-    let prefixmp = match prefix with None -> TOP mid | Some mp -> DEREF(mp, mid) in
-    let me = abs_me (Some prefixmp) env me in
+  | (None, StTypes(recflag, l)) ->
+    let env' = Env.(sub_tids env (List.map fst l)) in
+    let l = l |> List.map (fun (tid, ut) ->
+        (tid, subst_ut env' ut)) in
+    (env', StTypes(recflag, l))
+
+  | (None, StModuleBinding(mid, me)) ->
+    let me = abs_me None env me in
+    let env = Env.(sub_mids env [mid]) in
+    (env, StModuleBinding(mid, me))
+
+  | (Some mpopt, StModuleBinding(mid, me)) ->
+    let prefixmp = match mpopt with None -> TOP mid | Some mp -> DEREF(mp, mid) in
+    let me = abs_me (Some (Some prefixmp)) env me in
     let env = Env.(add_m env (mid, (DEREF(prefixmp, mid)))) in
     (env, StModuleBinding(mid, me))
 
-  | StOpen (mp, Some (MtSig l)) ->
+  | (_, StOpen (mp, Some (MtSig l))) ->
     let mp = abs_mp env mp in
     let env = List.fold_left (fun env -> function
           SiType tid ->
@@ -696,11 +721,11 @@ and abs_st prefix env st = match st with
     let st = StOpen (mp, Some (MtSig l)) in
     (env, st)
 
-  | StModuleType (_, _) -> (env, st)
-  | (StOpen(_, None)
-    | StImport _
-    | StLocal _
-    | StInclude _) -> Fmt.(failwithf "S8Absolute.abs_st: forbidden struct_item %a" pp_struct_item_t st)
+  | (_, StModuleType (_, _)) -> (env, st)
+  | (_, (StOpen(_, None)
+        | StImport _
+        | StLocal _
+        | StInclude _)) -> Fmt.(failwithf "S8Absolute.abs_st: forbidden struct_item %a" pp_struct_item_t st)
 
 and abs_stl prefix env stl =
   let (env, revacc) = List.fold_left (fun (env, revacc) st ->
@@ -710,12 +735,12 @@ and abs_stl prefix env stl =
   (env, List.rev revacc)
 
 let exec stl =
-  let (_, stl) = abs_stl None (Env.mk()) stl in
+  let (_, stl) = abs_stl (Some None) (Env.mk()) stl in
   stl
 
 end
 
 
-module EvalFunctors = struct
+module ReduceFunctorApp = struct
 
 end

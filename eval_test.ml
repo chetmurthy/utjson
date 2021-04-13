@@ -50,6 +50,21 @@ open M ;
 type u = t ;
 |} |> structure_of_string_exn |> S4Typecheck.exec)
       )
+  ; "cast-cast" >:: (fun ctxt -> 
+        assert_equal ~printer:Normal.structure_printer ~cmp:structure_cmp
+        ({|
+module M = struct
+  type nonrec t = object;
+  type nonrec u = array;
+end : sig t; u; end : sig t; end : sig t; end;
+|} |> structure_of_string_exn )
+        ({|
+module M = (struct
+  type t = object ;
+  type u = array ;
+end : sig t ; u ; end ) : sig t; end;
+|} |> structure_of_string_exn |> S4Typecheck.exec)
+      )
   ]
 
 
@@ -225,6 +240,35 @@ end ;
       )
   ]
 
+let s8_elim_cast_cast = "step-8-elim-cast-cast" >::: [
+    "simple" >:: (fun ctxt -> 
+        assert_equal ~printer:Normal.structure_printer ~cmp:structure_cmp
+        ({|
+module M = struct
+  type nonrec t = object;
+  type nonrec u = array;
+end : sig t; end;
+|} |> structure_of_string_exn )
+        ({|
+module M = (struct
+  type t = object ;
+  type u = array ;
+end : sig t ; u ; end ) : sig t; end;
+|} |> structure_of_string_exn
+         |> S1ElimImport.exec
+         |> S2ElimLocal.exec
+         |> ElimEmptyLocal.exec
+         |> S3NameFunctorAppSubterms.exec
+         |> S4Typecheck.exec
+         |> S5ElimInclude.exec
+         |> ElimEmptyLocal.exec
+         |> S7RenameOverridden.exec
+         |> S8Absolute.exec
+         |> ElimCastCast.exec
+)
+      )
+  ]
+
 
 let tests = "all" >::: [
     simple
@@ -236,6 +280,7 @@ let tests = "all" >::: [
   ; s6_elim_empty_local
   ; s7_rename_overridden
   ; s8_absolute
+  ; s8_elim_cast_cast
 ]
 
 if not !Sys.interactive then

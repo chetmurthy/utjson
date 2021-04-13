@@ -120,6 +120,8 @@ sig
   val sort_uniq : ('a, 'b, 'c) t -> ('a, 'b, 'c) t
   val merge : ('a, 'b, 'c) t -> ('a, 'b, 'c) t -> ('a, 'b, 'c) t
   val sub : ('a, 'b, 'c) t -> ('d, 'e, 'f) t -> ('a, 'b, 'c) t
+  val sub_tids : ('a, 'b, 'c) t -> ID.t list -> ('a, 'b, 'c) t
+  val sub_mids : ('a, 'b, 'c) t -> ID.t list -> ('a, 'b, 'c) t
   val lookup_t : ('a, 'b, 'c) t -> ID.t -> 'a option
   val lookup_m : ('a, 'b, 'c) t -> ID.t -> 'b option
   val lookup_mt : ('a, 'b, 'c) t -> ID.t -> 'c option
