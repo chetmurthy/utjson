@@ -618,9 +618,100 @@ let exec stl =
 
 end
 
-module Absolute = struct
+module S8Absolute = struct
 
+type abs_env_t = (utype_t, module_path_t, unit) Env.t
+[@@deriving show { with_path = false },eq]
 
+let subst_ut env ut =
+  let dt = make_dt () in
+  let old_migrate_utype_t = dt.migrate_utype_t in
+  let new_migrate_utype_t dt ut = match ut with
+      Ref(None, tid) -> begin match Env.(lookup_t env tid) with
+          None -> Fmt.(failwithf "S8Absolute.subst_ut: tid %a not found in env %a" ID.pp tid pp_abs_env_t env)
+        | Some ut -> ut
+      end
+    | _ -> old_migrate_utype_t dt ut in
+  let dt = { dt with migrate_utype_t = new_migrate_utype_t } in
+  dt.migrate_utype_t dt ut
+
+let abs_mp env mp =
+  let dt = make_dt () in
+  let old_migrate_module_path_t = dt.migrate_module_path_t in
+  let new_migrate_module_path_t dt mp = match mp with
+      REL mid -> begin match Env.(lookup_m env mid) with
+          None -> Fmt.(failwithf "abs_mp: module name %a not found in env %a"
+                         ID.pp mid pp_abs_env_t env)
+        | Some me -> me
+      end
+    | _ -> old_migrate_module_path_t dt mp in
+  let dt = { dt with migrate_module_path_t = new_migrate_module_path_t } in
+  dt.migrate_module_path_t dt mp
+
+let rec abs_me prefix env me = match me with
+    MeStruct l ->
+    let (_, l) = abs_stl prefix env l in
+    MeStruct l
+
+  | MeFunctorApp(me1, me2) ->
+    MeFunctorApp(abs_me prefix env me1, abs_me prefix env me2)
+  | MePath mp -> MePath(abs_mp env mp)
+  | MeFunctor((mid, mty), me) ->
+    let env = Env.(add_m env (mid, REL mid)) in
+    MeFunctor((mid, mty), abs_me prefix env me)
+  | MeCast(me, mt) ->
+    MeCast(abs_me prefix env me, mt)
+
+and abs_st prefix env st = match st with
+    StTypes(false, l) ->
+    let l = l |> List.map (fun (tid, ut) ->
+        (tid, subst_ut env ut)) in
+    let env' = Env.mk ~t:(l |> List.map (fun (tid, _) -> (tid, Ref (prefix, tid)))) () in 
+    let env = Env.(merge env' env) in
+    (env, StTypes(false, l))
+  | StTypes(true, l) ->
+    let env' = Env.mk ~t:(l |> List.map (fun (tid, _) -> (tid, Ref (prefix, tid)))) () in 
+    let env = Env.(merge env' env) in
+    let l = l |> List.map (fun (tid, ut) ->
+        (tid, subst_ut env ut)) in
+    (env, StTypes(false, l))
+
+  | StModuleBinding(mid, me) ->
+    let prefixmp = match prefix with None -> TOP mid | Some mp -> DEREF(mp, mid) in
+    let me = abs_me (Some prefixmp) env me in
+    let env = Env.(add_m env (mid, (DEREF(prefixmp, mid)))) in
+    (env, StModuleBinding(mid, me))
+
+  | StOpen (mp, Some (MtSig l)) ->
+    let mp = abs_mp env mp in
+    let env = List.fold_left (fun env -> function
+          SiType tid ->
+          Env.(add_t env (tid, Ref(Some mp, tid)))
+        | SiModuleBinding(mid, _) ->
+          Env.(add_m env (mid, DEREF(mp, mid)))
+        | SiModuleType _ -> env
+        | SiInclude _ as si -> 
+          Fmt.(failwithf "S8Absolute.abs_st: forbidden sig_item %a" pp_sig_item_t si)
+      ) env l in
+    let st = StOpen (mp, Some (MtSig l)) in
+    (env, st)
+
+  | StModuleType (_, _) -> (env, st)
+  | (StOpen(_, None)
+    | StImport _
+    | StLocal _
+    | StInclude _) -> Fmt.(failwithf "S8Absolute.abs_st: forbidden struct_item %a" pp_struct_item_t st)
+
+and abs_stl prefix env stl =
+  let (env, revacc) = List.fold_left (fun (env, revacc) st ->
+      let (env, st) = abs_st prefix env st in
+      (env, st::revacc)
+    ) (env, []) stl in
+  (env, List.rev revacc)
+
+let exec stl =
+  let (_, stl) = abs_stl None (Env.mk()) stl in
+  stl
 
 end
 

@@ -170,14 +170,12 @@ let s7_rename_overridden = "step-7-rename-overridden" >::: [
     "simple" >:: (fun ctxt -> 
         assert_equal ~printer:Normal.structure_printer ~cmp:structure_cmp
         ({|
-type nonrec t2 = object;
-type nonrec u = t2;
-type nonrec t1 = array;
- type nonrec v = t1;
+type nonrec t2 = object; type nonrec u0 = t2; type nonrec t1 = array;
+  type nonrec u = t1;
 |} |> structure_of_string_exn )
         ({|
 type nonrec t2 = object;
-type nonrec u0 = t2;
+type nonrec u = t2;
 type nonrec t1 = array;
 type nonrec u = t1;
 |} |> structure_of_string_exn
