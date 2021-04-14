@@ -314,31 +314,32 @@ Why do this? Why not just JSON Schema? What's wrong with JSON Schema?
 
        { "$ref": "#/definitions/address" }
 
-But in `taskfile.json <https://github.com/SchemaStore/schemastore/blob/9deea239e5cb34e54ea71af36b1763337ad51abe/src/schemas/json/taskfile.json#L103>`_
-we see that `definitions` (the old name for `$defs`) is simply a JSON object, and the typename/schema pairs are buried under another layer of objects, viz.::
+     But in `taskfile.json <https://github.com/SchemaStore/schemastore/blob/9deea239e5cb34e54ea71af36b1763337ad51abe/src/schemas/json/taskfile.json#L103>`_
+     we see that `definitions` (the old name for `$defs`) is simply a JSON object,
+     and the typename/schema pairs are buried under another layer of objects, viz.::
 
-    "definitions": {
-    "3": {
-      "env": <schema for env>,
-      .... etc ....
-    }
-  }
+       "definitions": {
+         "3": {
+           "env": <schema for env>,
+           .... other name/schema pairs ....
+         }
+       }
 
-  So when referencing a type "env", one uses "#/definitions/3/env".
-  In
-  `travis.json<https://github.com/SchemaStore/schemastore/blob/9deea239e5cb34e54ea71af36b1763337ad51abe/src/schemas/json/travis.json#L1541>`_
-  we find a key/value entry under a definition with both extraneous
-  JSON, and then subsidiary key/value entries::
+     So when referencing a type "env", one uses "#/definitions/3/env".
+     In
+     `travis.json <https://github.com/SchemaStore/schemastore/blob/9deea239e5cb34e54ea71af36b1763337ad51abe/src/schemas/json/travis.json#L1541>`_
+     we find a key/value entry under a definition with both extraneous
+     JSON, and then subsidiary key/value entries::
 
-      "definitions": {
-    "nonEmptyString": <schema for "nonEmptyString">,
-    "notificationObject": {
-      "webhooks": <extraneous JSON>,
-      "slack": <schema for "slack">,
-      ... other definitions ...
-    },
-    "import": <schema for "import">
-  },
+       "definitions": {
+         "nonEmptyString": <schema for "nonEmptyString">,
+         "notificationObject": {
+           "webhooks": <extraneous JSON>,
+           "slack": <schema for "slack">,
+           ... other definitions ...
+         },
+         "import": <schema for "import">
+       },
 
   So to refer to type "nonEmptyString", one uses
   "#/definitions/nonEmptyString".  To refer to "import", likewise,
