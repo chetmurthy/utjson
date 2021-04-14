@@ -295,20 +295,20 @@ Why do this? Why not just JSON Schema? What's wrong with JSON Schema?
      and comprehensible.
 
 
-- `$defs` is supposed to be an `object` where the key/value pairs are
-   "type name" and schema, e.g.::
+   - `$defs` is supposed to be an `object` where the key/value pairs are
+     "type name" and schema, e.g.::
 
-     "definitions": {
-       "address": {
-         "type": "object",
-         "properties": {
-           "street_address": { "type": "string" },
-           "city":           { "type": "string" },
-           "state":          { "type": "string" }
-         },
-         "required": ["street_address", "city", "state"]
-       }
-     },
+       "definitions": {
+         "address": {
+           "type": "object",
+           "properties": {
+             "street_address": { "type": "string" },
+             "city":           { "type": "string" },
+             "state":          { "type": "string" }
+           },
+           "required": ["street_address", "city", "state"]
+         }
+       },
 
 But in `taskfile.json<https://github.com/SchemaStore/schemastore/blob/9deea239e5cb34e54ea71af36b1763337ad51abe/src/schemas/json/taskfile.json#L103>`_
 we see that `definitions` (the old name for `$defs`) is simply a JSON object, and the typename/schema pairs are buried under another layer of objects, viz.::
