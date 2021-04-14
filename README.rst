@@ -248,7 +248,10 @@ What's Wrong with JSON Schema?
 
 Why do this? Why not just JSON Schema? What's wrong with JSON Schema?
 
--  ungainly, verbose, b/c expressed in JSON
+- ungainly, verbose, b/c expressed in JSON: it should be obvious by
+  comparing the "UTJ by Example" section above, to the equivalent in
+  "JSON Schema: Getting Started", that UTJ is just more succinct, and
+  at no loss in expressivity, and certainly no loss in precision.
 
 -  Weird syntax corner-cases in JSON Schema: here-and-there are weird
    syntax bit stuffed into corners, instead of using already-existing
@@ -349,35 +352,8 @@ Why do this? Why not just JSON Schema? What's wrong with JSON Schema?
      This sort of "grouping type declarations" maps directly to modules
      in ML-like languages.
 
--  Ostensibly, all fields must be declared in "properties" objects.  So
-   for instance, an "anyOf" should be structured thus (from `Understanding JSON Schema<https://json-schema.org/understanding-json-schema/reference/combining.html#anyof>`_::
-
-     {
-       "anyOf": [
-         { "type": "string" },
-         { "type": "number" }
-       ]
-     }
-
-   but in `cloudify.json<https://github.com/SchemaStore/schemastore/blob/9deea239e5cb34e54ea71af36b1763337ad51abe/src/schemas/json/cloudify.json#L154>`_
-   we find that the subschema of the "anyOf" lists fields but not in a "properties" object::
-
-           "anyOf": [
-	     <valid schema #1>,
-             {
-               "valid_values": {
-                 "type": "array",
-                 "items": {
-                   "type": ["number", "string", "boolean", "integer"]
-                 }
-               }
-             }
-           ]
-
-
-
    All of these have as a goal to reduce the verbosity of the schema.
-   But if we had a targetd human-readable front-end language, we could
+   But if we had a targeted human-readable front-end language, we could
    arrange for (e.g.) ``anyOf`` to be syntactically trivial, ditto
    listing properties.
 
