@@ -18,6 +18,11 @@ RML=utparse0.ml utprint.ml
 
 all: $(OBJ) syntax_test typing_test schemastore_test eval_test
 
+doc: README.html
+
+README.html: README.rst
+	pandoc -t html $< > README.html
+
 test:: all
 	rm -rf _build && mkdir -p _build
 	./syntax_test
