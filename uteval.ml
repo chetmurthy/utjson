@@ -739,10 +739,27 @@ and abs_stl prefix env stl =
 let exec stl =
   let (_, stl) = abs_stl (Some None) (Env.mk()) stl in
   stl
-
 end
 
+module S10ReduceFunctorApp = struct
 
-module ReduceFunctorApp = struct
+let rec find_functor = function
+    ([], _) -> Fmt.(failwithf "find_functor: path was empty")
+  | ([h], l) ->
+    l |> List.find_map (function
+          StModuleBinding (mid, (MeFunctor _ as me)) when mid = h -> Some me
+        | StModuleBinding (mid, MeCast(MeFunctor _ as me, _)) when mid = h -> Some me
+        | _ -> None)
+  | (h::t, l) ->
+    l |> List.find_map (function
+          StModuleBinding (mid, MeStruct l) when mid = h -> find_functor (t, l)
+        | StModuleBinding (mid, MeCast(MeStruct l, _)) when mid = h -> find_functor (t, l)
+        | _ -> None)
+(*
+let rec reduce_stl top stl =
+  List.map (reduce_st top) sto
 
+and reduce_st top st = match st with
+  
+*)
 end
