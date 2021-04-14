@@ -183,11 +183,12 @@ exclusive-or (“xor”) type-constraints.
 
 	This means that the <index-int>-th value (zero-based) satisfies <constraint-utype>.
 
-	<range-constraint> is as in mathematics, viz. [0,4), (0,3), (1,4]
-    etc with the customary meaning that square-brackets mean inclusive
-    bound and parens mean exclusive bound.  For an unconstrained upper
-    bound, use “...” (in which case inclusive/exclusive is
-    meaningless)
+	`<range-constraint>` is as in mathematics, viz. `[0,4)`, `(0,3)`,
+    `(1,4]` etc with the customary meaning that square-brackets mean
+    inclusive bound and parens mean exclusive bound.  For an
+    unconstrained upper bound, use “...” (in which case
+    inclusive/exclusive is meaningless).  Here numbers are interpreted
+    as integers.
 
   * strings
 
@@ -200,7 +201,7 @@ exclusive-or (“xor”) type-constraints.
 
 	Upper and lower bounds can be .inf or -.inf, and since JSON
     doesn’t allow those, clearly only exclusive bounds work with
-    those.
+    those.  Here numbers are integers or floats.
 
   * sealing an object:
 
@@ -208,7 +209,8 @@ exclusive-or (“xor”) type-constraints.
 
 	`[ sealed ; ]`
 
-	or its unconstrained fields can be given a default constraint
+	or its otherwise-unvalidated fields can be given a default
+    constraint
 
 	`[ orelse <constraint> ; ]`
 
