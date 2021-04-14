@@ -341,13 +341,13 @@ Why do this? Why not just JSON Schema? What's wrong with JSON Schema?
          "import": <schema for "import">
        },
 
-  So to refer to type "nonEmptyString", one uses
-  "#/definitions/nonEmptyString".  To refer to "import", likewise,
-  "#/definitions/import".  But to refer to "slack", one uses
-  "#/definitions/notificationObject/slack".
+     So to refer to type "nonEmptyString", one uses
+     "#/definitions/nonEmptyString".  To refer to "import", likewise,
+     "#/definitions/import".  But to refer to "slack", one uses
+     "#/definitions/notificationObject/slack".
 
-   This sort of "grouping type declarations" maps directly to modules
-   in ML-like languages.
+     This sort of "grouping type declarations" maps directly to modules
+     in ML-like languages.
 
 -  Ostensibly, all fields must be declared in "properties" objects.  So
    for instance, an "anyOf" should be structured thus (from `Understanding JSON Schema<https://json-schema.org/understanding-json-schema/reference/combining.html#anyof>`_::
