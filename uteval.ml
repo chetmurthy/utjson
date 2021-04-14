@@ -136,7 +136,7 @@ let all_mids stl =
   let old_migrate_module_type_t = dt.migrate_module_type_t in
   let new_migrate_module_path_t dt mp = match mp with
       REL mid -> add_mid mid ; mp
-    | TOP _ -> Fmt.(failwithf "Util.all_mids: internal error %a" pp_module_path_t mp)
+    | TOP mid -> add_mid mid ; mp
     | DEREF(mp, mid) -> add_mid mid ;
       old_migrate_module_path_t dt mp in
   let new_migrate_struct_item_t dt st = match st with
@@ -407,7 +407,7 @@ let rec me_uses me = match me with
 
 and mp_uses = function
     REL mid -> Env.mk ~m:[mid,()] ()
-  | TOP _ as mp -> Fmt.(failwithf "mp_uses: internal error %a" pp_module_path_t mp)
+  | TOP _ as mp -> Env.mk ()
   | DEREF(mp, _) -> mp_uses mp
 
 and st_uses_exports st = match st with
@@ -636,18 +636,6 @@ module S8Absolute = struct
 type abs_env_t = (utype_t, module_path_t, unit) Env.t
 [@@deriving show { with_path = false },eq]
 
-let subst_ut env ut =
-  let dt = make_dt () in
-  let old_migrate_utype_t = dt.migrate_utype_t in
-  let new_migrate_utype_t dt ut = match ut with
-      Ref(None, tid) -> begin match Env.(lookup_t env tid) with
-          None -> ut
-        | Some ut -> ut
-      end
-    | _ -> old_migrate_utype_t dt ut in
-  let dt = { dt with migrate_utype_t = new_migrate_utype_t } in
-  dt.migrate_utype_t dt ut
-
 let abs_mp env mp =
   let dt = make_dt () in
   let old_migrate_module_path_t = dt.migrate_module_path_t in
@@ -660,6 +648,20 @@ let abs_mp env mp =
     | _ -> old_migrate_module_path_t dt mp in
   let dt = { dt with migrate_module_path_t = new_migrate_module_path_t } in
   dt.migrate_module_path_t dt mp
+
+let subst_ut env ut =
+  let dt = make_dt () in
+  let old_migrate_utype_t = dt.migrate_utype_t in
+  let new_migrate_utype_t dt ut = match ut with
+      Ref(None, tid) -> begin match Env.(lookup_t env tid) with
+          None -> ut
+        | Some ut -> ut
+      end
+    | Ref(Some mp, tid) -> Ref(Some (abs_mp env mp), tid)
+
+    | _ -> old_migrate_utype_t dt ut in
+  let dt = { dt with migrate_utype_t = new_migrate_utype_t } in
+  dt.migrate_utype_t dt ut
 
 let rec abs_me prefix env me = match me with
     MeStruct l ->
@@ -755,11 +757,63 @@ let rec find_functor = function
           StModuleBinding (mid, MeStruct l) when mid = h -> find_functor (t, l)
         | StModuleBinding (mid, MeCast(MeStruct l, _)) when mid = h -> find_functor (t, l)
         | _ -> None)
-(*
-let rec reduce_stl top stl =
-  List.map (reduce_st top) sto
 
-and reduce_st top st = match st with
-  
-*)
+let unpack_functor_app me =
+  let rec unrec argacc = function
+      MePath mp -> (mp, argacc)
+    | MeCast(me, _) -> unrec argacc me
+    | MeFunctorApp(me1, MePath mp) -> unrec (mp::argacc) me1
+    | MeFunctorApp(me1, MeCast(me2, _)) ->
+      unrec argacc (MeFunctorApp(me1, me2))
+    | _ -> Fmt.(failwithf "unpack_functor_app: unexpected %a" pp_module_expr_t me) in
+  unrec [] me
+
+let mp_to_list mp =
+  let rec mprec acc = function
+    TOP mid -> mid::acc
+  | REL _ -> Fmt.(failwithf "mp_to_list: Should not find relative module-path here: %a" pp_module_path_t mp)
+  | DEREF(mp, mid) -> mprec (mid::acc) mp
+  in mprec [] mp
+
+let unpack_functor me =
+  let rec unrec acc = function
+      MeCast(me, _) -> unrec acc me
+    | MeFunctor((mid, mty), me) ->
+      unrec ((mid, mty)::acc) me
+    | MeStruct l -> (List.rev acc, l)
+    | _ -> Fmt.(failwithf "unpack_functor: unexpected module_expr %a" pp_module_expr_t me)
+  in unrec [] me
+
+let rec reduce_stl prefixmp top stl =
+  List.map (reduce_st prefixmp top) stl
+
+and reduce_me prefixmp top me = match me with
+  | MeCast(MeFunctorApp _ as me, MtSig _) ->
+    let (fmp, argmps) = unpack_functor_app me in
+    let fexp = match find_functor (mp_to_list fmp, top) with
+        None -> Fmt.(failwithf "reduce_me: could not find functor at module path %a" pp_module_path_t fmp)
+      | Some e -> e in
+    let (formals, stl) = unpack_functor fexp in
+    if List.length argmps <> List.length formals then
+      Fmt.(failwithf "formal/actual length mismatch in %a" pp_module_expr_t me) ;
+    let env = Env.mk ~m:(List.map2 (fun (mid, mty) argmp -> (mid, argmp)) formals argmps) () in
+    let (_, stl) = S8Absolute.abs_stl (Some prefixmp) env stl in
+    MeStruct stl
+
+  | MeCast(me, mt) ->
+    MeCast(reduce_me prefixmp top me, mt)
+  | MeStruct l -> MeStruct (List.map (reduce_st prefixmp top) l)
+  | (MeFunctor _
+    | MeFunctorApp _
+    | MePath _) -> me
+
+and reduce_st prefixmp top st = match st with
+  | StModuleBinding (mid, me) ->
+    let prefixmp = match prefixmp with None -> TOP mid | Some mp -> DEREF(mp, mid) in
+    StModuleBinding (mid, reduce_me (Some prefixmp) top me)
+  | st -> st
+
+let exec stl =
+  reduce_stl None stl stl
+
 end

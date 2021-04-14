@@ -298,7 +298,7 @@ module M = struct
     type nonrec t = object;
   end : sig type t; end;
   module N = .M.F(.M.NAMED0) : sig type t; end;
-  type nonrec u = N.t;
+  type nonrec u = .M.N.t;
 end : sig
   type u;
   module F : functor (M:sig type t; end) -> sig type t; end;
@@ -351,6 +351,53 @@ end : sig type t, u ; end ) : sig type t; end;
       )
   ]
 
+let s10_doit x =
+  x
+  |> structure_of_string_exn
+  |> S1ElimImport.exec
+  |> S2ElimLocal.exec
+  |> ElimEmptyLocal.exec
+  |> S3NameFunctorAppSubterms.exec
+  |> S4Typecheck.exec
+  |> S5ElimInclude.exec
+  |> ElimEmptyLocal.exec
+  |> S7RenameOverridden.exec
+  |> S8Absolute.exec
+  |> ElimCastCast.exec
+  |> S10ReduceFunctorApp.exec
+
+let s10_reduce_functor_app = "step-10-reduce-functor-app" >::: [
+    "simple" >:: (fun ctxt -> 
+        assert_equal ~printer:Normal.structure_printer ~cmp:structure_cmp
+        ({|
+module type Ext1 = sig type extension; end;
+module ExtensibleTree = functor (M:sig type extension; end) -> struct
+  type rec t = object && [
+    "data": object;
+    "children": array && [ of t; ];
+  ] && M.extension;
+end;
+module NAMED0 = struct
+  type nonrec extension = [ sealed; ];
+end : sig type extension; end;
+module StrictTree = struct
+  type nonrec t = object && [
+    "data": object;
+    "children": array && [ of .StrictTree.t; ];
+  ] && .NAMED0.extension;
+end;
+|} |> structure_of_string_exn )
+        ({|
+module type Ext1 = sig type extension ; end ;
+module ExtensibleTree = functor( M : Ext1 ) -> struct
+  type rec t = object && [ "data" : object ; "children" : array && [ of t ] ] && M.extension ;
+end ;
+
+module StrictTree = ExtensibleTree( struct type extension = [ sealed ]; end ) ;
+|} |> s10_doit)
+      )
+  ]
+
 let tests = "all" >::: [
     simple
   ; typecheck
@@ -362,6 +409,7 @@ let tests = "all" >::: [
   ; s7_rename_overridden
   ; s8_absolute
   ; s9_elim_cast_cast
+  ; s10_reduce_functor_app
 ]
 
 if not !Sys.interactive then

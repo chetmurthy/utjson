@@ -231,11 +231,11 @@ To fix this, we can define a "parameterized module" (called a "functor")::
       "data" : object ;
       "children" : array && [ of t ]
     ] && M.extension
-  end
+  end ;
 
 We can apply this parameterized module::
 
-  module StrictTree = ExtensibleTree( [ sealed ] )
+  module StrictTree = ExtensibleTree( struct type extension = [ sealed ] end ) ;
 
 Now, `StrictTree.t` is a `tree`, but it is sealed, and that is true
 for all the child nodes, too.

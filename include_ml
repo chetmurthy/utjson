@@ -92,7 +92,8 @@ open Eval_test ;;
 #trace S5ElimInclude.exec ;;
 #trace S7RenameOverridden.exec ;;
 #trace S8Absolute.exec ;;
-
+#trace ElimCastCast.exec ;;
+#trace S10ReduceFunctorApp.exec ;;
 (*
 #use "jq_examples.ml";;
 *)
