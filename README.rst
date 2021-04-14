@@ -240,8 +240,8 @@ We can apply this parameterized module::
 Now, `StrictTree.t` is a `tree`, but it is sealed, and that is true
 for all the child nodes, too.
 
-Motivation
-==========
+UTJ Compared to JSON Schema
+===========================
 
 What's Wrong with JSON Schema?
 ------------------------------
