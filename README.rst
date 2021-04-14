@@ -310,6 +310,10 @@ Why do this? Why not just JSON Schema? What's wrong with JSON Schema?
          }
        },
 
+     which are then used thus::
+
+       { "$ref": "#/definitions/address" }
+
 But in `taskfile.json <https://github.com/SchemaStore/schemastore/blob/9deea239e5cb34e54ea71af36b1763337ad51abe/src/schemas/json/taskfile.json#L103>`_
 we see that `definitions` (the old name for `$defs`) is simply a JSON object, and the typename/schema pairs are buried under another layer of objects, viz.::
 
