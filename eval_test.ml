@@ -24,9 +24,9 @@ let typecheck = "type_check" >::: [
         ({|
 local module Predefined = struct
   type nonrec integer = number && [ multipleOf 1.000000; ];
-    type nonrec scalar = boolean || number || string;
-    type nonrec json = null || scalar || array || object;
-  end : sig integer; scalar; json; end; in  end;
+  type nonrec scalar = boolean || number || string;
+  type nonrec json = null || scalar || array || object;
+  end : sig type integer, json, scalar; end; in  end;
 |} |> structure_of_string_exn )
         ({|
 local import "lib/predefined.utj" as Predefined; in
@@ -38,9 +38,9 @@ end ;
         ({|
 module M = struct
   type nonrec t = object;
-end : sig t; end;
+end : sig type t; end;
 type nonrec t = array;
-open M : sig t; end;
+open M : sig type t; end;
 type nonrec u = t;
 |} |> structure_of_string_exn )
         ({|
@@ -56,13 +56,13 @@ type u = t ;
 module M = struct
   type nonrec t = object;
   type nonrec u = array;
-end : sig t; u; end : sig t; end : sig t; end;
+end : sig type t, u; end : sig type t; end : sig type t; end;
 |} |> structure_of_string_exn )
         ({|
 module M = (struct
   type t = object ;
   type u = array ;
-end : sig t ; u ; end ) : sig t; end;
+end : sig type t, u ; end ) : sig type t; end;
 |} |> structure_of_string_exn |> S4Typecheck.exec)
       )
   ]
@@ -140,7 +140,7 @@ let s5_elim_include = "step-5-elim_include" >::: [
   module LOCAL0 = struct
     type nonrec t1 = object;
     type nonrec t2 = object;
-  end : sig t1; t2; end;
+  end : sig type t1, t2; end;
   local  in
     type nonrec t1 = LOCAL0.t1;
     type nonrec t2 = LOCAL0.t2;
@@ -174,7 +174,7 @@ let s6_elim_empty_local = "step-6-elim_empty_local" >::: [
         assert_equal ~printer:Normal.structure_printer ~cmp:structure_cmp
         ({|
 module LOCAL0 = struct type nonrec t1 = object; type nonrec t2 = object;
-  end : sig t1; t2; end;
+  end : sig type t1, t2; end;
   type nonrec t1 = LOCAL0.t1; type nonrec t2 = LOCAL0.t2;
   type nonrec t3 = t1 && [ "a": t2; ];
 |} |> structure_of_string_exn )
@@ -199,21 +199,27 @@ let s7_doit x =
   |> S5ElimInclude.exec
   |> ElimEmptyLocal.exec
   |> S7RenameOverridden.exec
+  |> S4Typecheck.exec
+  |> ElimCastCast.exec
 
 let s7_rename_overridden = "step-7-rename-overridden" >::: [
     "simple" >:: (fun ctxt -> 
         assert_equal ~printer:Normal.structure_printer ~cmp:structure_cmp
         ({|
-type nonrec t2 = object;
-type nonrec u0 = t2;
-type nonrec t1 = array;
-type nonrec u = t1;
+module M = struct
+  type nonrec t0 = object;
+  type nonrec u0 = t0;
+  type nonrec t = array;
+  type nonrec u = t;
+end : sig type t; type u; end;
 |} |> structure_of_string_exn )
         ({|
-type nonrec t2 = object;
-type nonrec u = t2;
-type nonrec t1 = array;
-type nonrec u = t1;
+module M = struct
+  type nonrec t = object;
+  type nonrec u = t;
+  type nonrec t = array;
+  type nonrec u = t;
+end ;
 |} |> s7_doit)
       )
   ]
@@ -229,6 +235,8 @@ let s8_doit x =
   |> S5ElimInclude.exec
   |> ElimEmptyLocal.exec
   |> S7RenameOverridden.exec
+  |> S4Typecheck.exec
+  |> ElimCastCast.exec
   |> S8Absolute.exec
 
 let s8_absolute = "step-8-absolute" >::: [
@@ -236,18 +244,18 @@ let s8_absolute = "step-8-absolute" >::: [
         assert_equal ~printer:Normal.structure_printer ~cmp:structure_cmp
         ({|
 module M = struct
-  type nonrec t2 = object;
-  type nonrec u0 = .M.t2;
-  type nonrec t1 = array;
-  type nonrec u = .M.t1;
-end : sig t2; u; t1; u; end;
+  type nonrec t0 = object;
+  type nonrec u0 = .M.t0;
+  type nonrec t = array;
+  type nonrec u = .M.t;
+end : sig type t; type u; end;
 |} |> structure_of_string_exn )
         ({|
 module M = struct
-type nonrec t2 = object;
-type nonrec u = t2;
-type nonrec t1 = array;
-type nonrec u = t1;
+type nonrec t = object;
+type nonrec u = t;
+type nonrec t = array;
+type nonrec u = t;
 end ;
 |} |> s8_doit
 )
@@ -259,11 +267,11 @@ module M = struct
   module N = struct
     type nonrec t = object;
     type nonrec u = .M.N.t && [ "b": array; ];
-  end : sig t; u; end;
-  module P = .M.N : sig t; u; end;
+  end : sig type t, u; end;
+  module P = .M.N : sig type t, u; end;
 end : sig
-  module N : sig t; u; end;
-  module P : sig t; u; end;
+  module N : sig type t, u; end;
+  module P : sig type t, u; end;
 end;
 |} |> structure_of_string_exn )
         ({|
@@ -281,24 +289,24 @@ end ;
         assert_equal ~printer:Normal.structure_printer ~cmp:structure_cmp
         ({|
 module M = struct
-  module F = functor (M:sig t; end) -> struct
+  module F = functor (M:sig type t; end) -> struct
     type nonrec t = M.t && [ "a": object; ];
   end;
   module NAMED0 = struct
     type nonrec t = object;
-  end : sig t; end;
-  module N = .M.F(.M.NAMED0) : sig t; end;
+  end : sig type t; end;
+  module N = .M.F(.M.NAMED0) : sig type t; end;
   type nonrec u = N.t;
 end : sig
-  module F : functor (M:sig t; end) -> sig t; end;
-  module NAMED0 : sig t; end;
-  module N : sig t; end;
-  u;
+  type u;
+  module F : functor (M:sig type t; end) -> sig type t; end;
+  module N : sig type t; end;
+  module NAMED0 : sig type t; end;
 end;
 |} |> structure_of_string_exn )
         ({|
 module M = struct
-  module F = functor(M : sig t ; end) -> struct
+  module F = functor(M : sig type t ; end) -> struct
     type t = M.t && [ "a": object ] ;   
   end ;
   module N = F(struct type t = object ; end) ;
@@ -330,13 +338,13 @@ let s9_elim_cast_cast = "step-9-elim-cast-cast" >::: [
 module M = struct
   type nonrec t = object;
   type nonrec u = array;
-end : sig t; end;
+end : sig type t; end;
 |} |> structure_of_string_exn )
         ({|
 module M = (struct
   type t = object ;
   type u = array ;
-end : sig t ; u ; end ) : sig t; end;
+end : sig type t, u ; end ) : sig type t; end;
 |} |> s9_doit)
       )
   ]

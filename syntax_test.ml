@@ -35,7 +35,7 @@ let success_module_type (expect, arg) =
 
 let success_sig_item (expect, arg) =
   let msg = Fmt.(str "parsing test for code << %s >>" arg) in
-  assert_equal ~msg ~printer:sig_item_printer ~cmp:sig_item_cmp
+  assert_equal ~msg ~printer:signature_printer ~cmp:signature_cmp
     expect (sig_item_of_string_exn arg)
 
 
@@ -133,7 +133,7 @@ let parsing = "parsing" >::: [
                            (MeStruct [(StTypes (false, [(ID.of_string "t", (Simple JObject))]))]))),
          "module M = struct type t = object ; end;")
       ; ((StModuleType ((ID.of_string "MTY"), (MtSig [(SiType (ID.of_string "t"))]))),
-         "module type MTY = sig t ; end;")
+         "module type MTY = sig type t ; end;")
       ; ((StLocal (
           [(StImport ("https://example.com/geographical-location.schema.json",
                     (ID.of_string "GeoLoc")))
@@ -205,11 +205,11 @@ end ;
     ; ((MtSig []),
        "sig end")
     ; ((MtFunctorType (((ID.of_string "M"), (MtSig [(SiType (ID.of_string "u"))])), (MtSig [(SiType (ID.of_string "t"))]))),
-       "functor (M: sig u; end) -> sig t ; end")
+       "functor (M: sig type u; end) -> sig type t ; end")
     ; ((MtSig
           [(SiType (ID.of_string "t")); (SiModuleBinding ((ID.of_string "M"), (MtPath (None, (ID.of_string "MTY")))));
            (SiModuleType ((ID.of_string "MTY2"), (MtSig [(SiType (ID.of_string "u"))])))]),
-       "sig t; module M : MTY ; module type MTY2 = sig u ; end ; end")
+       "sig type t; module M : MTY ; module type MTY2 = sig type u ; end ; end")
       ]
 
       )
@@ -230,12 +230,12 @@ end ;
 
       )
   ; "sig_item" >:: (fun ctxt -> List.iter success_sig_item [
-      ((SiInclude (DEREF (REL (ID.of_string "M"), (ID.of_string "N")))),
+      ([SiInclude (DEREF (REL (ID.of_string "M"), (ID.of_string "N")))],
        "include M.N;")
-    ; ((SiModuleBinding ((ID.of_string "M"), (MtPath (None, (ID.of_string "MTY"))))),
+    ; ([SiModuleBinding ((ID.of_string "M"), (MtPath (None, (ID.of_string "MTY"))))],
        "module M : MTY;")
-    ; ((SiModuleType ((ID.of_string "MTY"), (MtSig [(SiType (ID.of_string "t"))]))),
-       "module type MTY = sig t ; end;")
+    ; ([SiModuleType ((ID.of_string "MTY"), (MtSig [(SiType (ID.of_string "t"))]))],
+       "module type MTY = sig type t ; end;")
     ]
       )
   ]

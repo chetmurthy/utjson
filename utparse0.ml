@@ -78,8 +78,8 @@ value (struct_item_eoi : Grammar.Entry.e struct_item_t) = Grammar.Entry.create g
 value (signature : Grammar.Entry.e signature) = Grammar.Entry.create g "signature";
 value (signature_eoi : Grammar.Entry.e signature) = Grammar.Entry.create g "signature_eoi";
 
-value (sig_item : Grammar.Entry.e sig_item_t) = Grammar.Entry.create g "sig_item";
-value (sig_item_eoi : Grammar.Entry.e sig_item_t) = Grammar.Entry.create g "sig_item_eoi";
+value (sig_item : Grammar.Entry.e (list sig_item_t)) = Grammar.Entry.create g "sig_item";
+value (sig_item_eoi : Grammar.Entry.e (list sig_item_t)) = Grammar.Entry.create g "sig_item_eoi";
 
 value (module_expr : Grammar.Entry.e module_expr_t) = Grammar.Entry.create g "module_expr";
 value (module_expr_eoi : Grammar.Entry.e module_expr_t) = Grammar.Entry.create g "module_expr_eoi";
@@ -256,10 +256,11 @@ EXTEND
       ] ]
     ;
     sig_item: [ [
-        s = LIDENT ; ";" -> SiType (ID.of_string s)
-      | "module" ; uid = mid ; ":" ; mty=module_type ; ";" -> SiModuleBinding uid mty
-      | "module" ; "type" ; uid = mid ; "=" ; mty=module_type ; ";" -> SiModuleType uid mty
-      | "include" ; p = module_path ; ";" -> SiInclude p
+        "type" ; l = LIST1 LIDENT SEP "," ; ";" ->
+        l |> List.map (fun s -> SiType (ID.of_string s))
+      | "module" ; uid = mid ; ":" ; mty=module_type ; ";" -> [SiModuleBinding uid mty]
+      | "module" ; "type" ; uid = mid ; "=" ; mty=module_type ; ";" -> [SiModuleType uid mty]
+      | "include" ; p = module_path ; ";" -> [SiInclude p]
       ] ]
     ;
 
@@ -269,7 +270,7 @@ EXTEND
     ;
 
     signature: [ [
-        l = LIST0 sig_item -> l
+        l = LIST0 sig_item -> List.concat l
       ] ]
     ;
 

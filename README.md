@@ -242,7 +242,7 @@ utypes between square-brackets that are &&-ed (conjoined) can be merged, viz.
 `[ “name”: string ; ] && [ “age”: number ; ]` is the same as
 `[ “name”: string ; “age”: number ; ]`
 
-Naming constraints
+## Naming constraints
 
 utypes can be named, viz.
 ```
@@ -256,6 +256,8 @@ and c2 = ….
 and c3 = ….
 ;
 ```
+## Modules and Signatures
+
 utype-decls can be grouped in “modules”, viz.
 ```
 module M = struct

@@ -243,7 +243,7 @@ and tc_sig_item env = function
 and tc_module_expr env = function
     MeStruct l ->
     let (_, (stl, sil)) = tc_structure env l in
-    (MeStruct stl, MtSig sil)
+    (MeStruct stl, MtSig (List.sort_uniq Stdlib.compare sil))
 
   | MeFunctorApp(me1,me2) as me -> begin match (tc_module_expr env me1, tc_module_expr env me2) with
       ((me1, MtFunctorType((mid, formal_mty), resmty)), (me2, actual_mty)) ->
@@ -283,7 +283,7 @@ and tc_module_type env mt =
 and tc_module_type0 env = function
     MtSig l ->
     let (_, l) = tc_signature env l in
-    MtSig l
+    MtSig (List.sort_uniq Stdlib.compare l)
   | MtFunctorType ((mid, argty), resty) ->
     let argty = tc_module_type env argty in
     let resty = tc_module_type (TEnv.push_module env (mid, argty)) resty in

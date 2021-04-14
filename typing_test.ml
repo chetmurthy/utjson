@@ -35,7 +35,7 @@ let success_test (expect_sil_s, expect_stl_s, stl_s) =
 let typing = "typing" >::: [
     "1" >:: (fun ctxt -> 
         let st = structure_of_string_exn {|
-module type Ext1 = sig extension ; end ;
+module type Ext1 = sig type extension ; end ;
 module ExtensibleTree = functor( M : Ext1 ) -> struct
   type rec t = object && [ "data" : object ; "children" : array && [ of t ] ] && M.extension ;
 end ;
@@ -46,22 +46,22 @@ module StrictTree = ExtensibleTree( struct type extension = [ sealed ] ; end ) ;
       )
   ; "success" >::: (List.map success_test [
         (Some {|
-module type Ext1 = sig extension; end;
-module ExtensibleTree : functor (M:sig extension; end) -> sig t; end;
-module StrictTree : sig t; end;
+module type Ext1 = sig type extension; end;
+module ExtensibleTree : functor (M:sig type extension; end) -> sig type t; end;
+module StrictTree : sig type t; end;
 |},
 Some {|
-module type Ext1 = sig extension; end;
-  module ExtensibleTree = functor (M:sig extension; end) -> struct
+module type Ext1 = sig type extension; end;
+  module ExtensibleTree = functor (M:sig type extension; end) -> struct
     type rec t = object && [
         "data": object;
         "children": array && [ of t; ];
 ] && M.extension;
     end;
-  module StrictTree = ExtensibleTree(struct type nonrec extension = [ sealed; ]; end) : sig t; end;
+  module StrictTree = ExtensibleTree(struct type nonrec extension = [ sealed; ]; end) : sig type t; end;
 |},
 {|
-module type Ext1 = sig extension ; end ;
+module type Ext1 = sig type extension ; end ;
 module ExtensibleTree = functor( M : Ext1 ) -> struct
   type rec t = object && [ "data" : object ; "children" : array && [ of t ] ] && M.extension ;
 end ;
@@ -69,15 +69,15 @@ end ;
 module StrictTree = ExtensibleTree( struct type extension = [ sealed ] ; end ) ;
 |})
         ;         (Some {|
-module type T1 = sig extension; end;
-  module type T2 = functor (M:sig extension; end) -> sig extension; end;
+module type T1 = sig type extension; end;
+  module type T2 = functor (M:sig type extension; end) -> sig type extension; end;
 |},
                    Some {|
-module type T1 = sig extension; end;
-  module type T2 = functor (M:sig extension; end) -> sig extension; end;
+module type T1 = sig type extension; end;
+  module type T2 = functor (M:sig type extension; end) -> sig type extension; end;
 |},
 {|
-module type T1 = sig extension ; end ;
+module type T1 = sig type extension ; end ;
 module type T2 = functor (M:T1) -> T1 ;
 |})
       ])

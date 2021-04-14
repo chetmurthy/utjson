@@ -71,7 +71,7 @@ and pr_module_type pc = fun [
   | MtPath None id -> pprintf pc "%s" (ID.to_string id)
   ]
 and pr_sig_item pc = fun [
-    SiType s -> pprintf pc "%s;" (ID.to_string s)
+    SiType s -> pprintf pc "type %s;" (ID.to_string s)
   | SiModuleBinding s mty -> 
     pprintf pc "module %s : %p;" (ID.to_string s) print_module_type mty
   | SiModuleType s mty ->
