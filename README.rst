@@ -254,23 +254,121 @@ Why do this? Why not just JSON Schema? What's wrong with JSON Schema?
    syntax bit stuffed into corners, instead of using already-existing
    mechanisms.
 
-   An example: the “type” field of a schema is typicalyl a string, but
-   can be an array of strings, e.g. \ ``"type": ["string", "object"]``.
-   And then, there can be ``"properties"``, but those properties
-   evidently will not apply if the type of the value being validated is
-   a ``string``. It would be clearer if instead, a ``anyOf`` were used,
-   with ``string`` and ``object`` (with properties) as the two
-   possibilities. But that would be much, much more verbose, and so JSON
-   Schema chose to put in this weird shortcut.
+   - An example: in
+   `ansible-inventory.json<https://github.com/SchemaStore/schemastore/blob/9deea239e5cb34e54ea71af36b1763337ad51abe/src/schemas/json/ansible-inventory.json#L12>`_
+   there is a schema for a field "hosts"::
 
-   Another example: ``$defs`` is supposed to be an ``object`` with k/v
-   pairs, the value being a schema. But this is routinely violated, and
-   we find ``$defs`` that are just objects with other objects, and
-   somewhere beneath, there are k/v pairs denoting schema.
+     "hosts": {
+       "type": ["object", "string"],
+       "patternProperties": {
+         "[a-zA-Z.-_0-9]": {
+           "type": ["object", "null"]
+         }
+       }
+     },
 
-   Another: In a schema that describes an object, the properties are
-   supposed to be mentioned under a ``properties`` key, but sometimes
-   they're just mentioned directly.
+   So "hosts" can be either a "string" or an "object".  And it can
+   have fields whose names match the given pattern.  But that makes no
+   sense if "hosts" is an object.  It would be possible to write this using "oneOf", viz.::
+     "hosts": {
+       "oneOf": [
+         { "type": "string"},
+         { "type": "object",
+           "patternProperties": {
+             "[a-zA-Z.-_0-9]": {
+               "type": ["object", "null"]
+             }
+           }
+         }
+       ]
+     }
+
+   and the same could have been done for the "type" field under
+   "patternProperties".  But this verbiage makes the schema ever more
+   complicated, and so I would guess that the designers tolerate the
+   slight abuse of language shown above.  Instead, with UTJ, we can write::
+
+     type hosts_t = string || (object && [ /[a-zA-Z.-_0-9]/: object || null ]) ;
+
+and there is no ambiguity, no abuse of language.  It's also succinct
+and comprehensible.
+
+
+- `$defs` is supposed to be an `object` where the key/value pairs are
+   "type name" and schema, e.g.::
+
+     "definitions": {
+       "address": {
+         "type": "object",
+         "properties": {
+           "street_address": { "type": "string" },
+           "city":           { "type": "string" },
+           "state":          { "type": "string" }
+         },
+         "required": ["street_address", "city", "state"]
+       }
+     },
+
+But in `taskfile.json<https://github.com/SchemaStore/schemastore/blob/9deea239e5cb34e54ea71af36b1763337ad51abe/src/schemas/json/taskfile.json#L103>`_
+we see that `definitions` (the old name for `$defs`) is simply a JSON object, and the typename/schema pairs are buried under another layer of objects, viz.::
+
+    "definitions": {
+    "3": {
+      "env": <schema for env>,
+      .... etc ....
+    }
+  }
+
+  So when referencing a type "env", one uses "#/definitions/3/env".
+  In
+  `travis.json<https://github.com/SchemaStore/schemastore/blob/9deea239e5cb34e54ea71af36b1763337ad51abe/src/schemas/json/travis.json#L1541>`_
+  we find a key/value entry under a definition with both extraneous
+  JSON, and then subsidiary key/value entries::
+
+      "definitions": {
+    "nonEmptyString": <schema for "nonEmptyString">,
+    "notificationObject": {
+      "webhooks": <extraneous JSON>,
+      "slack": <schema for "slack">,
+      ... other definitions ...
+    },
+    "import": <schema for "import">
+  },
+
+  So to refer to type "nonEmptyString", one uses
+  "#/definitions/nonEmptyString".  To refer to "import", likewise,
+  "#/definitions/import".  But to refer to "slack", one uses
+  "#/definitions/notificationObject/slack".
+
+   This sort of "grouping type declarations" maps directly to modules
+   in ML-like languages.
+
+-  Ostensibly, all fields must be declared in "properties" objects.  So
+   for instance, an "anyOf" should be structured thus (from `Understanding JSON Schema<https://json-schema.org/understanding-json-schema/reference/combining.html#anyof>`_::
+
+     {
+       "anyOf": [
+         { "type": "string" },
+         { "type": "number" }
+       ]
+     }
+
+   but in `cloudify.json<https://github.com/SchemaStore/schemastore/blob/9deea239e5cb34e54ea71af36b1763337ad51abe/src/schemas/json/cloudify.json#L154>`_
+   we find that the subschema of the "anyOf" lists fields but not in a "properties" object::
+
+           "anyOf": [
+	     <valid schema #1>,
+             {
+               "valid_values": {
+                 "type": "array",
+                 "items": {
+                   "type": ["number", "string", "boolean", "integer"]
+                 }
+               }
+             }
+           ]
+
+
 
    All of these have as a goal to reduce the verbosity of the schema.
    But if we had a targetd human-readable front-end language, we could
