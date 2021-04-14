@@ -252,6 +252,61 @@ end ;
 |} |> s8_doit
 )
       )
+  ; "modules-1" >:: (fun ctxt -> 
+        assert_equal ~printer:Normal.structure_printer ~cmp:structure_cmp
+        ({|
+module M = struct
+  module N = struct
+    type nonrec t = object;
+    type nonrec u = .M.N.t && [ "b": array; ];
+  end : sig t; u; end;
+  module P = .M.N : sig t; u; end;
+end : sig
+  module N : sig t; u; end;
+  module P : sig t; u; end;
+end;
+|} |> structure_of_string_exn )
+        ({|
+module M = struct
+  module N = struct
+    type t = object ;
+    type u = t && [ "b": array ] ;
+  end ;
+  module P = N ;
+end ;
+|} |> s8_doit
+)
+      )
+  ; "functor-1" >:: (fun ctxt -> 
+        assert_equal ~printer:Normal.structure_printer ~cmp:structure_cmp
+        ({|
+module M = struct
+  module F = functor (M:sig t; end) -> struct
+    type nonrec t = M.t && [ "a": object; ];
+  end;
+  module NAMED0 = struct
+    type nonrec t = object;
+  end : sig t; end;
+  module N = .M.F(.M.NAMED0) : sig t; end;
+  type nonrec u = N.t;
+end : sig
+  module F : functor (M:sig t; end) -> sig t; end;
+  module NAMED0 : sig t; end;
+  module N : sig t; end;
+  u;
+end;
+|} |> structure_of_string_exn )
+        ({|
+module M = struct
+  module F = functor(M : sig t ; end) -> struct
+    type t = M.t && [ "a": object ] ;   
+  end ;
+  module N = F(struct type t = object ; end) ;
+  type u = N.t ;
+end ;
+|} |> s8_doit
+)
+      )
   ]
 
 let s9_doit x =

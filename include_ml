@@ -55,9 +55,7 @@ let top_id x = top Normal.id_printer x ;;
 let top_utype x = top Normal.printer x ;;
 #install_printer top_utype ;;
 let top_struct_item x = top Normal.struct_item_printer x ;;
-(*
 #install_printer top_struct_item ;;
-*)
 let top_sig_item x = top Normal.sig_item_printer x ;;
 #install_printer top_sig_item ;;
 
@@ -66,6 +64,9 @@ let top_module_type x = top Normal.module_type_printer x ;;
 
 let top_module_expr x = top Normal.module_expr_printer x ;;
 #install_printer top_module_expr ;;
+
+let top_module_path x = top Normal.module_path_printer x ;;
+#install_printer top_module_path ;;
 
 #load "utconv.cmo";;
 open Utconv ;;

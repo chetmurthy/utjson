@@ -706,7 +706,7 @@ and abs_st prefix env st = match (prefix, st) with
   | (Some mpopt, StModuleBinding(mid, me)) ->
     let prefixmp = match mpopt with None -> TOP mid | Some mp -> DEREF(mp, mid) in
     let me = abs_me (Some (Some prefixmp)) env me in
-    let env = Env.(add_m env (mid, (DEREF(prefixmp, mid)))) in
+    let env = Env.(add_m env (mid, prefixmp)) in
     (env, StModuleBinding(mid, me))
 
   | (_, StOpen (mp, Some (MtSig l))) ->

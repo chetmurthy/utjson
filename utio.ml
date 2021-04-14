@@ -23,6 +23,8 @@ let module_expr_to_string t = print_module_expr Pprintf.empty_pc t
 let module_type_of_string_exn s = s |> parse_string parse_module_type_eoi
 let module_type_to_string t = print_module_type Pprintf.empty_pc t
 
+let module_path_to_string t = print_module_path Pprintf.empty_pc t
+
 module Debug = struct
 let id_printer = ID.show
 let printer = show_utype_t
@@ -37,6 +39,9 @@ let module_expr_cmp = equal_module_expr_t
 
 let module_type_printer x = "<<"^(show_module_type_t x)^">>"
 let module_type_cmp = equal_module_type_t
+
+let module_path_printer x = "<<"^(show_module_path_t x)^">>"
+let module_path_cmp = equal_module_path_t
 
 let sig_item_printer x = "<<"^(show_sig_item_t x)^">>"
 let sig_item_cmp = equal_sig_item_t
@@ -56,6 +61,7 @@ let printer x  = "<< "^(to_string x)^" >>"
 let struct_item_printer x = "<< "^(struct_item_to_string x)^" >>"
 let module_expr_printer x = "<< "^(module_expr_to_string x)^" >>"
 let module_type_printer x = "<< "^(module_type_to_string x)^" >>"
+let module_path_printer x = "<< "^(module_path_to_string x)^" >>"
 let sig_item_printer x = "<< "^(sig_item_to_string x)^" >>"
 let signature_printer x = "<< "^(signature_to_string x)^" >>"
 let structure_printer x = "<< "^(structure_to_string x)^" >>"

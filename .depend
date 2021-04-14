@@ -73,12 +73,14 @@ uteval.cmo : \
     ututil.cmo \
     uttypecheck.cmo \
     utmigrate.cmo \
+    utio.cmo \
     utconv.cmo
 uteval.cmx : \
     utypes.cmx \
     ututil.cmx \
     uttypecheck.cmx \
     utmigrate.cmx \
+    utio.cmx \
     utconv.cmx
 utio.cmo : \
     utypes.cmi \
@@ -93,10 +95,12 @@ uttestutil.cmx :
 uttypecheck.cmo : \
     utypes.cmi \
     ututil.cmo \
+    utmigrate.cmo \
     utconv.cmo
 uttypecheck.cmx : \
     utypes.cmx \
     ututil.cmx \
+    utmigrate.cmx \
     utconv.cmx
 ututil.cmo :
 ututil.cmx :
@@ -118,9 +122,11 @@ utlexing.cmx : \
     ututil.cmx
 utparse0.cmo : \
     utypes.cmi \
+    ututil.cmo \
     utlexing.cmo
 utparse0.cmx : \
     utypes.cmx \
+    ututil.cmx \
     utlexing.cmx
 utprint.cmo : \
     utypes.cmi \
