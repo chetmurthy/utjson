@@ -255,7 +255,7 @@ Why do this? Why not just JSON Schema? What's wrong with JSON Schema?
    mechanisms.
 
    - An example: in
-   `ansible-inventory.json<https://github.com/SchemaStore/schemastore/blob/9deea239e5cb34e54ea71af36b1763337ad51abe/src/schemas/json/ansible-inventory.json#L12>`_
+   `ansible-inventory.json <https://github.com/SchemaStore/schemastore/blob/9deea239e5cb34e54ea71af36b1763337ad51abe/src/schemas/json/ansible-inventory.json#L12>`_
    there is a schema for a field "hosts"::
 
      "hosts": {
