@@ -41,6 +41,9 @@ In this section, I'll reproduce the examples found in
 `JSON Schema: Getting Started Step-By-Step <https://json-schema.org/learn/getting-started-step-by-step>`_,
 but using UTJ.
 
+A Simple Product Schema
+-----------------------
+
 Suppose we want to give a type for a product-catalog entry::
 
   {
@@ -90,6 +93,9 @@ Some notes:
     rewriting the type-expressions into a lower-level form suitable
     for validation.
 
+Add a field with a Complex Schema Type
+--------------------------------------
+
 Now we want to add "dimensions" and "warehouseLocation" keys to the product::
 
   {
@@ -127,6 +133,9 @@ Notice that the constraints for the type of "dimensions" are not in a
 single "[...]" block, but spread across two conjuncts.  Internally,
 `[ <c1> ; <c2> ]` is equivalent to `[ <c1> ] && [ <c2> ]`.
 
+Import a Schema from another File
+---------------------------------
+
 Now we want to introduce a "warehouseLocation", which will be a
 lattitude/longitude pair.  This is somewhat standardized, so we'd like
 to refer to another schema file, `geographical-location.schema.utj`,
@@ -150,7 +159,10 @@ And then we want to use this type in our product schema::
      ] && [ required "length", "width", "height" ];
     "warehouseLocation": M0.t;
   ] ;
-  
+
+Wrap in a Module and Hide Some Types
+------------------------------------
+
 We could define a module and refactor types a little, viz.::
 
   module Product = struct
@@ -176,6 +188,9 @@ We could define a module and refactor types a little, viz.::
 and using "signatures" (types for modules), we can ensure that the
 type "dim_t" is not visible outside the module.
 
+Seal a Type (forbid unvalidated fields)
+---------------------------------------
+
 If we wanted a version of the product that did not allow any other
 fields, we could do so::
 
@@ -188,6 +203,9 @@ type, we could do so::
     data : object ;
     children : array && [ of t ]
   ] ;
+
+Use Parameterized Modules to make a Recursive Type Extensible
+-------------------------------------------------------------
 
 JSON Schema has a mechanism for extending types such as the above
 (`$dynamicAnchor`, `$dynamicRef`) that is ... a little complex to
