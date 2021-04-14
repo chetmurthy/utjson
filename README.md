@@ -1,119 +1,280 @@
-This document describes a type system for JSON.  You could say that it’s based on union typing, but you could also say that it is based on JSON Schema, and the resemblance should become clearer as we get further in the description.  The goal here is to have a type system that is both easy to write and easy to understand.  Representing types as JSON objects is not a goal, b/c it’s so trivial once you have a mapping from the types of some programming language, to types in this system: just implement this type system in that language, and then turn a crank to get out JSON.
 
-Introduction and Motivation
+# Introduction
 
-The obvious observation when looking at JSON and typing it, is that since there is so much JSON out there, you have to “meet them where they are” and not impose constraints a priori.  So something like “map ML types to JSON” won’t work.  Instead, I’m going to propose using “union typing”.  This is a system where types represent “constraints” on values, and one can both union (“||”), intersect (“&&”) and exclusive-or (“xor”) type-constraints.
+This project implements a type system for JSON, which one could describe as:
 
-Why would you want to do this?  Well, a system where we describe type-constraints as conjunctions and disjunctions, where they enjoy the standard properties (commutativity, associativity, distributivity), is one that allows us to perform optimizations on the type-expressions given, and convert them to a standard normal form that could be expressed in a form of lower-level “machine code”.  An interpreter for that machine code would type-check a JSON value, and that interpreter would be all that is needed for most implementations: the full generality of JSON Schema would not need to be accepted by most conforming implementations.  This would and should make schema validation faster and more uniform across all implementations.
+* directly inspired by JSON Schema, and pretty much 100% compatible
+  with JSON Schema, in the sense that there is a converter from JSON
+  Schema to this type system, and it is evidently straightforward to
+  convert back.
+  
+* based on union typing, as I remember it from the school of
+  Dezani-Ciancaglini, Barbanera, Berardi, and others at the
+  Dipartimento di Informatica at the University of Torino.  I can't
+  find any open-source publications of their work, b/c it was so long
+  ago that it was all published thru places like Springer, but here's
+  a reference I found to an LNCS volume (of TACS 1991):
+  
+  Title: Intersection and union types
+  Authors: Franco BarbaneraMariangiola Dezani-Ciancaglini
+  LNCS 526
+  
+I'll present this type system as if it's unrelated to JSON Schema, but
+at various critical points I'll gesture at JSON Schema, so it's clear
+what various bits are used for.
 
-Enumerate constraints
+# Motivation
 
-Simple constraints are:
+## What's Wrong with JSON Schema?
 
-null, string, bool, number, array, object
+Why do this?  Why not just JSON Schema?  What's wrong with JSON Schema?
 
-Fields can be constrained:
+* ungainly, verbose, b/c expressed in JSON
 
-[ <fieldname>: <constraint> ; ]
-[ /<fielld-name-pcre-compat-regexp>/: <constraint> ; ]
-[ required: <field-name> ; ]
+* Weird syntax corner-cases in JSON Schema: here-and-there are weird
+  syntax bit stuffed into corners, instead of using already-existing
+  mechanisms.
+  
+  An example: the "type" field of a schema is typicalyl a string, but
+  can be an array of strings, e.g. `"type": ["string", "object"]`.
+  And then, there can be `"properties"`, but those properties
+  evidently will not apply if the type of the value being validated is
+  a `string`.  It would be clearer if instead, a `anyOf` were used,
+  with `string` and `object` (with properties) as the two
+  possibilities. But that would be much, much more verbose, and so
+  JSON Schema chose to put in this weird shortcut.
+  
+  Another example: `$defs` is supposed to be an `object` with k/v
+  pairs, the value being a schema.  But this is routinely violated,
+  and we find `$defs` that are just objects with other objects, and
+  somewhere beneath, there are k/v pairs denoting schema.
+  
+  Another: In a schema that describes an object, the properties are
+  supposed to be mentioned under a `properties` key, but sometimes
+  they're just mentioned directly.
+  
+  All of these have as a goal to reduce the verbosity of the schema.
+  But if we had a targetd human-readable front-end language, we could
+  arrange for (e.g.) `anyOf` to be syntactically trivial, ditto
+  listing properties.
+  
+* Too high-level: JSON Schema has `$defs`, `$ref`, `$dynamicRef`,
+  maybe other stuff, that makes it difficult for implementors.  What
+  might be nice, is if this high-level version of JSON Schema, were
+  *compiled down* to some lower-level representation, maybe itself a
+  form of JSON Schema, that eschewed all these higher-level bits, and
+  admitted of a straightforward implementation of validators.
 
-As I’ll describe later, these imply the constraint “object”.
+There are probably other issues, but I'll stop here.
 
-Arrays can be constrained:
+## Non-Goals
 
-[ of <constraint> ; ]
-[ <constraint1> * <constraint2> * <constraint3> ; ] (etc)
-[ unique ; ]
-[ size <range-constraint> ; ]
-[ <index-int>: <constraint> ; ]
-This means that the <index-int>-th value (zero-based) satisfies <constraint>
+This type system is *not* designed to be different from JSON Schema.
+The idea is that instead of writing a JSON Schema, you would write one
+of these, and if you needed one, you could generate a JSON Schema.  Of
+course, there's a "converter" that converts (most) JSON Schema to this
+type system.  I expect that most JSON Schema will convert; when some
+do not, I will provide clear arguments for why those Schema are
+problematic.
 
-	Where <range-constraint> is as in mathematics, viz. [0,4), (0,3), (1,4] etc with the customary meaning that square-brackets mean inclusive bound and parens mean exclusive bound.  For an unconstrained upper bound, use “...” (in which case inclusive/exclusive is meaningless)
+The obvious observation when looking at JSON and typing it, is that
+since there is so much JSON out there, you have to “meet them where
+they are” and not impose constraints a priori.  So something like “map
+ML types to JSON” won’t work.  Instead, I’m going to propose using
+“union typing”.  This is a system where types represent “constraints”
+on values, and one can both union (“||”), intersect (“&&”) and
+exclusive-or (“xor”) type-constraints.
 
-Strings can be constrained:
-[ size <range-constraint> ; ]
-[ /<pcre-compatible-regexp>/ ]
+## Goals
 
-Numbers can be constrained:
-[ bounds <range-constraint> ; ]
-	Upper and lower bounds can be .inf or -.inf, and since JSON doesn’t allow those, clearly only exclusive bounds work with those.
+* Be as close as possible to JSON Schema, covering as many of the
+  types as JSON Schema covers.  That is to say, as much as possible,
+  if we think of a JSON Schema as being equivalent to the set of JSON
+  documents it validates, then as much as possible, we want to have
+  our type system cover the same sets of JSON documents, as JSON
+  Schema covers
 
-And so on.
+* The type expressions should enjoy as many algebraic equalities as
+  possible -- associative, commutative, distributive laws should hold
+  for type-expressions.  It will become clear why this is useful, when
+  it comes time to do generate low-level schema, from which we can
+  efficiently validate JSON values.
+  
+* Compile down to a low-level schema, which can be used as input to
+  schema-validation in many other language implementations (which
+  hence won't have to understand the full complexity of JSON Schema,
+  but only the subset -- a sort of machine code).
+  
+* Everywhere possible, borrow from programming-language type systems,
+  which have demonstrated their ability to represent large sets of
+  types without confusing developers.
 
-Sealing an object:
+# The Type System
 
-An object can be sealed
+* `utype`s: The type system revolves around defining "union types",
+  herein abbreviated *utype*s.  In this text, we'll sometimes call
+  them constraints, for reasons that should become clear.
 
-[ sealed ; ]
+* `structure`s: A `structure` is a collection of named `utype`s, as in
+  the style of OCaml modules.
 
-Or its unconstrained fields can be given a default constraint
+* `signature`s: a `signature` is the "type" of a `structure` -- that
+  is to say, it describes the types that that structure exports.
+  
+* In order to implement the JSON Schema notion of
+  "dynamicAnchor"/"dynamicRef" in a sensible way, we also have
+  "functors" (again from OCaml) which are functions from one structure
+  to another.  That is to say, they are parameterized structures.
+  I'll show how the "tree"/"strictTree" example can be redone, and
+  hopefully some others.
 
-[ orelse <constraint> ; ]
+## Atomic `utype`s
 
-An object that neither given “sealed” nor “orelse” constraint is implicitly given an “unsealed” constraint.  This gets introduced during schema-processing.
+* The simplest utypes are the raw types of JSON:
+  ```
+  type t = object ;
+  ```
+  [also, `null`, `bool`, `string`, `number`, `array`]
 
-Composite constraints
+	It should be obvious when a JSON value is validated by such utypes.
+
+* Next are "constraints".  "<fieldname>" here is a quoted-string, as
+  in JSON Schema.
+
+  * fields:
+  
+    `[ <fieldname>: <constraint-utype> ; ]`
+  
+	(equivalent to `properties`)
+  
+	`[ /<field-name-pcre-compat-regexp>/: <constraint-utype> ; ]`
+
+	(equivalent to `patternProperties`)
+
+    `[ required: <field-name> ; ]`
+
+	As I’ll describe later, these imply the constraint “object”.
+
+  Multiple constraints can be strung together, viz.
+
+  `[ "a": object ; "b": array; required "a", "b" ]`
+
+  Semicolons are separators, but a final semicolon is allowed.
+
+  * arrays
+
+    `[ of <constraint-utype> ; ]`
+
+	same as `"items"` with a schema argument.
+
+    `[ <constraint-utype1> * <constraint-utype2> * <constraint-utype3> ; ] (etc)`
+
+	same as `"items"` with a list of schema.
+
+    `[ unique ; ]`
+
+	same as `"uniqueItems"`
+
+    `[ size <range-constraint> ; ]`
+
+	range-constraints are explained below.
+
+    `[ <index-int>: <constraint-utype> ; ]`
+
+	This means that the <index-int>-th value (zero-based) satisfies <constraint-utype>.
+
+	<range-constraint> is as in mathematics, viz. [0,4), (0,3), (1,4]
+    etc with the customary meaning that square-brackets mean inclusive
+    bound and parens mean exclusive bound.  For an unconstrained upper
+    bound, use “...” (in which case inclusive/exclusive is
+    meaningless)
+
+  * strings
+
+	`[ size <range-constraint> ; ]`
+	`[ /<pcre-compatible-regexp>/ ]`
+
+  * numbers
+
+	`[ bounds <range-constraint> ; ]`
+
+	Upper and lower bounds can be .inf or -.inf, and since JSON
+    doesn’t allow those, clearly only exclusive bounds work with
+    those.
+
+  * sealing an object:
+
+	An object can be sealed
+
+	`[ sealed ; ]`
+
+	or its unconstrained fields can be given a default constraint
+
+	`[ orelse <constraint> ; ]`
+
+	An object that neither given “sealed” nor “orelse” constraint is
+    implicitly given an “unsealed” constraint.  This gets introduced
+    during schema-processing.
+
+## Composite `utype`s
 
 Constraints can be *composed* using conjunction and disjunction:
 
-<con1> && <con2>: JSON values satisfying this constraint satisfy both <con1> and <con2>.
-<con1> || <con2>: JSON values satisfying this constraint satisfy either or both of <con1>, <con2>
+`<con1> && <con2>`: JSON values satisfying this constraint satisfy both <con1> and <con2>.
+`<con1> || <con2>`: JSON values satisfying this constraint satisfy either or both of <con1>, <con2>
 
-Similarly there is “<con1> xor <con2>”, (AKA “oneOf”), which is like “or”, but only one side can be satisfied.
+Similarly there is 
 
-There is “not <con1>”, which is satisfied exactly when the constraint <con1> is not satisfied.
+`<con1> xor <con2>`:  (AKA “oneOf”), which is like “or”, but only one side can be satisfied.
 
-NOTE WELL: We don’t have an if-then construct here, b/c it …. Isn’t what you’d want for tagged-union, and in fact, tagged-union is already properly handled by an xor of conjunctions.
+`not <con1>`: which is satisfied exactly when the constraint <con1> is not satisfied.
 
-Examples:
+`<con1> => <con2>`: the same as "if-then" in JSON Schema: an implication.
 
-string && [ size (0..26] ; ] a nonempty string of max length 26.
+## Examples
 
-Constraints between square-brackets that are &&-ed (conjoined) can be merged, viz.
+`string && [ size (0..26] ; ] a nonempty string of max length 26.
 
-[ “name”: string ; ] && [ “age”: number ; ] is the same as
-[ “name”: string ; “age”: number ; ]
+utypes between square-brackets that are &&-ed (conjoined) can be merged, viz.
+
+`[ “name”: string ; ] && [ “age”: number ; ]` is the same as
+`[ “name”: string ; “age”: number ; ]`
 
 Naming constraints
 
-Constraints can be named, viz.
-
+utypes can be named, viz.
+```
 type c1 = string ;
 type c2 = c1 && [ size [0,26) ; ] ;
-
-Constraints are only visible after having been declared, but can be declared as part of a recursive group:
-
+```
+utypes are only visible after having been declared, but can be declared as part of a recursive group:
+```
 type rec c1 = …
 and c2 = ….
 and c3 = ….
 ;
-Constraints can be grouped in “modules”, viz.
-
-Module M = struct
-<constraint-decls-terminated-by-semicolon>
+```
+utype-decls can be grouped in “modules”, viz.
+```
+module M = struct
+<utype-decls-terminated-by-semicolon>
 end ;
-
-and this is a constraint-declaration. A constraint “c2” in module “M” is named as “M.c2” outside that module.
+```
+A utype `c2` in module `M` is named as `M.c2` outside that module.
 
 By default, declared constraints are exported.  But via local-declaration, they can be declared for use, but not exported:
 
-local <constraint-declarations> in <constraint-declarations>;
+`local <constraint-declarations> in <constraint-declarations>;`
 
 Constraints can be “imported” from HTTP URLs, viz
 
-Import <url> as M ;
+`import <url> as M ;`
 
 Which is the same as
 
-module M = struct <contents of url inserted here> end ;
+`module M = struct <contents of url inserted here> end ;`
 
 And finally, a module can be “opened”, so that its contents are usable without the module-prefix:
 
-open M;
-
-Some Notes
-
-xor can be mapped to or (“||”) if it can be proved that the disjuncts are mutually incompatible.  In the relevant case -- tagged unions -- this is straightforward.  It isn’t even clear that xor is useful, but leave it in, just in case.
-
+`open M;`
 
