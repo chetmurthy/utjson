@@ -302,8 +302,8 @@ since there is so much JSON out there, you have to “meet them where they
 are” and not impose constraints a priori. So something like “map ML
 types to JSON” won't work. Instead, I'm going to propose using “union
 typing”. This is a system where types represent “constraints” on values,
-and one can both union (“\|\|”), intersect (“&&”) and exclusive-or
-(“xor”) type-constraints.
+and one can both union (`||`), intersect (`&&`) and exclusive-or
+(`xor`) type-constraints.
 
 Goals
 -----
@@ -333,25 +333,23 @@ Goals
 The Type System
 ===============
 
--  ``utype``\ s: The type system revolves around defining “union types”,
-   herein abbreviated *utype*\ s. In this text, we'll sometimes call
+-  `utype`: The type system revolves around defining “union types”,
+   herein abbreviated *utype*. In this text, we'll sometimes call
    them constraints, for reasons that should become clear.
 
--  ``structure``\ s: A ``structure`` is a collection of named
-   ``utype``\ s, as in the style of OCaml modules.
+-  `structure`: A `structure` is a list of named
+   `utype`s, as in the style of OCaml structures (the contents of a `struct....end`.
 
--  ``signature``\ s: a ``signature`` is the “type” of a ``structure`` –
+-  `signature`: a `signature` is the “type” of a `structure` –
    that is to say, it describes the types that that structure exports.
 
 -  In order to implement the JSON Schema notion of
    “dynamicAnchor”/“dynamicRef” in a sensible way, we also have
    “functors” (again from OCaml) which are functions from one structure
-   to another. That is to say, they are parameterized structures. I'll
-   show how the “tree”/“strictTree” example can be redone, and hopefully
-   some others.
+   to another. That is to say, they are parameterized structures.
 
-Atomic ``utype``\ s
--------------------
+Atomic `utype`s
+---------------
 
 -  The simplest utypes are the raw types of JSON:
 
