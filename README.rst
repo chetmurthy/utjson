@@ -255,43 +255,44 @@ Why do this? Why not just JSON Schema? What's wrong with JSON Schema?
    mechanisms.
 
    - An example: in
-   `ansible-inventory.json <https://github.com/SchemaStore/schemastore/blob/9deea239e5cb34e54ea71af36b1763337ad51abe/src/schemas/json/ansible-inventory.json#L12>`_
-   there is a schema for a field "hosts"::
+     `ansible-inventory.json <https://github.com/SchemaStore/schemastore/blob/9deea239e5cb34e54ea71af36b1763337ad51abe/src/schemas/json/ansible-inventory.json#L12>`_
+     there is a schema for a field "hosts"::
 
-     "hosts": {
-       "type": ["object", "string"],
-       "patternProperties": {
-         "[a-zA-Z.-_0-9]": {
-           "type": ["object", "null"]
-         }
-       }
-     },
-
-   So "hosts" can be either a "string" or an "object".  And it can
-   have fields whose names match the given pattern.  But that makes no
-   sense if "hosts" is an object.  It would be possible to write this using "oneOf", viz.::
-     "hosts": {
-       "oneOf": [
-         { "type": "string"},
-         { "type": "object",
-           "patternProperties": {
-             "[a-zA-Z.-_0-9]": {
-               "type": ["object", "null"]
-             }
+       "hosts": {
+         "type": ["object", "string"],
+         "patternProperties": {
+           "[a-zA-Z.-_0-9]": {
+             "type": ["object", "null"]
            }
          }
-       ]
-     }
+       },
 
-   and the same could have been done for the "type" field under
-   "patternProperties".  But this verbiage makes the schema ever more
-   complicated, and so I would guess that the designers tolerate the
-   slight abuse of language shown above.  Instead, with UTJ, we can write::
+     So "hosts" can be either a "string" or an "object".  And it can
+     have fields whose names match the given pattern.  But that makes no
+     sense if "hosts" is an object.  It would be possible to write this using "oneOf", viz.::
 
-     type hosts_t = string || (object && [ /[a-zA-Z.-_0-9]/: object || null ]) ;
+       "hosts": {
+         "oneOf": [
+           { "type": "string"},
+           { "type": "object",
+             "patternProperties": {
+               "[a-zA-Z.-_0-9]": {
+                 "type": ["object", "null"]
+               }
+             }
+           }
+         ]
+       }
 
-and there is no ambiguity, no abuse of language.  It's also succinct
-and comprehensible.
+     and the same could have been done for the "type" field under
+     "patternProperties".  But this verbiage makes the schema ever more
+     complicated, and so I would guess that the designers tolerate the
+     slight abuse of language shown above.  Instead, with UTJ, we can write::
+
+       type hosts_t = string || (object && [ /[a-zA-Z.-_0-9]/: object || null ]) ;
+
+     and there is no ambiguity, no abuse of language.  It's also succinct
+     and comprehensible.
 
 
 - `$defs` is supposed to be an `object` where the key/value pairs are
