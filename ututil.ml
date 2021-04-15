@@ -28,3 +28,10 @@ let diff_set l1 l2 =
   if l2 = [] then l1 else List.filter (fun x -> not (List.mem x l2)) l1
 let subtract = diff_set
 let intersect l1 l2 = List.filter (fun x -> List.mem x l2) l1
+
+let firstn n l =
+  let rec aux acc = function
+      (0, l) -> List.rev acc
+    | (n, (h::t)) -> aux (h::acc) (pred n, t)
+    | _ -> failwith "firstn"
+  in aux [] (n,l)

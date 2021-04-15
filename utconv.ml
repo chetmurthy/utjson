@@ -515,10 +515,14 @@ let conv_schema t =
   else 
     [StLocal(l, [StTypes(false, [(ID.of_string "t", t)])])]
 
-let load_file s =
-  if Str.(string_match (regexp ".*\\.json$") s 0) then
-    let j = Yojson.Basic.from_file s in
-    conv_schema j
-  else if Str.(string_match (regexp ".*\\.utj$") s 0) then
-    Utparse0.(parse_file parse_structure) s
-  else Fmt.(failwithf "load_file: format not recognized: %s" s)
+let load_file ?(with_predefined=false) s =
+  let stl =
+    if Str.(string_match (regexp ".*\\.json$") s 0) then
+      let j = Yojson.Basic.from_file s in
+      conv_schema j
+    else if Str.(string_match (regexp ".*\\.utj$") s 0) then
+      Utparse0.(parse_file parse_structure) s
+    else Fmt.(failwithf "load_file: format not recognized: %s" s) in
+  if with_predefined then
+  [StImport("lib/predefined.utj", ID.of_string "Predefined")]@stl
+  else stl

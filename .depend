@@ -22,6 +22,7 @@ schemastore_test.cmo : \
     utprint.cmo \
     utparse0.cmo \
     utio.cmo \
+    uteval.cmo \
     utconv.cmo
 schemastore_test.cmx : \
     utypes.cmx \
@@ -29,12 +30,14 @@ schemastore_test.cmx : \
     utprint.cmx \
     utparse0.cmx \
     utio.cmx \
+    uteval.cmx \
     utconv.cmx
 syntax_test.cmo : \
     utypes.cmi \
     uttestutil.cmo \
     utprint.cmo \
     utparse0.cmo \
+    utmigrate.cmo \
     utio.cmo \
     utconv.cmo
 syntax_test.cmx : \
@@ -42,6 +45,7 @@ syntax_test.cmx : \
     uttestutil.cmx \
     utprint.cmx \
     utparse0.cmx \
+    utmigrate.cmx \
     utio.cmx \
     utconv.cmx
 typing_test.cmo : \
