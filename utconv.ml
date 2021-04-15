@@ -1,4 +1,4 @@
-open Ututil
+1open Ututil
 open Utypes
 
 type json =
@@ -46,6 +46,8 @@ let xorList l =
     match List.assoc s !uri2type with
       r -> r
     | exception Not_found ->
+      if String.get s 0 = '#' then
+        Fmt.(failwithf "local ref not found: %a" Dump.string s) ;
       let mid = newmid() in
       let r = Ref(Some (REL mid),(ID.of_string "t")) in
       add_imports s mid ;
@@ -53,11 +55,11 @@ let xorList l =
       r
 
   let locals = ref [] 
-  let forward_define_local s =
-    add_uri2type (Printf.sprintf "#/definitions/%s" s) (Ref(None, (ID.of_string s))) ;
+  let forward_define_local (uri, s) =
+    add_uri2type uri (Ref(None, (ID.of_string s))) ;
     ()
   let register_local_definition s t =
-    locals := (s, t) :: !locals ;
+    locals := (ID.of_string s, t) :: !locals ;
     ()
 
   let reset () = 
@@ -66,7 +68,7 @@ let xorList l =
     imports := [] ;
     locals := []
 
-  let assoc_opt k l =
+  let assoc_opt k (l : (string * Yojson.Basic.t) list) =
     match List.assoc k l with
       v -> Some v
     | exception Not_found -> None
@@ -82,13 +84,18 @@ let xorList l =
     | `String "scalar" -> [Ref (Some(REL (ID.of_string "Predefined")), (ID.of_string "scalar"))]
     | v -> Fmt.(failwithf "conv_type: malformed type member: %a" pp_json v)
 
-  let documentation_keys = [
-    "$schema"; "$id"; "title"; "description"; "$contact"; "$comment"
-    ; "examples"; "example" ; "documentation"; "enumDescriptions"
-    ; "deprecated"; "version" ; "authors"
-    ; "$vocabulary"
+let documentation_keys = [
+  "$schema"; "$id"; "title"; "titles"; "description"; "$contact"; "$comment"
+  ; "xcomments"
+  ; "examples"; "example" ; "documentation"; "enumDescriptions"
+  ; "markdownDescription"
+  ; "deprecated" ; "deprecationMessage"
+  ; "version" ; "authors"
+  ; "$vocabulary"
+  ; "$xsd-type"
+  ; "$xsd-full-type"
   ]
-  let known_keys = documentation_keys@[
+let known_useful_keys = [
     "$ref"
   ; "type"; "properties"; "required"; "patternProperties"
   ; "minimum"; "maximum"
@@ -105,13 +112,15 @@ let xorList l =
   ; "contentMediaType";"contentEncoding"
   ; "const" ; "multipleOf"
   ; "dependencies"
-  ;"if"; "then"; "else"
+  ; "if"; "then"; "else"
   ]
-  let known_garbage_keys = [
+let known_garbage_keys = [
     "x-intellij-case-insensitive"
   ; "x-intellij-language-injection"
   ; "x-intellij-html-description"
+  ; "fileMatch"
   ]
+let known_keys = documentation_keys@known_useful_keys@known_garbage_keys
 
   let rec conv_type_l (j : json) = match j with
       `Assoc l when l |> List.for_all (fun (k,_) -> List.mem k documentation_keys) ->
@@ -395,31 +404,47 @@ let xorList l =
       [] -> Fmt.(failwithf "conv_type: conversion produced no result: %a" pp_json t)
     | l -> andList l
 
-  and conv_definitions j =
-    match j with
+  let extract_definitions path j =
+    let acc = ref [] in
+    let rec exrec path j = match j with
       `Assoc l ->
-      l |> List.iter (fun (name, _) ->
-          forward_define_local name
-        ) ;
-      l |> List.iter (fun (name, t) ->
-          let t = conv_type0 t in
-          register_local_definition (ID.of_string name) t
-        )
+      if l |> List.for_all (fun (k, _) -> List.mem k known_keys) then
+        push acc (path, j)
+      else
+        l |> List.iter (fun (k,v) ->
+            exrec (path@[k]) v
+          )
+      | _ -> () in
+    exrec path j ;
+    List.rev !acc
 
-    | _ -> assert false
+  let conv_type j = conv_type0 j
 
-let conv_type t =
+  let conv_definitions path j =
+    let defl = extract_definitions path j in
+    defl |> List.iter (fun (path, _) ->
+        let uri = String.concat "/" path in
+        let (name, _) = sep_last path in
+        forward_define_local (uri, name)
+      ) ;
+    defl |> List.iter (fun (path, t) ->
+        let t = conv_type t in
+        let (name, _) = sep_last path in
+        register_local_definition name t
+      )
+
+let conv_schema t =
   reset () ;
   (match t with
      `Assoc l ->
      (match assoc_opt "definitions" l with
-        Some (`Assoc _ as j) -> conv_definitions j
+        Some (`Assoc _ as j) -> conv_definitions ["#";"definitions"] j
 
       | Some v -> Fmt.(failwithf "conv_type: malformed definitions member: %a" pp_json v)
       | None -> ()
      ) ;
      (match assoc_opt "$defs" l with
-        Some (`Assoc _ as j) -> conv_definitions j
+        Some (`Assoc _ as j) -> conv_definitions ["#";"$defs"] j
 
       | Some v -> Fmt.(failwithf "conv_type: malformed definitions member: %a" pp_json v)
       | None -> ()
@@ -436,7 +461,7 @@ let conv_type t =
 let load_file s =
   if Str.(string_match (regexp ".*\\.json$") s 0) then
     let j = Yojson.Basic.from_file s in
-    conv_type j
+    conv_schema j
   else if Str.(string_match (regexp ".*\\.utj$") s 0) then
     Utparse0.(parse_file parse_structure) s
   else Fmt.(failwithf "load_file: format not recognized: %s" s)

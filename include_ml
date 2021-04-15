@@ -68,6 +68,11 @@ let top_module_expr x = top Normal.module_expr_printer x ;;
 let top_module_path x = top Normal.module_path_printer x ;;
 #install_printer top_module_path ;;
 
+let top_yojson j = Fmt.(pf stdout "%s" (Yojson.Basic.pretty_to_string j)) ;;
+#install_printer top_yojson ;;
+let top_json (j : Utconv.json) = top_yojson j ;;
+#install_printer top_json ;;
+
 #load "utconv.cmo";;
 open Utconv ;;
 #load "uttypecheck.cmo";;
@@ -98,8 +103,8 @@ open Eval_test ;;
 #use "jq_examples.ml";;
 *)
 
-#print_length 1000;;
-#print_depth 1000;;
+#print_length 10000;;
+#print_depth 10000;;
 (*
 ;;; Local Variables: ***
 ;;; mode:tuareg ***

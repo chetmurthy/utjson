@@ -78,23 +78,13 @@ let convert_check = "convert_check" >::: (List.map convert_check1 [
   ;"bungee-plugin.json"
   ;"chrome-manifest.json"
   ;"chutzpah.json"
-(* malformed, using JSON as structure
   ;"circleciconfig.json"
-*)
-(* "fileMatch" member at toplevel
   ;"cirrus.json"
-*)
   ;"clasp.json"
   ;"cloudbuild.json"
-(* properties are listed but not in "properties" (e.g. "valid_values")
   ;"cloudify.json"
-*)
-(* properties are listed but not in "properties"
   ;"cloud-sdk-pipeline-config-schema.json"
-*)
-(* properties are listed but not in "properties"
   ;"codecov.json"
-*)
   ;"codeship-services.json"
   ;"codeship-steps.json"
   ;"coffeelint.json"
@@ -110,9 +100,7 @@ let convert_check = "convert_check" >::: (List.map convert_check1 [
   ;"container-structure-test.json"
   ;"content-security-policy-report-2.json"
   ;"cosmos-config.json"
-(* superfluous "scope" member as part of some types
   ;"creatomic.json"
-*)
   ;"cryproj.52.schema.json"
   ;"cryproj.53.schema.json"
   ;"cryproj.54.schema.json"
@@ -121,16 +109,13 @@ let convert_check = "convert_check" >::: (List.map convert_check1 [
   ;"cryproj.json"
   ;"csscomb.json"
   ;"csslintrc.json"
-(* properties are listed but not in "properties"
+
   ;"dart-build.json"
-*)
   ;"dart-test.json"
   ;"datalogic-scan2deploy-android.json"
   ;"datalogic-scan2deploy-ce.json"
   ;"debugsettings.json"
-(* extra members from intellij ?
   ;"dependabot-2.0.json"
-*)
   ;"dependabot.json"
   ;"detekt.json"
   ;"devinit.schema-1.0.json"
@@ -142,12 +127,8 @@ let convert_check = "convert_check" >::: (List.map convert_check1 [
   ;"docfx.json"
   ;"dotnetcli.host.json"
   ;"drone.json"
-(* "titles", probably a typo from "title"
   ;"drush.site.yml.json"
-*)
-(* "$xsd-type", other extraneous keys
   ;"dss-2.0.0.json"
-*)
 (* "typeof" ?  wazzat?
   ;"electron-builder.json"
 *)
@@ -183,31 +164,25 @@ let convert_check = "convert_check" >::: (List.map convert_check1 [
   ;"grunt-watch-task.json"
   ;"hadolint.json"
   ;"haxelib.json"
-(* intellij
   ;"helmfile.json"
-*)
   ;"hemtt-0.6.2.json"
   ;"host.json"
   ;"host-meta.json"
   ;"htmlhint.json"
   ;"httpmockrc.json"
-(* intellij
   ;"huskyrc.json"
-*)
   ;"imageoptimizer.json"
   ;"install.json"
   ;"io-package.json"
-(* "links" ?
-  ;"jasonette.json"
+(* "links" -- this is gonna blow up in typechecking
 *)
+  ;"jasonette.json"
   ;"jdt.json"
   ;"jekyll.json"
   ;"jovo-language-model.json"
   ;"jsbeautifyrc.json"
   ;"jsbeautifyrc-nested.json"
-(* extraneous definition -- should be an annotatiion
   ;"jsconfig.json"
-*)
   ;"jscsrc.json"
   ;"jsdoc-1.0.0.json"
   ;"jshintrc.json"
@@ -216,9 +191,7 @@ let convert_check = "convert_check" >::: (List.map convert_check1 [
   ;"jsone.json"
   ;"jsonld.json"
   ;"json-patch.json"
-(* properties are listed but not in "properties"
   ;"ksp-avc.json"
-*)
   ;"ksp-ckan.json"
   ;"kustomization.json"
   ;"launchsettings.json"
@@ -243,9 +216,7 @@ let convert_check = "convert_check" >::: (List.map convert_check1 [
   ;"mtaext.json"
   ;"mta.json"
   ;"mycode.json"
-(* "fileMatch" member at toplevel
   ;"neoload.json"
-*)
   ;"nest-cli.json"
   ;"netlify.json"
   ;"nightwatch.json"
@@ -336,9 +307,7 @@ let convert_check = "convert_check" >::: (List.map convert_check1 [
   ;"schema-org-place.json"
   ;"schema-org-thing.json"
   ;"semgrep.json"
-(* properties are listed but not in "properties"
   ;"servicehub.config.schema.json"
-*)
   ;"servicehub.service.schema.json"
   ;"settings.job.json"
   ;"solidaritySchema.json"
@@ -353,9 +322,7 @@ let convert_check = "convert_check" >::: (List.map convert_check1 [
   ;"stylintrc.json"
   ;"swagger-2.0.json"
   ;"swcrc.json"
-(* definitions foolishness
   ;"taskfile.json"
-*)
   ;"taurus.json"
   ;"template.json"
   ;"templatesources.json"
@@ -364,9 +331,7 @@ let convert_check = "convert_check" >::: (List.map convert_check1 [
 *)
   ;"traefik-v2-file-provider.json"
   ;"traefik-v2.json"
-(* definition fuckery
   ;"travis.json"
-*)
 (* more "//" with a bunch of documentation
   ;"tsconfig.json"
 *)
@@ -380,9 +345,7 @@ let convert_check = "convert_check" >::: (List.map convert_check1 [
   ;"typewiz.json"
   ;"typings.json"
   ;"typingsrc.json"
-(* properties are listed but not in "properties"
   ;"ui5-manifest.json"
-*)
   ;"up.json"
 (* looks like based on outdated schema draft
   ;"vega.json"

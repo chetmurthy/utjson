@@ -1,0 +1,53 @@
+Head:     master Add User Journal Map YAML schema (#1556)
+Merge:    origin/master Add User Journal Map YAML schema (#1556)
+
+Unstaged changes (2)
+modified   src/schemas/json/servicehub.config.schema.json
+@@ -36,8 +36,7 @@
+               "description": "The value of the environment variable to set."
+             }
+           }
+-        }
+-      },
++        },
+       "hosts": {
+         "type": "object",
+         "required": [ "rootDir" ],
+@@ -65,6 +64,7 @@
+           }
+         }
+       }
++      }
+     }
+   }
+ }
+modified   src/schemas/json/ui5-manifest.json
+@@ -129,6 +129,7 @@
+           ]
+         },
+         "i18n": {
++	    "properties": {
+           "bundleUrl": {
+             "type": "string",
+             "maxLength": 100,
+@@ -151,6 +152,7 @@
+               "description": "A BCP47 language tag or a JDK compatible locale string (e.g. “en-GB”, “en_GB” or “en”)"
+             }
+           }
++	    }
+         },
+         "applicationVersion": {
+           "type": "object",
+
+Recent commits
+8c8372e master origin/master Add User Journal Map YAML schema (#1556)
+ccf12d0 Add new version for linguistic schema lsdlschema-3.1.json (#1555)
+6f938d9 NLog in appsettings with targets async = true (#1554)
+186a8f3 Add inherit to gitlab-ci schema (#1553)
+38360eb Update gitlab-ci scheme (#1552)
+abd7253 Add Azure Static Web Apps config schema (#1551)
+c5f7976 Update Cirrus CI Schema (#1550)
+d3d49a5 [package] allow bundledDependencies to be true (#1547) (#1547)
+f7049c5 Set gitlab-ci to match all files ending with .gitlab-ci.yml (#1545)
+70cf11f Fix typo in schema-catalog.json (#1544)
+
