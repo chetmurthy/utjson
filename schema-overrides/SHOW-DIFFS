@@ -1,0 +1,9 @@
+#!/usr/bin/env perl
+
+{
+  foreach my $f (<*.json>) {
+    if (-r "../schemastore/src/schemas/json/$f") {
+      system("diff -Bwiu ../schemastore/src/schemas/json/$f $f ") ;
+    }
+  }
+}

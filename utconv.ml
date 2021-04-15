@@ -107,6 +107,11 @@ let xorList l =
   ; "dependencies"
   ;"if"; "then"; "else"
   ]
+  let known_garbage_keys = [
+    "x-intellij-case-insensitive"
+  ; "x-intellij-language-injection"
+  ; "x-intellij-html-description"
+  ]
 
   let rec conv_type_l (j : json) = match j with
       `Assoc l when l |> List.for_all (fun (k,_) -> List.mem k documentation_keys) ->
@@ -114,8 +119,12 @@ let xorList l =
     | `Assoc l ->
       let keys = List.map fst l in
       keys |> List.iter (fun k ->
-          if not (List.mem k known_keys) then
-            Fmt.(failwithf "conv_type: unrecognized object-key %s in %a" k pp_json j)
+          if not (List.mem k known_keys) then begin
+            if List.mem k known_garbage_keys then
+              Fmt.(pf stderr "conv_type: known garbage object-key %s in@.%s@.%!" k (Yojson.Basic.pretty_to_string j))
+            else
+              Fmt.(failwithf "conv_type: unrecognized object-key %s in@.%s@.%!" k (Yojson.Basic.pretty_to_string j))
+          end
         ) ;
       (match assoc_opt "type" l with
        | (Some (`String _ as j)) -> conv_simple j

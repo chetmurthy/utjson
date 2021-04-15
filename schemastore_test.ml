@@ -22,7 +22,11 @@ let successf (expectf, f) =
 
 let convert1 f =
   let fp = "schemastore/src/schemas/json/"^f in
-  load_file fp
+  let override_fp = "schema-overrides/"^f in
+  if override_fp |>  Fpath.v |> Bos.OS.File.exists |> Rresult.R.get_ok then
+    load_file override_fp
+  else
+    load_file fp
 
 let convert_check1 f =
   f >:: (fun ctxt ->
@@ -31,10 +35,7 @@ let convert_check1 f =
 
 let convert_check = "convert_check" >::: (List.map convert_check1 [
     "ansible-inventory.json"
-(*
-  ;"ansible-playbook.json"
-*)
-(* BUG in schema
+  ; "ansible-playbook.json"
   ;"ansible-role-2.0.json"
   ;"ansible-role-2.1.json"
   ;"ansible-role-2.2.json"
@@ -44,14 +45,9 @@ let convert_check = "convert_check" >::: (List.map convert_check1 [
   ;"ansible-role-2.6.json"
   ;"ansible-role-2.7.json"
   ;"ansible-role-2.9.json"
-*)
-(* OVERRIDDEN
-  ;"apibuilder.json"
-*)
+  ; "apibuilder.json"
   ;"apple-app-site-association.json"
-(* OVERRIDDEN
   ;"appsettings.json"
-*)
   ;"appsscript.json"
   ;"appveyor.json"
   ;"asmdef.json"
