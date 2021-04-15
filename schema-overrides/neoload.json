@@ -131,8 +131,7 @@
 							"value": { "$ref": "#/definitions/common/text" }
 						  }
 					}
-				],
-				"x-d7nosupport-additionalProperties": false
+				]
 			},
 			"file":{
 				"$id":"#/definitions/variables/file",
@@ -164,8 +163,7 @@
 							"out_of_value": { "$ref": "#/definitions/common/var_out_of_value" }
 						}
 					}
-				],
-				"x-d7nosupport-additionalProperties": false
+				]
 			},
 			"counter":{
 				"$id":"#/definitions/variables/counter",
@@ -188,8 +186,7 @@
 							"out_of_value": { "$ref": "#/definitions/common/var_out_of_value" }
 						}
 					}
-				],
-				"x-d7nosupport-additionalProperties": false
+				]
 			},
 			"random_number":{
 				"$id":"#/definitions/variables/random_number",
@@ -210,8 +207,7 @@
 							}
 						}
 					}
-				],
-				"x-d7nosupport-additionalProperties": false
+				]
 			},
 			"javascript":{
 				"$id":"#/definitions/variables/javascript",
@@ -224,8 +220,7 @@
 							"script": { "$ref": "#/definitions/common/text" }
 						}
 					}
-				],
-				"x-d7nosupport-additionalProperties": false
+				]
 			}
 		},
 		"server": {
@@ -312,16 +307,16 @@
 					"title":"Thresholds",
 					"type":"array",
 					"minItems":1,
-					"items": { "$ref": "#/definitions/sla/threshold" }
+					"items": { "$ref": "#/definitions/sla_threshold" }
 				  }
-			},
-			"threshold":{
-				"$id":"#/definitions/sla/threshold",
-				"title":"Threshold",
-				"type":"string",
-				"pattern":"^(.*?)\\s(warn\\s(>=|==|<=|>|<))(?=\\s)(.*?)per\\s(test|interval)$"
-			  }
+			}
 		},
+	    "sla_threshold":{
+		"$id":"#/definitions/sla/threshold",
+		"title":"Threshold",
+		"type":"string",
+		"pattern":"^(.*?)\\s(warn\\s(>=|==|<=|>|<))(?=\\s)(.*?)per\\s(test|interval)$"
+	    },
 		"populations": {
 			"population":{
 				"$id":"#/definitions/population",

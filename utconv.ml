@@ -30,11 +30,51 @@ let xorList l =
   let (last,l) = sep_last l in
   List.fold_right (fun a b -> Xor(a,b)) l last
 
+  let assoc_opt k (l : (string * Yojson.Basic.t) list) =
+    match List.assoc k l with
+      v -> Some v
+    | exception Not_found -> None
+
+  let entire_schema = ref `Null
   let counter = ref 0
   let newmid () =
     let mid = Printf.sprintf "M%d" !counter in
     counter := 1 + !counter ;
     ID.of_string mid
+
+  let definitions_worklist = ref []
+  let path2type = ref []
+
+  let find_definition path =
+    let rec findrec = function
+        ([], j) -> j
+      | ("#"::t, j) -> findrec (t, j)
+      | (h::t, `Assoc l) -> begin match assoc_opt h l with
+            None -> Fmt.(failwithf "cannot find definition %s in schema" (String.concat "/" path))
+          | Some j -> findrec(t,j)
+        end
+      | _ -> Fmt.(failwithf "path %s mismatched with schema" (String.concat "/" path))
+    in findrec (path, !entire_schema)
+
+  let typename_of_path path =
+    let path = match path with
+        "#"::"definitions"::t -> t
+      | "#"::"$defs"::t -> t
+      | _ -> path in
+    let tname = String.concat "_" path in
+    ID.of_string tname
+
+  let rec lookup_definition_ref s =
+    let path = String.split_on_char '/' s in
+    match List.assoc path !path2type with
+      v -> v
+    | exception Not_found ->
+      let def = find_definition path in
+      let tname = typename_of_path path in
+      let t = Ref(None, tname) in
+      Stack.push definitions_worklist (path,def) ;
+      Stack.push path2type (path, t) ;
+      t
 
   let uri2type = ref []
   let add_uri2type s r = uri2type := (s,r) :: !uri2type
@@ -42,36 +82,29 @@ let xorList l =
   let imports = ref []
   let add_imports s mid = imports := (s, mid):: !imports 
 
-  let lookup_ref s =
+  let lookup_import_ref s =
     match List.assoc s !uri2type with
       r -> r
     | exception Not_found ->
-      if String.get s 0 = '#' then
-        Fmt.(failwithf "local ref not found: %a" Dump.string s) ;
       let mid = newmid() in
       let r = Ref(Some (REL mid),(ID.of_string "t")) in
       add_imports s mid ;
       add_uri2type s r ;
       r
 
-  let locals = ref [] 
-  let forward_define_local (uri, s) =
-    add_uri2type uri (Ref(None, (ID.of_string s))) ;
-    ()
-  let register_local_definition s t =
-    locals := (ID.of_string s, t) :: !locals ;
-    ()
+  let lookup_ref s =
+    if String.get s 0 = '#' then
+      lookup_definition_ref s
+    else
+      lookup_import_ref s
 
-  let reset () = 
+  let reset t = 
+    entire_schema := t ;
+    definitions_worklist := [] ;
+    path2type := [] ;
     counter := 0 ;
     uri2type := [] ;
-    imports := [] ;
-    locals := []
-
-  let assoc_opt k (l : (string * Yojson.Basic.t) list) =
-    match List.assoc k l with
-      v -> Some v
-    | exception Not_found -> None
+    imports := []
 
   let conv_simple = function
       `String "null" -> [Simple JNull]
@@ -118,9 +151,10 @@ let known_garbage_keys = [
     "x-intellij-case-insensitive"
   ; "x-intellij-language-injection"
   ; "x-intellij-html-description"
+  ; "x-intellij-enum-metadata"
   ; "fileMatch"
   ]
-let known_keys = documentation_keys@known_useful_keys@known_garbage_keys
+let known_keys = documentation_keys@known_useful_keys
 
   let rec conv_type_l (j : json) = match j with
       `Assoc l when l |> List.for_all (fun (k,_) -> List.mem k documentation_keys) ->
@@ -404,56 +438,29 @@ let known_keys = documentation_keys@known_useful_keys@known_garbage_keys
       [] -> Fmt.(failwithf "conv_type: conversion produced no result: %a" pp_json t)
     | l -> andList l
 
-  let extract_definitions path j =
-    let acc = ref [] in
-    let rec exrec path j = match j with
-      `Assoc l ->
-      if l |> List.for_all (fun (k, _) -> List.mem k known_keys) then
-        push acc (path, j)
-      else
-        l |> List.iter (fun (k,v) ->
-            exrec (path@[k]) v
-          )
-      | _ -> () in
-    exrec path j ;
-    List.rev !acc
-
   let conv_type j = conv_type0 j
 
-  let conv_definitions path j =
-    let defl = extract_definitions path j in
-    defl |> List.iter (fun (path, _) ->
-        let uri = String.concat "/" path in
-        let (name, _) = sep_last path in
-        forward_define_local (uri, name)
-      ) ;
-    defl |> List.iter (fun (path, t) ->
-        let t = conv_type t in
-        let (name, _) = sep_last path in
-        register_local_definition name t
-      )
+  let conv_definitions () =
+    let rec drec acc =
+      if Stack.empty definitions_worklist then
+        List.stable_sort Stdlib.compare acc
+      else
+        let (path, def) = Stack.top definitions_worklist in
+        Stack.pop definitions_worklist ;
+        let def = conv_type def in
+        let tname = typename_of_path path in
+        drec ((tname, def)::acc)
+    in
+    drec []
 
 let conv_schema t =
-  reset () ;
-  (match t with
-     `Assoc l ->
-     (match assoc_opt "definitions" l with
-        Some (`Assoc _ as j) -> conv_definitions ["#";"definitions"] j
-
-      | Some v -> Fmt.(failwithf "conv_type: malformed definitions member: %a" pp_json v)
-      | None -> ()
-     ) ;
-     (match assoc_opt "$defs" l with
-        Some (`Assoc _ as j) -> conv_definitions ["#";"$defs"] j
-
-      | Some v -> Fmt.(failwithf "conv_type: malformed definitions member: %a" pp_json v)
-      | None -> ()
-     ) ;
-   | _ -> ()) ;
-  let t = conv_type0 t in
+  reset t ;
+  let t = conv_type t in
   let l = List.map (fun (id, mid) -> StImport(id, mid)) !imports in
-  let l = if !locals = [] then l else
-      l@[StTypes(true, List.rev !locals)] in
+  let defs = conv_definitions() in
+  let l = if defs <> [] then
+      (StTypes(true, defs))::l
+    else l in
   if l = [] then [StTypes(false, [(ID.of_string "t", t)])]
   else 
     [StLocal(l, [StTypes(false, [(ID.of_string "t", t)])])]

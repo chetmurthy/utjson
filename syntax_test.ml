@@ -9,6 +9,16 @@ open Utprint
 open Utio
 open Utio.Debug
 open Utconv
+open Utmigrate
+
+let normalize_structure stl =
+  let dt = make_dt () in
+  let old_migrate_struct_item_t = dt.migrate_struct_item_t in
+  let new_migrate_struct_item_t dt = function
+      StTypes(true, l) -> StTypes(true, List.stable_sort Stdlib.compare l)
+    | st -> old_migrate_struct_item_t dt st in
+  let dt = { dt with migrate_struct_item_t = new_migrate_struct_item_t } in
+  dt.migrate_structure dt stl
 
 let success (expect, arg) =
   let msg = Fmt.(str "parsing test for code << %s >>" arg) in
@@ -240,7 +250,6 @@ end ;
       )
   ]
 
-
 let success (expect, arg) =
   let msg = Fmt.(str "printing test for code << %s >>" arg) in
   assert_equal ~msg ~printer:(fun x -> "<<"^x^">>") expect (to_string (of_string_exn arg))
@@ -334,6 +343,8 @@ let item_to_string t = print_struct_item Pprintf.empty_pc t
 let item_printer x = "<<"^(show_struct_item_t x)^">>"
 let item_cmp = equal_struct_item_t
 
+let structure_cmp a b = structure_cmp (normalize_structure a) (normalize_structure b)
+
 let success (expect, f) =
   assert_equal ~msg:f ~printer:structure_printer ~cmp:structure_cmp
     (structure_of_string_exn expect)
@@ -344,32 +355,34 @@ let successf (expectf, f) =
     (load_file expectf)
     (load_file f)
 
-let convert = "convert" >::: [
-    "convert" >:: (fun ctxt -> List.iter successf [
-        ("schema-overrides/product-schema.utj",
-         "schema-overrides/product-schema.json")
-      ; ("schema-overrides/ansible-inventory.utj",
-         "schemastore/src/schemas/json/ansible-inventory.json")
-      ; ("schema-overrides/apibuilder.utj",
-         "schema-overrides/apibuilder.json")
-      ; ("schema-overrides/apple-app-site-association.utj",
-         "schemastore/src/schemas/json/apple-app-site-association.json")
-      ; ("schema-overrides/appsettings.utj",
-         "schema-overrides/appsettings.json")
-      ; ("schema-overrides/appsscript.utj",
-         "schemastore/src/schemas/json/appsscript.json")
-      ; ("schema-overrides/appveyor.utj",
-         "schemastore/src/schemas/json/appveyor.json")
-      ; ("schema-overrides/asmdef.utj",
-         "schemastore/src/schemas/json/asmdef.json")
-      ; ("schema-overrides/avro-avsc.utj",
-         "schemastore/src/schemas/json/avro-avsc.json")
-      ; ("schema-overrides/azure-iot-edgeagent-deployment-1.0.utj",
-         "schemastore/src/schemas/json/azure-iot-edgeagent-deployment-1.0.json")
-      ]
-      )
-  ]
+let successf_test (a,b) =
+  (a^" || "^b) >:: (fun ctxt ->
+      successf (a,b)
+    )
 
+let convert = "convert" >::: (List.map successf_test [
+    ("schema-overrides/product-schema.utj",
+     "schema-overrides/product-schema.json")
+  ; ("schema-overrides/ansible-inventory.utj",
+     "schemastore/src/schemas/json/ansible-inventory.json")
+  ; ("schema-overrides/apibuilder.utj",
+     "schema-overrides/apibuilder.json")
+  ; ("schema-overrides/apple-app-site-association.utj",
+     "schemastore/src/schemas/json/apple-app-site-association.json")
+  ; ("schema-overrides/appsettings.utj",
+     "schema-overrides/appsettings.json")
+  ; ("schema-overrides/appsscript.utj",
+     "schemastore/src/schemas/json/appsscript.json")
+  ; ("schema-overrides/appveyor.utj",
+     "schemastore/src/schemas/json/appveyor.json")
+  ; ("schema-overrides/asmdef.utj",
+     "schemastore/src/schemas/json/asmdef.json")
+  ; ("schema-overrides/avro-avsc.utj",
+     "schemastore/src/schemas/json/avro-avsc.json")
+  ; ("schema-overrides/azure-iot-edgeagent-deployment-1.0.utj",
+     "schemastore/src/schemas/json/azure-iot-edgeagent-deployment-1.0.json")
+  ]
+  )
 
 let tests = "all" >::: [
     simple
