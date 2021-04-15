@@ -1,4 +1,5 @@
-local type rec possiblySecretString = string || number || object && [ "secure": string; ] && (object && [ sealed; ])
+module DEFINITIONS = struct
+type rec possiblySecretString = string || number || object && [ "secure": string; ] && (object && [ sealed; ])
 and commitFilter = object && [
     "message": string && [ format "regex"; ];
     "author": string && [ format "regex"; ] || string;
@@ -117,4 +118,7 @@ and job = [
     "on_success": array && [ of command; ];
     "on_failure": array && [ of command; ];
     "on_finish": array && [ of command; ];
-]; in type nonrec t = job; end ;
+];
+end ;
+open DEFINITIONS ;
+type nonrec t = job; end ;

@@ -1,4 +1,4 @@
-local
+module DEFINITIONS = struct
 type rec webOptimizer = object && [
     "enableCaching": boolean;
     "enableTagHelperBundling": boolean && [ default true; ];
@@ -335,7 +335,9 @@ and umbracoUnattended = [
     "UnattendedUserName": string;
     "UnattendedUserEmail": string;
     "UnattendedUserPassword": string;
-]; in
+];
+end ;
+open DEFINITIONS ;
  type nonrec t = object && [
     "Kestrel": kestrel;
     "Logging": logging;

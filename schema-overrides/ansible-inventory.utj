@@ -1,7 +1,10 @@
-local type rec group = object && [
+module DEFINITIONS = struct
+type rec group = object && [
     "hosts": (object || string) && [ /[a-zA-Z.-_0-9]/ : (object || null); ];
     "vars": object;
     "children": [ /[a-zA-Z-_0-9]/ : group; ];
 ];
-in type nonrec t = object && [ "all": group; ];
+end ;
+open DEFINITIONS ;
+type nonrec t = object && [ "all": group; ];
 end;

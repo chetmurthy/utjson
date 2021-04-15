@@ -1,4 +1,5 @@
-local type rec apidoc = object && [ "version": string; ] && (object && [ sealed; ]) && [ required "version"; ]
+module DEFINITIONS = struct
+type rec apidoc = object && [ "version": string; ] && (object && [ sealed; ]) && [ required "version"; ]
 and info = object && [
     "contact": contact;
     "license": license;
@@ -140,7 +141,9 @@ and body = object && [
     "description": string;
     "attributes": array && [ of attribute; ];
     "deprecation": deprecation;
-] && (object && [ sealed; ]) && [ required "type"; ]; in
+] && (object && [ sealed; ]) && [ required "type"; ];
+end ;
+open DEFINITIONS ;
 type nonrec t = [
     "name": string;
     "apidoc": apidoc;

@@ -1,4 +1,5 @@
-local type rec platformValues = array && [
+module DEFINITIONS = struct
+type rec platformValues = array && [
     of [
         enum "Android", "Editor", "iOS", "LinuxStandalone32",
         "LinuxStandalone64", "LinuxStandaloneUniversal", "Lumin",
@@ -6,7 +7,10 @@ local type rec platformValues = array && [
         "tvOS", "WSA", "WebGL", "WindowsStandalone32", "WindowsStandalone64",
         "XboxOne";
 ];
-] && [ unique; ]; in type nonrec t = object && [
+] && [ unique; ];
+end ;
+open DEFINITIONS ;
+type nonrec t = object && [
     "name": string && string && [ size [1,max]; ];
     "rootNamespace": string && string && [ size [1,max]; ];
     "references": array && [ of string && string && [ size [1,max]; ]; ] && [ unique; ];

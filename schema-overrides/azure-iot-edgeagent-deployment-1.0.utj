@@ -1,4 +1,5 @@
-local type rec moduleType = [ enum "docker"; ]
+module DEFINITIONS = struct
+ type rec moduleType = [ enum "docker"; ]
 and status = [ enum "running", "stopped"; ]
 and restartPolicy = [ enum "never", "on-failure", "on-unhealthy", "always"; ]
 and moduleSettings = object && [
@@ -9,7 +10,8 @@ and env = object && [
     /^[^\+#$\s\.]+$/ : object && [ "value": number || string || boolean; ] && [ required "value"; ];
 ] && (object && [ sealed; ])
 and createOptions = string && [ contentMediaType "application/json"; ];
-in
+end ;
+open DEFINITIONS ;
  type nonrec t = object && [
     "$edgeAgent": object && [
         "properties.desired": object && [

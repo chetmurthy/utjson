@@ -1,4 +1,4 @@
-local
+module DEFINITIONS = struct
 type rec avroSchema = types
 and types = primitiveType xor primitiveTypeWithMetadata xor customTypeReference xor avroRecord xor avroEnum xor avroArray xor avroMap xor avroFixed xor avroUnion
 and primitiveType = string && [ enum "null", "boolean", "int", "long", "float", "double", "bytes", "string";
@@ -56,6 +56,7 @@ and avroFixed = object && [
 ] && [ required "type",  "name",  "size"; ]
 and name = string && [ /^[A-Za-z_][A-Za-z0-9_]*$/ ]
 and namespace = string && [ /^([A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)*)*$/ ];
-in
+end ;
+open DEFINITIONS ;
 type nonrec t = avroSchema;
 end;

@@ -506,14 +506,15 @@ let conv_schema t =
   let t = match top_conv_type t with
     None -> Fmt.(pf stderr "WARNING: top_conv_type: conversion produced no result:\n@.%s@." (Yojson.Basic.pretty_to_string t)) ; UtTrue
     | Some t -> t in
-  let l = List.map (fun (id, mid) -> StImport(id, mid)) !imports in
   let defs = conv_definitions() in
+  let l = List.map (fun (id, mid) -> StImport(id, mid)) !imports in
   let l = if defs <> [] then
-      (StTypes(true, defs))::l
+      l@[
+        StModuleBinding(ID.of_string "DEFINITIONS", MeStruct [StTypes(true, defs)])
+      ; StOpen(REL (ID.of_string "DEFINITIONS"), None)
+      ]
     else l in
-  if l = [] then [StTypes(false, [(ID.of_string "t", t)])]
-  else 
-    [StLocal(l, [StTypes(false, [(ID.of_string "t", t)])])]
+  l@[StTypes(false, [(ID.of_string "t", t)])]
 
 let load_file ?(with_predefined=false) s =
   let stl =
