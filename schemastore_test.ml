@@ -326,8 +326,6 @@ let convert_check = "convert_check" >::: (List.map convert_check1 [
   ;"ui5-manifest.json"
   ;"up.json"
   ;"vega.json"
-(* looks like based on outdated schema draft
-*)
   ;"vega-lite.json"
   ;"vim-addon-info.json"
   ;"vs-2017.3.host.json"
