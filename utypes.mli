@@ -60,6 +60,8 @@ and utype_t =
   | Not of utype_t
   | Atomic of atomic_utype_t list
   | Ref of module_path_t option * ID.t
+  | UtTrue
+  | UtFalse
 [@@deriving show { with_path = false },eq]
 
 type struct_item_t =

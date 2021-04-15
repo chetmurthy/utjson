@@ -248,10 +248,19 @@ What's Wrong with JSON Schema?
 
 Why do this? Why not just JSON Schema? What's wrong with JSON Schema?
 
-- ungainly, verbose, b/c expressed in JSON: it should be obvious by
-  comparing the "UTJ by Example" section above, to the equivalent in
-  "JSON Schema: Getting Started", that UTJ is just more succinct, and
-  at no loss in expressivity, and certainly no loss in precision.
+-  ungainly, verbose, b/c expressed in JSON: it should be obvious by
+   comparing the "UTJ by Example" section above, to the equivalent in
+   "JSON Schema: Getting Started", that UTJ is just more succinct, and
+   at no loss in expressivity, and certainly no loss in precision.
+
+- JSON Schema is effectively written by the user at the level of the
+   abstract syntax tree (AST).  This means that when the JSON Schema
+   designers and implementors decide to change the AST in order to
+   support some new function, users' schema must be modified (or be
+   left to work against backlevel schema).  Contrast this with the way
+   that regular programming languages work: designers work hard to
+   ensure that syntax stays forward-compatible, and AST details are
+   hidden from users, who are concerned only with surface syntax.
 
 -  Weird syntax corner-cases in JSON Schema: here-and-there are weird
    syntax bit stuffed into corners, instead of using already-existing

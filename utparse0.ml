@@ -172,6 +172,8 @@ EXTEND
       ]
     | "simple" [
         b = base_type -> Simple b
+      | "true" -> UtTrue
+      | "false" -> UtFalse
       | (mpopt, tid) = tid_path -> Ref mpopt tid
       | "[" ; h = atomic_utype ; ";" ; l = atomic_utype_semi_list ; "]" -> Atomic [h::l]
       | "[" ; h = atomic_utype ; "]" -> Atomic [h]

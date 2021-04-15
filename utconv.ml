@@ -30,7 +30,7 @@ let xorList l =
   let (last,l) = sep_last l in
   List.fold_right (fun a b -> Xor(a,b)) l last
 
-  let assoc_opt k (l : (string * Yojson.Basic.t) list) =
+  let assoc_opt (k: string) l =
     match List.assoc k l with
       v -> Some v
     | exception Not_found -> None
@@ -42,38 +42,77 @@ let xorList l =
     counter := 1 + !counter ;
     ID.of_string mid
 
+  let id2node = ref []
   let definitions_worklist = ref []
   let path2type = ref []
 
+  let extract_id2node (schema : Yojson.Basic.t) =
+    let acc = ref [] in
+    let rec prec j = match j with
+        `Assoc l ->
+        if List.mem_assoc "$id" l then
+          begin match List.assoc "$id" l with
+              `String id ->
+              Stack.push acc (id, j)
+            | _ -> ()
+          end ;
+        List.iter (fun (_, v) -> prec v) l
+
+      | `List l -> List.iter prec l
+      | _ -> ()
+    in prec schema;
+    !acc
+
+  let populate_id2node schema =
+    id2node := extract_id2node schema
+
   let find_definition path =
     let rec findrec = function
-        ([], j) -> j
+        ([], j) -> Some j
       | ("#"::t, j) -> findrec (t, j)
       | (h::t, `Assoc l) -> begin match assoc_opt h l with
-            None -> Fmt.(failwithf "cannot find definition %s in schema" (String.concat "/" path))
+            None -> None
           | Some j -> findrec(t,j)
         end
-      | _ -> Fmt.(failwithf "path %s mismatched with schema" (String.concat "/" path))
-    in findrec (path, !entire_schema)
+      | (h::t, (`List l as j)) ->
+        let n = try int_of_string h with Failure _ ->
+          Fmt.(failwithf "path-step %a not an integer, but object was an array:@.%s@."
+                 Dump.string h (Yojson.Basic.pretty_to_string j)) in
+        if n < 0 || n >= List.length l then
+          Fmt.(failwithf "path-step %d was out-of-bounds for object@.%s@."
+                 n (Yojson.Basic.pretty_to_string j)) ;
+        findrec (t, List.nth l n)
+      | _ -> Fmt.(failwithf "path %s mismatched with schema" path)
+    in findrec (String.split_on_char '/' path, !entire_schema)
 
-  let typename_of_path path =
-    let path = match path with
-        "#"::"definitions"::t -> t
-      | "#"::"$defs"::t -> t
-      | _ -> path in
-    let tname = String.concat "_" path in
-    ID.of_string tname
+  let clean_path s =
+    let s = Str.(substitute_first (regexp (quote "#/$defs/")) (fun _ -> "") s) in
+    let s = Str.(substitute_first (regexp (quote "#/defs/")) (fun _ -> "") s) in
+    let s = Str.(substitute_first (regexp (quote "#/refs/")) (fun _ -> "") s) in
+    let s = Str.(substitute_first (regexp (quote "#/definitions/")) (fun _ -> "") s) in
+    let s = Str.(global_substitute (regexp (quote "[#:/]")) (fun _ -> "_") s) in
+    s
+
+  let typename_of_path s =
+    let s = clean_path s in
+    ID.of_string s
 
   let rec lookup_definition_ref s =
-    let path = String.split_on_char '/' s in
-    match List.assoc path !path2type with
-      v -> v
-    | exception Not_found ->
-      let def = find_definition path in
-      let tname = typename_of_path path in
+    match assoc_opt s !path2type with
+      Some v -> v
+    | None ->
+      let def = match (find_definition s, assoc_opt s !id2node) with
+          (None, None) -> Fmt.(failwithf "lookup_definition_ref: cannot find reference %a" Dump.string s)
+        | (Some def, Some def') ->
+          if def <> def' then
+            Fmt.(failwithf "lookup_definition_ref: error: reference %a is both an ID and a path, and they point at different things!" Dump.string s) ;
+          def
+        | (Some def, None) -> def
+        | (None, Some def) -> def in
+      let tname = typename_of_path s in
       let t = Ref(None, tname) in
-      Stack.push definitions_worklist (path,def) ;
-      Stack.push path2type (path, t) ;
+      Stack.push definitions_worklist (s,def) ;
+      Stack.push path2type (s, t) ;
       t
 
   let uri2type = ref []
@@ -104,7 +143,8 @@ let xorList l =
     path2type := [] ;
     counter := 0 ;
     uri2type := [] ;
-    imports := []
+    imports := [] ;
+    populate_id2node t
 
   let conv_simple = function
       `String "null" -> [Simple JNull]
@@ -127,6 +167,10 @@ let documentation_keys = [
   ; "$vocabulary"
   ; "$xsd-type"
   ; "$xsd-full-type"
+  ; "meta" ; "metatag" ; "PWA"
+  ; "tsType"
+  ; "defaultSnippets"
+  ; "@comment"
   ]
 let known_useful_keys = [
     "$ref"
@@ -139,13 +183,13 @@ let known_useful_keys = [
   ; "minItems"; "maxItems"
   ; "minProperties"; "maxProperties"
   ; "uniqueItems"; "id"
-  ; "definitions" ; "$defs"
+  ; "definitions" ; "$defs"; "defs" ; "refs"
   ; "enum"; "default";"pattern";"format";"propertyNames"
   ; "anyOf";"allOf";"oneOf";"not"
   ; "contentMediaType";"contentEncoding"
   ; "const" ; "multipleOf"
-  ; "dependencies"
   ; "if"; "then"; "else"
+  ; "dependencies"
   ]
 let known_garbage_keys = [
     "x-intellij-case-insensitive"
@@ -431,7 +475,7 @@ let known_keys = documentation_keys@known_useful_keys
        | (None,None,None) -> []
       )
 
-    | j -> Fmt.(failwithf "conv_type: %a" pp_json j)
+    | j -> Fmt.(failwithf "conv_type: expected an object but got@.%s@." (Yojson.Basic.pretty_to_string j))
 
   and conv_type0 t =
     match conv_type_l t with
@@ -439,6 +483,10 @@ let known_keys = documentation_keys@known_useful_keys
     | l -> andList l
 
   let conv_type j = conv_type0 j
+  let top_conv_type t =
+    match conv_type_l t with
+      [] -> None
+    | l -> Some (andList l)
 
   let conv_definitions () =
     let rec drec acc =
@@ -455,7 +503,9 @@ let known_keys = documentation_keys@known_useful_keys
 
 let conv_schema t =
   reset t ;
-  let t = conv_type t in
+  let t = match top_conv_type t with
+    None -> Fmt.(pf stderr "WARNING: top_conv_type: conversion produced no result:\n@.%s@." (Yojson.Basic.pretty_to_string t)) ; UtTrue
+    | Some t -> t in
   let l = List.map (fun (id, mid) -> StImport(id, mid)) !imports in
   let defs = conv_definitions() in
   let l = if defs <> [] then

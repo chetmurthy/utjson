@@ -136,9 +136,7 @@ let convert_check = "convert_check" >::: (List.map convert_check1 [
   ;"eslintrc.json"
   ;"esmrc.json"
   ;"esquio.json"
-(* "fallback" instead of "default" ?
   ;"expo-37.0.0.json"
-*)
   ;"expo-38.0.0.json"
   ;"expo-39.0.0.json"
   ;"expo-40.0.0.json"
@@ -174,8 +172,6 @@ let convert_check = "convert_check" >::: (List.map convert_check1 [
   ;"imageoptimizer.json"
   ;"install.json"
   ;"io-package.json"
-(* "links" -- this is gonna blow up in typechecking
-*)
   ;"jasonette.json"
   ;"jdt.json"
   ;"jekyll.json"
@@ -197,9 +193,7 @@ let convert_check = "convert_check" >::: (List.map convert_check1 [
   ;"launchsettings.json"
   ;"lerna.json"
   ;"libman.json"
-(* just definitions, no actual type
   ;"licenses.1.json"
-*)
   ;"lintstagedrc.schema.json"
   ;"local.settings.json"
   ;"lsdlschema-0.7.json"
@@ -220,16 +214,12 @@ let convert_check = "convert_check" >::: (List.map convert_check1 [
   ;"nest-cli.json"
   ;"netlify.json"
   ;"nightwatch.json"
-(* "required" as a boolean member, not a list of fields
   ;"ninjs-1.0.json"
-*)
   ;"ninjs-1.1.json"
   ;"ninjs-1.2.json"
   ;"ninjs-1.3.json"
   ;"nodehawkrc.json"
-(* malformed schema in dependencies/nodeArgs
   ;"nodemon.json"
-*)
   ;"now.json"
   ;"npm-link-up.json"
   ;"npmpackagejsonlintrc.json"
@@ -242,9 +232,7 @@ let convert_check = "convert_check" >::: (List.map convert_check1 [
   ;"openweather.current.json"
   ;"openweather.roadrisk.json"
   ;"opspec-io-0.1.7.json"
-(* "tsType" ?
   ;"package.json"
-*)
   ;"package.manifest-7.0.0.json"
   ;"package.manifest-8.0.0.json"
   ;"package.manifest.json"
@@ -268,9 +256,7 @@ let convert_check = "convert_check" >::: (List.map convert_check1 [
   ;"project.json"
   ;"prometheus.json"
   ;"prometheus.rules.json"
-(* "defaultSnippets" -- is this like "examples" ?
   ;"proxies.json"
-*)
   ;"pubspec.json"
   ;"pyrseas-0.8.json"
   ;"renovate.json"
@@ -299,9 +285,7 @@ let convert_check = "convert_check" >::: (List.map convert_check1 [
   ;"sarif-external-property-file.json"
   ;"sarif.json"
   ;"schema-catalog.json"
-(* exclusiveMinimum old style
   ;"schema-draft-v4.json"
-*)
   ;"schema-org-action.json"
   ;"schema-org-contact-point.json"
   ;"schema-org-place.json"
@@ -326,29 +310,23 @@ let convert_check = "convert_check" >::: (List.map convert_check1 [
   ;"taurus.json"
   ;"template.json"
   ;"templatesources.json"
-(* "@comment"
   ;"toolinfo.1.1.0.json"
-*)
   ;"traefik-v2-file-provider.json"
   ;"traefik-v2.json"
   ;"travis.json"
-(* more "//" with a bunch of documentation
   ;"tsconfig.json"
-*)
   ;"tsd.json"
   ;"tsdrc.json"
   ;"ts-force-config.json"
-(* based on outdated draft
   ;"tslint.json"
-*)
   ;"tsoa.json"
   ;"typewiz.json"
   ;"typings.json"
   ;"typingsrc.json"
   ;"ui5-manifest.json"
   ;"up.json"
-(* looks like based on outdated schema draft
   ;"vega.json"
+(* looks like based on outdated schema draft
 *)
   ;"vega-lite.json"
   ;"vim-addon-info.json"

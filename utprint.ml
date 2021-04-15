@@ -129,6 +129,8 @@ and pr_utype_not pc = fun [
     ]
 and pr_utype_simple pc = fun [
       Simple x -> pprintf pc "%p" print_base_type x
+    | UtTrue -> pprintf pc "true"
+    | UtFalse -> pprintf pc "false"
     | Atomic l -> pprintf pc "[@[<2>@;%p@;]@]" (Prtools.vlist print_atomic) l
     | Ref None id -> pprintf pc "%p" print_id id
     | Ref (Some p) id -> pprintf pc "%p.%p" print_module_path p print_id id
