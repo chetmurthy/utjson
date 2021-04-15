@@ -813,7 +813,12 @@ and reduce_st prefixmp top st = match st with
     StModuleBinding (mid, reduce_me (Some prefixmp) top me)
   | st -> st
 
+let rec fix f x =
+  let x' = f x in
+  if x = x' then x
+    else fix f x'
+
 let exec stl =
-  reduce_stl None stl stl
+  fix (fun stl -> reduce_stl None stl stl) stl
 
 end
