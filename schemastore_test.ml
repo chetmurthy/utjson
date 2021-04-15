@@ -13,7 +13,8 @@ open Utconv
 open Uteval
 
 let all_files = [
-  "ansible-inventory.json"
+  "kubernetesjsonschema.dev/master/_definitions.json"
+; "ansible-inventory.json"
 ; "ansible-playbook.json"
 ;"ansible-role-2.0.json"
 ;"ansible-role-2.1.json"
@@ -340,12 +341,15 @@ let successf (expectf, f) =
     (load_file ~with_predefined:true  f)
 
 let convert1 f =
-  let fp = "schemastore/src/schemas/json/"^f in
+  let store_fp = "schemastore/src/schemas/json/"^f in
   let override_fp = "schema-overrides/"^f in
+  let cache_fp = "schema-cache/"^f in
   if override_fp |>  Fpath.v |> Bos.OS.File.exists |> Rresult.R.get_ok then
-    load_file ~with_predefined:true  override_fp
-  else
-    load_file ~with_predefined:true  fp
+    load_file ~with_predefined:true override_fp
+  else if cache_fp |>  Fpath.v |> Bos.OS.File.exists |> Rresult.R.get_ok then
+    load_file ~with_predefined:true cache_fp
+  else 
+    load_file ~with_predefined:true store_fp
 
 let convert_check1 f =
   f >:: (fun ctxt ->
