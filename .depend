@@ -18,6 +18,7 @@ eval_test.cmx : \
     utconv.cmx
 schemastore_test.cmo : \
     utypes.cmi \
+    ututil.cmo \
     uttestutil.cmo \
     utprint.cmo \
     utparse0.cmo \
@@ -26,6 +27,7 @@ schemastore_test.cmo : \
     utconv.cmo
 schemastore_test.cmx : \
     utypes.cmx \
+    ututil.cmx \
     uttestutil.cmx \
     utprint.cmx \
     utparse0.cmx \
@@ -113,9 +115,11 @@ utmigrate.cmo : \
 utmigrate.cmx : \
     utypes.cmx
 utypes.cmo : \
+    utypes.cmi \
     ututil.cmo \
     utypes.cmi
 utypes.cmx : \
+    utypes.cmx \
     ututil.cmx \
     utypes.cmi
 utlexing.cmo : \

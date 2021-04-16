@@ -1,8 +1,9 @@
 open OUnit2
 open OUnitTest
 open Pa_ppx_testutils
-open Uttestutil
+open Pa_ppx_utils.Std
 
+open Uttestutil
 open Utypes
 open Ututil
 open Utparse0

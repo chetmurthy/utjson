@@ -1,3 +1,5 @@
+open Pa_ppx_utils.Std
+
 open Ututil
 open Utypes
 
@@ -36,6 +38,8 @@ type json_list = json list [@@deriving show,eq]
 
     Method:
 
+    (0) if uri starts with "http://", replace that with "http-schema-cache"
+
     (1) first, replace ".json" with ".utj" before proceeding.
 
     (2) try to use current filename as a basename, in the manner of base URLs.
@@ -58,6 +62,10 @@ module CC = struct
   let mk ?(filename="") ?(filepath=[]) ?(urimap=[]) () = { filename ; filepath ; urimap }
 
   let map_uri t s =
+    let http_colon_slash_slash = "http://" in
+    let s' = if starts_with ~pat:http_colon_slash_slash s then
+        string_suffix s (String.length http_colon_slash_slash)
+      else s in
     let uri = Fpath.v s in
     (* (1) first get extension right *)
     let utj = if Fpath.has_ext "utj" uri then uri
