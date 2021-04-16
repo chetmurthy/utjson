@@ -298,7 +298,7 @@ let known_keys = documentation_keys@known_useful_keys
       )@
       (match assoc_opt "properties" l with
          Some (`Assoc l) ->
-         [Atomic (List.map (fun (k,v) -> Field(k,conv_type0 v)) l)]
+         [Atomic (List.rev (List.rev_map (fun (k,v) -> Field(k,conv_type0 v)) l))]
        | Some v -> Fmt.(failwithf "conv_type: malformed properties member: %a" pp_json v)
        | None -> []
       )@
