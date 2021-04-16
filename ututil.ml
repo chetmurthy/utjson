@@ -35,3 +35,13 @@ let firstn n l =
     | (n, (h::t)) -> aux (h::acc) (pred n, t)
     | _ -> failwith "firstn"
   in aux [] (n,l)
+
+let mkdir_p s =
+  let p = Fpath.v s in
+  let rec mkrec p =
+    if p |> Bos.OS.Dir.exists |> Rresult.R.get_ok then ()
+    else begin
+      mkrec (Fpath.parent p) ;
+      ignore (Bos.OS.U.mkdir p 0o755)
+    end
+  in mkrec p
