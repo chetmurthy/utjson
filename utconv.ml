@@ -14,6 +14,59 @@ type json =
 
 type json_list = json list [@@deriving show,eq]
 
+
+  let clean_path s =
+    let s = Str.(substitute_first (regexp (quote "#/$defs/")) (fun _ -> "") s) in
+    let s = Str.(substitute_first (regexp (quote "#/defs/")) (fun _ -> "") s) in
+    let s = Str.(substitute_first (regexp (quote "#/refs/")) (fun _ -> "") s) in
+    let s = Str.(substitute_first (regexp (quote "#/definitions/")) (fun _ -> "") s) in
+    let s = Str.(global_substitute (regexp (quote "[#:/]")) (fun _ -> "_") s) in
+    s
+
+  let typename_of_path s =
+    let s = clean_path s in
+    ID.of_string s
+
+(** Conversion Context
+
+    This an attempt to somewhat automate the process of converting
+   files from JSON Schema to UTJ, and make it easy to distinguish
+   between converted files that we need to preserve (b/c hand-edited)
+   and those that were converted and cached.
+
+    Method:
+
+    (1) first, break URL apart into URI and fragment
+
+    (2) fragment is converted into type-name, not further considered
+
+    (3) URI is mapped thru [urimap], maybe to no effect
+
+    (4) if it's ".json", that gets replaced by ".utj"
+
+    (5) then it's searched-for in the filepath, and if it's not found,
+    that's an error
+
+ *)
+
+module CC = struct
+  type t = {
+    filepath : string list
+  ; urimap : (string * string) list
+  }
+  let mk ~filepath ~urimap () = { filepath ; urimap }
+  let find_uri t uri = match List.assoc uri t.urimap with
+      v -> v
+    | exception Not_found -> Fmt.(failwithf "CC.find_uri: uri %a not found" Dump.string uri)
+
+  let map_url t url =
+    let (uri, typename) = match String.split_on_char '#' url with
+        [s] -> (s, ID.of_string "t")
+      | [uri;fragment] -> (uri, typename_of_path ("#"^fragment)) in
+    (find_uri t uri, typename)
+end
+module ConvContext = CC
+
 let isString (j : Yojson.Basic.t) = match j with
   `String _ -> true | _ -> false
 
@@ -35,6 +88,7 @@ let xorList l =
       v -> Some v
     | exception Not_found -> None
 
+  let cc = ref (CC.mk [] ())
   let entire_schema = ref `Null
   let counter = ref 0
   let newmid () =
@@ -85,18 +139,6 @@ let xorList l =
       | _ -> Fmt.(failwithf "path %s mismatched with schema" path)
     in findrec (String.split_on_char '/' path, !entire_schema)
 
-  let clean_path s =
-    let s = Str.(substitute_first (regexp (quote "#/$defs/")) (fun _ -> "") s) in
-    let s = Str.(substitute_first (regexp (quote "#/defs/")) (fun _ -> "") s) in
-    let s = Str.(substitute_first (regexp (quote "#/refs/")) (fun _ -> "") s) in
-    let s = Str.(substitute_first (regexp (quote "#/definitions/")) (fun _ -> "") s) in
-    let s = Str.(global_substitute (regexp (quote "[#:/]")) (fun _ -> "_") s) in
-    s
-
-  let typename_of_path s =
-    let s = clean_path s in
-    ID.of_string s
-
   let rec lookup_definition_ref s =
     match assoc_opt s !path2type with
       Some v -> v
@@ -126,8 +168,9 @@ let xorList l =
       r -> r
     | exception Not_found ->
       let mid = newmid() in
-      let r = Ref(Some (REL mid),(ID.of_string "t")) in
-      add_imports s mid ;
+      let (filename, typename) = CC.map_url !cc s in
+      let r = Ref(Some (REL mid),typename) in
+      add_imports filename mid ;
       add_uri2type s r ;
       r
 
@@ -137,7 +180,8 @@ let xorList l =
     else
       lookup_import_ref s
 
-  let reset t = 
+  let reset urimap t = 
+    cc := CC.mk urimap () ;
     entire_schema := t ;
     definitions_worklist := [] ;
     path2type := [] ;
@@ -501,8 +545,8 @@ let known_keys = documentation_keys@known_useful_keys
     in
     drec []
 
-let conv_schema t =
-  reset t ;
+let conv_schema urimap t =
+  reset urimap t ;
   let t = match top_conv_type t with
     None -> Fmt.(pf stderr "WARNING: top_conv_type: conversion produced no result:\n@.%s@." (Yojson.Basic.pretty_to_string t)) ; UtTrue
     | Some t -> t in
@@ -516,11 +560,11 @@ let conv_schema t =
     else l in
   l@[StTypes(false, [(ID.of_string "t", t)])]
 
-let load_file ?(with_predefined=false) s =
+let load_file ?(with_predefined=false) ?(urimap=[]) s =
   let stl =
     if Str.(string_match (regexp ".*\\.json$") s 0) then
       let j = Yojson.Basic.from_file s in
-      conv_schema j
+      conv_schema urimap j
     else if Str.(string_match (regexp ".*\\.utj$") s 0) then
       Utparse0.(parse_file parse_structure) s
     else Fmt.(failwithf "load_file: format not recognized: %s" s) in
