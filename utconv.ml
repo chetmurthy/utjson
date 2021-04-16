@@ -36,34 +36,60 @@ type json_list = json list [@@deriving show,eq]
 
     Method:
 
-    (1) first, break URL apart into URI and fragment
+    (1) first, replace ".json" with ".utj" before proceeding.
 
-    (2) fragment is converted into type-name, not further considered
+    (2) try to use current filename as a basename, in the manner of base URLs.
 
-    (3) URI is mapped thru [urimap], maybe to no effect
+    (3) if that fails, then search for file on filepath
 
-    (4) if it's ".json", that gets replaced by ".utj"
-
-    (5) then it's searched-for in the filepath, and if it's not found,
-    that's an error
+    (4) and if that fails, then map original file thru urimap.
 
  *)
 
 module CC = struct
   type t = {
+    filename : string ;
     filepath : string list
   ; urimap : (string * string) list
   }
-  let mk ~filepath ~urimap () = { filepath ; urimap }
-  let find_uri t uri = match List.assoc uri t.urimap with
-      v -> v
-    | exception Not_found -> Fmt.(failwithf "CC.find_uri: uri %a not found" Dump.string uri)
+[@@deriving show { with_path = false },eq]
+
+
+  let mk ?(filename="") ?(filepath=[]) ?(urimap=[]) () = { filename ; filepath ; urimap }
+
+  let map_uri t s =
+    let uri = Fpath.v s in
+    (* (1) first get extension right *)
+    let utj = if Fpath.has_ext "utj" uri then uri
+      else if Fpath.has_ext "json" uri then
+        Fpath.(uri |> rem_ext |> add_ext "utj")
+      else uri in
+
+    (* (2) try to use current filename as a basename, in the manner of base URLs. *)
+    let basename = t.filename |> Fpath.v |> Fpath.split_base |> fst in
+    let utj' = Fpath.append basename utj in
+    if utj' |> Bos.OS.File.exists |> Rresult.R.get_ok then
+      utj' |> Fpath.to_string else
+
+    match t.filepath |> List.find_map (fun dir ->
+          let utj' = Fpath.(append (v dir) utj) in
+          if utj' |> Bos.OS.File.exists |> Rresult.R.get_ok then
+            Some (utj' |> Fpath.to_string)
+          else None) with
+      Some s -> s
+    | None ->
+      match List.assoc s t.urimap with
+        v -> v
+      | exception Not_found ->
+        Fmt.(failwithf "CC.map_uri: uri %a not found@.CC: %a@."
+               Dump.string s
+               pp t)
 
   let map_url t url =
     let (uri, typename) = match String.split_on_char '#' url with
         [s] -> (s, ID.of_string "t")
       | [uri;fragment] -> (uri, typename_of_path ("#"^fragment)) in
-    (find_uri t uri, typename)
+    (map_uri t uri, typename)
 end
 module ConvContext = CC
 
@@ -88,7 +114,7 @@ let xorList l =
       v -> Some v
     | exception Not_found -> None
 
-  let cc = ref (CC.mk [] ())
+  let cc = ref (CC.mk ())
   let entire_schema = ref `Null
   let counter = ref 0
   let newmid () =
@@ -180,8 +206,8 @@ let xorList l =
     else
       lookup_import_ref s
 
-  let reset urimap t = 
-    cc := CC.mk urimap () ;
+  let reset ?filename ?urimap ?filepath t = 
+    cc := CC.mk ?filename ?urimap ?filepath () ;
     entire_schema := t ;
     definitions_worklist := [] ;
     path2type := [] ;
@@ -545,8 +571,8 @@ let known_keys = documentation_keys@known_useful_keys
     in
     drec []
 
-let conv_schema urimap t =
-  reset urimap t ;
+let conv_schema ?(filename="") ?filepath ?urimap t =
+  reset ~filename ?filepath ?urimap t ;
   let t = match top_conv_type t with
     None -> Fmt.(pf stderr "WARNING: top_conv_type: conversion produced no result:\n@.%s@." (Yojson.Basic.pretty_to_string t)) ; UtTrue
     | Some t -> t in
@@ -560,11 +586,11 @@ let conv_schema urimap t =
     else l in
   l@[StTypes(false, [(ID.of_string "t", t)])]
 
-let load_file ?(with_predefined=false) ?(urimap=[]) s =
+let load_file ?(with_predefined=false) ?(filepath=[]) ?(urimap=[]) s =
   let stl =
     if Str.(string_match (regexp ".*\\.json$") s 0) then
       let j = Yojson.Basic.from_file s in
-      conv_schema urimap j
+      conv_schema ~filename:s ~urimap ~filepath j
     else if Str.(string_match (regexp ".*\\.utj$") s 0) then
       Utparse0.(parse_file parse_structure) s
     else Fmt.(failwithf "load_file: format not recognized: %s" s) in

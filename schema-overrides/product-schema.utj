@@ -1,4 +1,4 @@
-import "json-schema-samples/geographical-location.schema.utj" as M0;
+import "schema-overrides/geographical-location.schema.utj" as M0;
   type nonrec t = object && [
     "productId": Predefined.integer;
     "productName": string;

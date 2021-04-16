@@ -1,3 +1,5 @@
 type t = object &&
-[ "lattitude": number ; "longitude": number ; ]
+[ "lattitude": number ; "longitude": number ;
+  require "lattitude", "longitude"
+]
 ;
