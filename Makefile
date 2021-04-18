@@ -30,6 +30,16 @@ test:: all
 	./schemastore_test || true
 	./eval_test
 
+utjtool.TEST: utjtool
+	./utjtool --help
+	./utjtool convert --utj-path _build:.git /dev/zero
+	./utjtool convert --utj-path _build:.git --utj-path _build:.git /dev/zero
+	UTJPATH=_build:.git ./utjtool convert /dev/zero
+
+utjtool:: utjtool.ml
+#	$(OCAMLFIND) ocamlc -dsource $(DEBUG) $(OCAMLFLAGS) -package ppx_deriving.show,ppx_deriving_cmdliner,cmdliner -linkpkg -linkall utjtool.ml
+	$(OCAMLFIND) ocamlc $(DEBUG) $(OCAMLFLAGS) -package ppx_deriving.show,ppx_deriving_cmdliner,cmdliner -linkpkg -linkall -o utjtool utjtool.ml
+
 syntax_test: $(OBJ) uttestutil.cmo syntax_test.cmo
 	$(OCAMLFIND) ocamlc $(DEBUG) $(OCAMLCFLAGS) -package $(PACKAGES),oUnit -linkpkg -linkall -syntax camlp5r $^ -o $@
 
