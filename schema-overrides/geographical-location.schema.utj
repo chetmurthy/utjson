@@ -1,5 +1,0 @@
-type t = object &&
-[ "lattitude": number ; "longitude": number ;
-  require "lattitude", "longitude"
-]
-;

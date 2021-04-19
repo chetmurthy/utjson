@@ -42,11 +42,9 @@ type json_list = json list [@@deriving show,eq]
 
     (1) first, replace ".json" with ".utj" before proceeding.
 
-    (2) try to use current filename as a basename, in the manner of base URLs.
+    (2) if that fails, then search for file on filepath
 
-    (3) if that fails, then search for file on filepath
-
-    (4) and if that fails, then map original file thru urimap.
+    (3) and if that fails, then map original uri thru urimap.
 
  *)
 
@@ -81,12 +79,6 @@ module CC = struct
       else if Fpath.has_ext "json" uri then
         Fpath.(uri |> rem_ext |> add_ext "utj")
       else uri in
-
-    (* (2) try to use current filename as a basename, in the manner of base URLs. *)
-    let basename = t.filename |> Fpath.v |> Fpath.split_base |> fst in
-    let utj' = Fpath.append basename utj in
-    if utj' |> Bos.OS.File.exists |> Rresult.R.get_ok then
-      ("via basename", utj' |> Fpath.to_string) else
 
     match t.filepath |> List.find_map (fun dir ->
           let utj' = Fpath.(append (v dir) utj) in

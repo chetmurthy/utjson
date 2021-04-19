@@ -1,0 +1,5 @@
+type t = object &&
+[ "lattitude": number ; "longitude": number ] &&
+[ required "lattitude", "longitude"
+]
+;

@@ -352,9 +352,10 @@ let success (expect, f) =
     (convert_file (CC.mk()) f)
 
 let successf (expectf, f) =
+  let filepath = ["schema-golden/schema-overrides"] in
   assert_equal ~msg:f ~printer:structure_printer ~cmp:structure_cmp
     (load_file expectf)
-    (convert_file (CC.mk()) f)
+    (convert_file (CC.mk ~filepath ()) f)
 
 let successf_test (a,b) =
   (a^" || "^b) >:: (fun ctxt ->
@@ -362,25 +363,27 @@ let successf_test (a,b) =
     )
 
 let convert = "convert" >::: (List.map successf_test [
-    ("schema-overrides/product-schema.utj",
+    ("schema-golden/schema-overrides/geographical-location.schema.utj",
+     "schema-overrides/geographical-location.schema.json")
+  ; ("schema-golden/schema-overrides/product-schema.utj",
      "schema-overrides/product-schema.json")
-  ; ("schema-overrides/ansible-inventory.utj",
+  ; ("schema-golden/schema-overrides/ansible-inventory.utj",
      "schemastore/src/schemas/json/ansible-inventory.json")
-  ; ("schema-overrides/apibuilder.utj",
+  ; ("schema-golden/schema-overrides/apibuilder.utj",
      "schema-overrides/apibuilder.json")
-  ; ("schema-overrides/apple-app-site-association.utj",
+  ; ("schema-golden/schema-overrides/apple-app-site-association.utj",
      "schemastore/src/schemas/json/apple-app-site-association.json")
-  ; ("schema-overrides/appsettings.utj",
+  ; ("schema-golden/schema-overrides/appsettings.utj",
      "schema-overrides/appsettings.json")
-  ; ("schema-overrides/appsscript.utj",
+  ; ("schema-golden/schema-overrides/appsscript.utj",
      "schemastore/src/schemas/json/appsscript.json")
-  ; ("schema-overrides/appveyor.utj",
+  ; ("schema-golden/schema-overrides/appveyor.utj",
      "schemastore/src/schemas/json/appveyor.json")
-  ; ("schema-overrides/asmdef.utj",
+  ; ("schema-golden/schema-overrides/asmdef.utj",
      "schemastore/src/schemas/json/asmdef.json")
-  ; ("schema-overrides/avro-avsc.utj",
+  ; ("schema-golden/schema-overrides/avro-avsc.utj",
      "schemastore/src/schemas/json/avro-avsc.json")
-  ; ("schema-overrides/azure-iot-edgeagent-deployment-1.0.utj",
+  ; ("schema-golden/schema-overrides/azure-iot-edgeagent-deployment-1.0.utj",
      "schemastore/src/schemas/json/azure-iot-edgeagent-deployment-1.0.json")
   ]
   )
