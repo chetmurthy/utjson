@@ -52,21 +52,29 @@ type json_list = json list [@@deriving show,eq]
 
 module CC = struct
   type t = {
-    filename : string ;
-    filepath : string list
+    filename : string
+  ; httpcache : string
+  ; filepath : string list
   ; urimap : (string * string) list
   }
 [@@deriving show { with_path = false },eq]
 
 
-  let mk ?(filename="") ?(filepath=[]) ?(urimap=[]) () = { filename ; filepath ; urimap }
+  let mk ?(httpcache="http-schema-cache") ?(filename="") ?(filepath=[]) ?(urimap=[]) () =
+    { filename ; filepath ; httpcache ; urimap }
+
+  let with_filename cc filename = { cc with filename }
 
   let map_uri t s =
     let http_colon_slash_slash = "http://" in
-    let s' = if starts_with ~pat:http_colon_slash_slash s then
-        string_suffix s (String.length http_colon_slash_slash)
+    let https_colon_slash_slash = "https://" in
+    let s' =
+      if starts_with ~pat:http_colon_slash_slash s then
+        t.httpcache^"/"^(string_suffix s (String.length http_colon_slash_slash))
+      else if starts_with ~pat:https_colon_slash_slash s then
+        t.httpcache^"/"^(string_suffix s (String.length https_colon_slash_slash))
       else s in
-    let uri = Fpath.v s in
+    let uri = Fpath.v s' in
     (* (1) first get extension right *)
     let utj = if Fpath.has_ext "utj" uri then uri
       else if Fpath.has_ext "json" uri then
@@ -214,8 +222,8 @@ let xorList l =
     else
       lookup_import_ref s
 
-  let reset ?filename ?urimap ?filepath t = 
-    cc := CC.mk ?filename ?urimap ?filepath () ;
+  let reset newcc t = 
+    cc := newcc ;
     entire_schema := t ;
     definitions_worklist := [] ;
     path2type := [] ;
@@ -579,8 +587,8 @@ let known_keys = documentation_keys@known_useful_keys
     in
     drec []
 
-let conv_schema ?(filename="") ?filepath ?urimap t =
-  reset ~filename ?filepath ?urimap t ;
+let conv_schema cc t =
+  reset cc t ;
   let t = match top_conv_type t with
     None -> Fmt.(pf stderr "WARNING: top_conv_type: conversion produced no result:\n@.%s@." (Yojson.Basic.pretty_to_string t)) ; UtTrue
     | Some t -> t in
@@ -594,14 +602,13 @@ let conv_schema ?(filename="") ?filepath ?urimap t =
     else l in
   l@[StTypes(false, [(ID.of_string "t", t)])]
 
-let load_file ?(with_predefined=false) ?(filepath=[]) ?(urimap=[]) s =
+let convert_file ?(with_predefined=false) cc s =
+  let open Fpath in
   let stl =
-    if Str.(string_match (regexp ".*\\.json$") s 0) then
+    if has_ext "json" (v s) then
       let j = Yojson.Basic.from_file s in
-      conv_schema ~filename:s ~urimap ~filepath j
-    else if Str.(string_match (regexp ".*\\.utj$") s 0) then
-      Utparse0.(parse_file parse_structure) s
-    else Fmt.(failwithf "load_file: format not recognized: %s" s) in
+      conv_schema (CC.with_filename cc s) j
+    else Fmt.(failwithf "convert_file: format not recognized: %s" s) in
   if with_predefined then
   [StImport("lib/predefined.utj", ID.of_string "Predefined")]@stl
   else stl

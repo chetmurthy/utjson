@@ -12,6 +12,7 @@ open Utio
 open Utio.Debug
 open Utconv
 open Uteval
+open Uttypecheck
 
 let all_files = [
   "kubernetesjsonschema.dev/master/_definitions.json"
@@ -334,23 +335,23 @@ let all_files = [
 let success (expect, f) =
   assert_equal ~msg:f ~printer:structure_printer ~cmp:structure_cmp
     (structure_of_string_exn expect)
-    (load_file ~with_predefined:true f)
+    (convert_file ~with_predefined:true (CC.mk()) f)
 
 let successf (expectf, f) =
   assert_equal ~msg:f ~printer:structure_printer ~cmp:structure_cmp
     (load_file ~with_predefined:true  expectf)
-    (load_file ~with_predefined:true  f)
+    (convert_file ~with_predefined:true (CC.mk())  f)
 
 let convert1 f =
   let store_fp = "schemastore/src/schemas/json/"^f in
   let override_fp = "schema-overrides/"^f in
   let cache_fp = "schema-cache/"^f in
   if override_fp |>  Fpath.v |> Bos.OS.File.exists |> Rresult.R.get_ok then
-    load_file ~with_predefined:true override_fp
+    convert_file ~with_predefined:true (CC.mk()) override_fp
   else if cache_fp |>  Fpath.v |> Bos.OS.File.exists |> Rresult.R.get_ok then
-    load_file ~with_predefined:true cache_fp
+    convert_file ~with_predefined:true (CC.mk()) cache_fp
   else 
-    load_file ~with_predefined:true store_fp
+    convert_file ~with_predefined:true (CC.mk()) store_fp
 
 let convert_check1 f =
   f >:: (fun ctxt ->

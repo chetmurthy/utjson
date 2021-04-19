@@ -5,6 +5,18 @@ open Ututil
 open Utypes
 open Utmigrate
 
+let load_file ?(with_predefined=false) s =
+  let open Fpath in
+  if has_ext "json" (v s) then
+    Fmt.(failwithf "load_file: should only be called on UTJ files, not JSON: %s" s) ;
+
+  let stl =
+    if has_ext "utj" (v s) then
+      Utparse0.(parse_file parse_structure) s
+    else Fmt.(failwithf "load_file: format not recognized: %s" s) in
+  if with_predefined then
+  [StImport("lib/predefined.utj", ID.of_string "Predefined")]@stl
+  else stl
 
 module TEnv = struct
   type t = (unit, module_type_t, module_type_t) Env.t
@@ -162,7 +174,7 @@ and tc_struct_item env = function
     (TEnv.push_module env (mid, mty), (st, [si]))
 
   | StImport(fname, mid) ->
-    let stl = Utconv.load_file fname in
+    let stl = load_file fname in
     let st = StModuleBinding (mid, MeStruct stl) in
     tc_struct_item env st
 

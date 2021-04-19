@@ -212,7 +212,7 @@ module S1ElimImport = struct
     let old_migrate_struct_item_t = dt.migrate_struct_item_t in
     let new_migrate_struct_item_t dt st = match st with
       | StImport(fname, mid) ->
-        let stl = Utconv.load_file fname in
+        let stl = load_file fname in
         let st = StModuleBinding (mid, MeStruct stl) in
         old_migrate_struct_item_t dt st
       | _ -> old_migrate_struct_item_t dt st in

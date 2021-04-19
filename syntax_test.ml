@@ -10,6 +10,7 @@ open Utio
 open Utio.Debug
 open Utconv
 open Utmigrate
+open Uttypecheck
 
 let normalize_structure stl =
   let dt = make_dt () in
@@ -348,12 +349,12 @@ let structure_cmp a b = structure_cmp (normalize_structure a) (normalize_structu
 let success (expect, f) =
   assert_equal ~msg:f ~printer:structure_printer ~cmp:structure_cmp
     (structure_of_string_exn expect)
-    (load_file f)
+    (convert_file (CC.mk()) f)
 
 let successf (expectf, f) =
   assert_equal ~msg:f ~printer:structure_printer ~cmp:structure_cmp
     (load_file expectf)
-    (load_file f)
+    (convert_file (CC.mk()) f)
 
 let successf_test (a,b) =
   (a^" || "^b) >:: (fun ctxt ->

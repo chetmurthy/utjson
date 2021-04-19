@@ -29,6 +29,7 @@ let pp_lexbuf lb =
 
 print_string "================ START ================\n";; flush stdout ;;
 
+open Pa_ppx_utils.Std ;;
 open Yojson.Basic ;;
 
 #load "ututil.cmo";;
@@ -49,6 +50,9 @@ open Utprint ;;
 open Utio ;;
 
 let top pp x = Fmt.(pf stdout "%s" (pp x)) ;;
+
+let top_fpath x = top Fpath.to_string x ;;
+#install_printer top_fpath ;;
 
 let top_id x = top Normal.id_printer x ;;
 #install_printer top_id ;;
