@@ -22,7 +22,7 @@ type json_list = json list [@@deriving show,eq]
     let s = Str.(substitute_first (regexp (quote "#/defs/")) (fun _ -> "") s) in
     let s = Str.(substitute_first (regexp (quote "#/refs/")) (fun _ -> "") s) in
     let s = Str.(substitute_first (regexp (quote "#/definitions/")) (fun _ -> "") s) in
-    let s = Str.(global_substitute (regexp (quote "[#:/]")) (fun _ -> "_") s) in
+    let s = Str.(global_substitute (regexp "[#:/.-]") (fun _ -> "_") s) in
     s
 
   let typename_of_path s =
@@ -56,12 +56,13 @@ module CC = struct
   ; httpcache : string
   ; filepath : string list
   ; urimap : (string * string) list
+  ; verbose : bool
   }
 [@@deriving show { with_path = false },eq]
 
 
-  let mk ?(httpcache="http-schema-cache") ?(filename="") ?(filepath=[]) ?(urimap=[]) () =
-    { filename ; filepath ; httpcache ; urimap }
+  let mk ?(verbose=true) ?(httpcache="http-schema-cache") ?(filename="") ?(filepath=[]) ?(urimap=[]) () =
+    { filename ; filepath ; httpcache ; urimap ; verbose }
 
   let with_filename cc filename = { cc with filename }
 
@@ -85,17 +86,17 @@ module CC = struct
     let basename = t.filename |> Fpath.v |> Fpath.split_base |> fst in
     let utj' = Fpath.append basename utj in
     if utj' |> Bos.OS.File.exists |> Rresult.R.get_ok then
-      utj' |> Fpath.to_string else
+      ("via basename", utj' |> Fpath.to_string) else
 
     match t.filepath |> List.find_map (fun dir ->
           let utj' = Fpath.(append (v dir) utj) in
           if utj' |> Bos.OS.File.exists |> Rresult.R.get_ok then
             Some (utj' |> Fpath.to_string)
           else None) with
-      Some s -> s
+      Some s -> ("via filepath", s)
     | None ->
       match List.assoc s t.urimap with
-        v -> v
+        v -> ("via urimap", v)
       | exception Not_found ->
         Fmt.(failwithf "CC.map_uri: uri %a not found@.CC: %a@."
                Dump.string s
@@ -105,7 +106,10 @@ module CC = struct
     let (uri, typename) = match String.split_on_char '#' url with
         [s] -> (s, ID.of_string "t")
       | [uri;fragment] -> (uri, typename_of_path ("#"^fragment)) in
-    (map_uri t uri, typename)
+    let (via, utj_uri) = map_uri t uri in
+    if t.verbose then
+      Fmt.(pf stderr "[%s -> %s via %s]\n%!" uri utj_uri via) ;
+    (utj_uri, typename)
 end
 module ConvContext = CC
 
@@ -282,6 +286,16 @@ let known_garbage_keys = [
   ; "x-intellij-language-injection"
   ; "x-intellij-html-description"
   ; "x-intellij-enum-metadata"
+  ; "x-kubernetes-embedded-resource"
+  ; "x-kubernetes-group-version-kind"
+  ; "x-kubernetes-int-or-string"
+  ; "x-kubernetes-list-map-keys"
+  ; "x-kubernetes-list-type"
+  ; "x-kubernetes-map-type"
+  ; "x-kubernetes-patch-merge-key"
+  ; "x-kubernetes-patch-strategy"
+  ; "x-kubernetes-preserve-unknown-fields"
+  ; "x-kubernetes-unions"
   ; "fileMatch"
   ]
 let known_keys = documentation_keys@known_useful_keys
@@ -587,10 +601,40 @@ let known_keys = documentation_keys@known_useful_keys
     in
     drec []
 
+let recognize_definition t = match t with
+  `Assoc l ->
+  l |> List.exists (function (k, v) ->
+      List.mem k known_useful_keys
+    )
+  | _ -> false
+
+let recognize_definitions cc (t : Yojson.Basic.t) = match t with
+    `Assoc l -> begin match (assoc_opt "definitions" l, assoc_opt "$defs" l, assoc_opt "defs" l ) with
+        (Some (`Assoc l), None, None) ->
+        l |> List.iter (function (k, v) ->
+            if recognize_definition v then
+              ignore(lookup_ref (Printf.sprintf "#/definitions/%s" k))
+          )
+      | (None, Some (`Assoc l), None) ->
+        l |> List.iter (fun (k, v) ->
+            if recognize_definition v then
+              ignore(lookup_ref (Printf.sprintf "#/definitions/%s" k))
+          )
+      | (None, None, Some (`Assoc l)) ->
+        l |> List.iter (fun (k, v) ->
+            if recognize_definition v then
+              ignore(lookup_ref (Printf.sprintf "#/definitions/%s" k))
+          )
+      | (None, None, None) -> ()
+      | _ -> Fmt.(failwithf "recognize_definitions: malformed %s" (Yojson.Basic.pretty_to_string t))
+    end
+  | _ -> ()
+
 let conv_schema cc t =
   reset cc t ;
+  recognize_definitions cc t ;
   let t = match top_conv_type t with
-    None -> Fmt.(pf stderr "WARNING: top_conv_type: conversion produced no result:\n@.%s@." (Yojson.Basic.pretty_to_string t)) ; UtTrue
+      None -> Fmt.(pf stderr "WARNING: top_conv_type: conversion produced no result\n") ; UtTrue
     | Some t -> t in
   let defs = conv_definitions() in
   let l = List.map (fun (id, mid) -> StImport(id, mid)) !imports in

@@ -19,6 +19,7 @@ eval_test.cmx : \
 schemastore_test.cmo : \
     utypes.cmi \
     ututil.cmo \
+    uttypecheck.cmo \
     uttestutil.cmo \
     utprint.cmo \
     utparse0.cmo \
@@ -28,6 +29,7 @@ schemastore_test.cmo : \
 schemastore_test.cmx : \
     utypes.cmx \
     ututil.cmx \
+    uttypecheck.cmx \
     uttestutil.cmx \
     utprint.cmx \
     utparse0.cmx \
@@ -36,6 +38,7 @@ schemastore_test.cmx : \
     utconv.cmx
 syntax_test.cmo : \
     utypes.cmi \
+    uttypecheck.cmo \
     uttestutil.cmo \
     utprint.cmo \
     utparse0.cmo \
@@ -44,6 +47,7 @@ syntax_test.cmo : \
     utconv.cmo
 syntax_test.cmx : \
     utypes.cmx \
+    uttypecheck.cmx \
     uttestutil.cmx \
     utprint.cmx \
     utparse0.cmx \
@@ -68,26 +72,22 @@ typing_test.cmx : \
     utconv.cmx
 utconv.cmo : \
     utypes.cmi \
-    ututil.cmo \
-    utparse0.cmo
+    ututil.cmo
 utconv.cmx : \
     utypes.cmx \
-    ututil.cmx \
-    utparse0.cmx
+    ututil.cmx
 uteval.cmo : \
     utypes.cmi \
     ututil.cmo \
     uttypecheck.cmo \
     utmigrate.cmo \
-    utio.cmo \
-    utconv.cmo
+    utio.cmo
 uteval.cmx : \
     utypes.cmx \
     ututil.cmx \
     uttypecheck.cmx \
     utmigrate.cmx \
-    utio.cmx \
-    utconv.cmx
+    utio.cmx
 utio.cmo : \
     utypes.cmi \
     utprint.cmo \
@@ -96,18 +96,26 @@ utio.cmx : \
     utypes.cmx \
     utprint.cmx \
     utparse0.cmx
+utjtool.cmo : \
+    ututil.cmo \
+    utio.cmo \
+    utconv.cmo
+utjtool.cmx : \
+    ututil.cmx \
+    utio.cmx \
+    utconv.cmx
 uttestutil.cmo :
 uttestutil.cmx :
 uttypecheck.cmo : \
     utypes.cmi \
     ututil.cmo \
-    utmigrate.cmo \
-    utconv.cmo
+    utparse0.cmo \
+    utmigrate.cmo
 uttypecheck.cmx : \
     utypes.cmx \
     ututil.cmx \
-    utmigrate.cmx \
-    utconv.cmx
+    utparse0.cmx \
+    utmigrate.cmx
 ututil.cmo :
 ututil.cmx :
 utmigrate.cmo : \
@@ -115,11 +123,9 @@ utmigrate.cmo : \
 utmigrate.cmx : \
     utypes.cmx
 utypes.cmo : \
-    utypes.cmi \
     ututil.cmo \
     utypes.cmi
 utypes.cmx : \
-    utypes.cmx \
     ututil.cmx \
     utypes.cmi
 utlexing.cmo : \

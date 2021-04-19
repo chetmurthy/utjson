@@ -17,7 +17,7 @@ let convert1 cc ~with_predefined ~verbose infile outfile =
 
 let convert_to_utj with_predefined verbose filepath destdir outputfile files =
   let filepath = List.concat filepath in
-  let cc = CC.mk ~filepath () in
+  let cc = CC.mk ~verbose ~filepath () in
   match (destdir, files, outputfile) with
     ("", [infile], "-") ->
     convert1 cc ~with_predefined ~verbose infile "-"
