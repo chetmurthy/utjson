@@ -121,27 +121,30 @@ end
 
 module Extract = struct
 
-let extract1 cc ~with_predefined ~simplify ~verbose infile outfile =
+let extract1 cc ~with_predefined ~simplify ~final ~verbose infile outfile =
   let stl = convert_file ~with_predefined cc infile in
   let stl = full_extract stl in
   let stl = if simplify then full_simplify stl else stl in
   let oc = if outfile = "-" then stdout else open_out outfile in
   if verbose then
     Fmt.(pf stderr "[extract %s to %s]\n%!" infile outfile) ;
-  output_string oc (structure_to_string stl) ;
+  if final then
+    output_string oc (stl |> FinalExtract.exec |> top_bindings_to_string)
+  else
+    output_string oc (structure_to_string stl) ;
   output_string oc "\n" ;
   if outfile <> "-" then close_out oc
 
-let extract_to_utj with_predefined simplify verbose filepath destdir outputfile files =
+let extract_to_utj with_predefined simplify final verbose filepath destdir outputfile files =
   let filepath = List.concat filepath in
   let cc = CC.mk ~verbose ~filepath () in
   match (destdir, files, outputfile) with
     ("", [infile], "-") ->
-    extract1 cc ~with_predefined ~simplify ~verbose infile "-"
+    extract1 cc ~with_predefined ~simplify ~final ~verbose infile "-"
 
   | ("", [infile], outfile) when outfile <> "-" ->
     mkdir_p Fpath.(outfile |> v |> parent |> to_string) ;
-    extract1 cc ~with_predefined ~simplify ~verbose infile outfile
+    extract1 cc ~with_predefined ~simplify ~final ~verbose infile outfile
 
   | (destdir, infiles, "-") when destdir <> "" ->
     mkdir_p destdir ;
@@ -149,7 +152,7 @@ let extract_to_utj with_predefined simplify verbose filepath destdir outputfile 
         if not Fpath.(infile |> v |> has_ext "json") then
           Fmt.(failwithf "input file %s is not JSON" infile) ;
         let outfile = Fpath.(to_string (append (v destdir) (infile |> v |> set_ext "utj" |> basename |> v))) in
-        extract1 cc ~with_predefined ~simplify ~verbose infile outfile
+        extract1 cc ~with_predefined ~simplify ~final ~verbose infile outfile
       )
   | _ -> Fmt.(failwithf "Bad args\nfilepath = %s\ndestdir = %s\noutputfile = %s\nfiles = %s\n"
                 (String.concat ":" filepath)
@@ -187,6 +190,10 @@ let cmd =
     let doc = "Simplify utypes." in
     Arg.(value & flag & info ["s"; "simplify"] ~doc) in
 
+  let final =
+    let doc = "Print final type bindings." in
+    Arg.(value & flag & info ["final"] ~doc) in
+
   let verbose =
     let doc = "Be verbose." in
     Arg.(value & flag & info ["v"; "verbose"] ~doc) in
@@ -197,7 +204,7 @@ let cmd =
     `P "Extract JSON to UTJ."
   ]
   in
-  Term.(const extract_to_utj $ with_predefined $ simplify $ verbose $ filepath $ destdir $outputfile $ files),
+  Term.(const extract_to_utj $ with_predefined $ simplify $ final $ verbose $ filepath $ destdir $outputfile $ files),
   Term.info "extract" ~version:"v0.1" ~doc ~exits:Term.default_exits ~man
 end
 
