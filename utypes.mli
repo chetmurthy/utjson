@@ -52,7 +52,9 @@ and module_path_t =
   | DEREF of module_path_t * ID.t
 
 and utype_t =
-    Simple of base_type_t
+    UtTrue
+  | UtFalse
+  | Simple of base_type_t
   | And of utype_t * utype_t
   | Or of utype_t * utype_t
   | Xor of utype_t * utype_t
@@ -60,8 +62,6 @@ and utype_t =
   | Not of utype_t
   | Atomic of atomic_utype_t list
   | Ref of module_path_t option * ID.t
-  | UtTrue
-  | UtFalse
 [@@deriving show { with_path = false },eq]
 
 type struct_item_t =

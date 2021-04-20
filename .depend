@@ -36,6 +36,26 @@ schemastore_test.cmx : \
     utio.cmx \
     utextract.cmx \
     utconv.cmx
+simplify_test.cmo : \
+    utypes.cmi \
+    uttypecheck.cmo \
+    uttestutil.cmo \
+    utsimplify.cmo \
+    utprint.cmo \
+    utparse0.cmo \
+    utio.cmo \
+    utextract.cmo \
+    utconv.cmo
+simplify_test.cmx : \
+    utypes.cmx \
+    uttypecheck.cmx \
+    uttestutil.cmx \
+    utsimplify.cmx \
+    utprint.cmx \
+    utparse0.cmx \
+    utio.cmx \
+    utextract.cmx \
+    utconv.cmx
 syntax_test.cmo : \
     utypes.cmi \
     uttypecheck.cmo \
@@ -99,15 +119,31 @@ utio.cmx : \
 utjtool.cmo : \
     ututil.cmo \
     uttypecheck.cmo \
+    utsimplify.cmo \
     utparse0.cmo \
     utio.cmo \
+    utextract.cmo \
     utconv.cmo
 utjtool.cmx : \
     ututil.cmx \
     uttypecheck.cmx \
+    utsimplify.cmx \
     utparse0.cmx \
     utio.cmx \
+    utextract.cmx \
     utconv.cmx
+utsimplify.cmo : \
+    utypes.cmi \
+    ututil.cmo \
+    uttypecheck.cmo \
+    utmigrate.cmo \
+    utio.cmo
+utsimplify.cmx : \
+    utypes.cmx \
+    ututil.cmx \
+    uttypecheck.cmx \
+    utmigrate.cmx \
+    utio.cmx
 uttestutil.cmo :
 uttestutil.cmx :
 uttypecheck.cmo : \

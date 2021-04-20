@@ -81,8 +81,10 @@ let top_json (j : Utconv.json) = top_yojson j ;;
 open Utconv ;;
 #load "uttypecheck.cmo";;
 open Uttypecheck ;;
-#load "uteval.cmo";;
-open Uteval ;;
+#load "utextract.cmo";;
+open Utextract ;;
+#load "utsimplify.cmo";;
+open Utsimplify ;;
 (*
 #load "syntax_test.cmo";;
 open Syntax_test ;;
@@ -106,10 +108,13 @@ open Eval_test ;;
 #trace ElimCastCast.exec ;;
 #trace S10ReduceFunctorApp.exec ;;
 *)
+#load "simplify_test.cmo";;
+open Simplify_test ;;
 
+(*
 #load "schemastore_test.cmo";;
 open Schemastore_test ;;
-
+*)
 (*
 #use "jq_examples.ml";;
 *)
