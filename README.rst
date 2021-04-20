@@ -159,6 +159,7 @@ And then we want to use this type in our product schema::
      ] && [ required "length", "width", "height" ];
     "warehouseLocation": M0.t;
   ] ;
+  end ;
 
 Wrap in a Module and Hide Some Types
 ------------------------------------
@@ -166,7 +167,7 @@ Wrap in a Module and Hide Some Types
 We could define a module and refactor types a little, viz.::
 
   module Product = struct
-    local import "geographical-location.schema.utj" as GEO in
+    import "geographical-location.schema.utj" as GEO;
 
     type dim_t = object && [
       "length": number;
@@ -437,8 +438,8 @@ The Type System
    “functors” (again from OCaml) which are functions from one structure
    to another. That is to say, they are parameterized structures.
 
-Atomic `utype`s
----------------
+Atomic ``utype``s
+-----------------
 
 -  The simplest utypes are the raw types of JSON:
 
