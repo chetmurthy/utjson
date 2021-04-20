@@ -85,7 +85,7 @@ module-exprs are:
     The only relative references that need replacing, are those in the body of the
     functor (now the struct produced by reduction, that refer to functor-formal-args.
 
-(10) remove all module-types, functors, and un-contracted functors.
+(11) remove all module-types, functors, and un-contracted functors.
 
 *)
 
@@ -822,3 +822,43 @@ let exec stl =
   fix (fun stl -> reduce_stl None stl stl) stl
 
 end
+
+module S11NukeFunctorsSigs = struct
+
+let exec stl =
+  let dt = make_dt () in
+  let old_migrate_structure = dt.migrate_structure in
+  let old_migrate_module_expr_t = dt.migrate_module_expr_t in
+  let new_migrate_module_expr_t dt me = match me with
+      MeCast(me, _) -> dt.migrate_module_expr_t dt me
+    | _ -> old_migrate_module_expr_t dt me in
+
+  let new_migrate_structure dt stl =
+    let stl = old_migrate_structure dt stl in
+    List.fold_right (fun st acc ->
+        match st with
+  | StModuleBinding(_, MeStruct _) -> st::acc
+  | StTypes _ -> st::acc
+  | _ -> acc
+      ) stl [] in
+  let dt = { dt with
+             migrate_structure = new_migrate_structure
+           ; migrate_module_expr_t = new_migrate_module_expr_t
+           } in
+  dt.migrate_structure dt stl
+end
+
+let full_extract x =
+  x
+  |> S1ElimImport.exec
+  |> S2ElimLocal.exec
+  |> ElimEmptyLocal.exec
+  |> S3NameFunctorAppSubterms.exec
+  |> S4Typecheck.exec
+  |> S5ElimInclude.exec
+  |> ElimEmptyLocal.exec
+  |> S7RenameOverridden.exec
+  |> S8Absolute.exec
+  |> ElimCastCast.exec
+  |> S10ReduceFunctorApp.exec
+  |> S11NukeFunctorsSigs.exec

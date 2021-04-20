@@ -369,9 +369,18 @@ let typecheck1 f =
 
 let typecheck = "typecheck" >::: (List.map typecheck1 all_files)
 
+let extract1 f =
+  f >:: (fun ctxt ->
+      let stl = convert1 f in
+      ignore (full_extract stl)
+    )
+
+let extract = "extract" >::: (List.map extract1 all_files)
+
 let tests = "all" >::: [
     convert_check
   ; typecheck
+  ; extract
 ]
 
 if not !Sys.interactive then

@@ -1,20 +1,20 @@
-eval_test.cmo : \
+extract_test.cmo : \
     utypes.cmi \
     uttypecheck.cmo \
     uttestutil.cmo \
     utprint.cmo \
     utparse0.cmo \
     utio.cmo \
-    uteval.cmo \
+    utextract.cmo \
     utconv.cmo
-eval_test.cmx : \
+extract_test.cmx : \
     utypes.cmx \
     uttypecheck.cmx \
     uttestutil.cmx \
     utprint.cmx \
     utparse0.cmx \
     utio.cmx \
-    uteval.cmx \
+    utextract.cmx \
     utconv.cmx
 schemastore_test.cmo : \
     utypes.cmi \
@@ -24,7 +24,7 @@ schemastore_test.cmo : \
     utprint.cmo \
     utparse0.cmo \
     utio.cmo \
-    uteval.cmo \
+    utextract.cmo \
     utconv.cmo
 schemastore_test.cmx : \
     utypes.cmx \
@@ -34,7 +34,7 @@ schemastore_test.cmx : \
     utprint.cmx \
     utparse0.cmx \
     utio.cmx \
-    uteval.cmx \
+    utextract.cmx \
     utconv.cmx
 syntax_test.cmo : \
     utypes.cmi \
@@ -76,13 +76,13 @@ utconv.cmo : \
 utconv.cmx : \
     utypes.cmx \
     ututil.cmx
-uteval.cmo : \
+utextract.cmo : \
     utypes.cmi \
     ututil.cmo \
     uttypecheck.cmo \
     utmigrate.cmo \
     utio.cmo
-uteval.cmx : \
+utextract.cmx : \
     utypes.cmx \
     ututil.cmx \
     uttypecheck.cmx \
