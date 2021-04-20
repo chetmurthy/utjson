@@ -450,7 +450,7 @@ let test_full (a,b) =
       test_fullf (a,b)
     )
 
-let full_extract = "full-extract" >::: [
+let full_extract_tests = "full-extract" >::: [
     test_full ({|
 module Predefined = struct
   type nonrec integer = number && [ multipleOf 1.0; ];
@@ -480,6 +480,43 @@ module Predefined = struct
                "schema-overrides/product-schema.json")
   ]
 
+let test_finalf (expect, f) =
+  let filepath = ["schema-golden/schema-overrides"] in
+  assert_equal ~msg:f ~printer:Normal.top_bindings_printer ~cmp:top_bindings_cmp
+    (expect |> top_bindings_of_string_exn)
+    (FinalExtract.exec (full_extract (convert_file ~with_predefined:true (CC.mk ~filepath ()) f)))
+
+let test_final (a,b) =
+  (a^" || "^b) >:: (fun ctxt ->
+      test_finalf (a,b)
+    )
+
+let final_extract = "final-extract" >::: [
+    test_final ({|
+.Predefined.integer = number && [ multipleOf 1.0; ];
+.Predefined.scalar = boolean || number || string;
+.Predefined.json = null || .Predefined.scalar || array || object;
+.Predefined.positive_number = number && [ bounds (0.0,max]; ];
+.M0.t = object && [
+    "lattitude": number;
+    "longitude": number;
+] && [ required "lattitude",  "longitude"; ];
+t = object && [
+    "productId": .Predefined.integer;
+    "productName": string;
+    "price": number && [ bounds (0.0,max]; ];
+    "tags": array && [ of string; ] && [ unique; ] && array && [ size [1,max]; ];
+    "dimensions": object && [
+        "length": number;
+        "width": number;
+        "height": number;
+] && [ required "length",  "width",  "height"; ];
+    "warehouseLocation": .M0.t;
+] && [ required "productId",  "productName",  "price"; ];
+|},
+               "schema-overrides/product-schema.json")
+  ]
+
 let tests = "all" >::: [
     simple
   ; typecheck
@@ -492,7 +529,8 @@ let tests = "all" >::: [
   ; s8_absolute
   ; s9_elim_cast_cast
   ; s10_reduce_functor_app
-  ; full_extract
+  ; full_extract_tests
+  ; final_extract
 ]
 
 if not !Sys.interactive then

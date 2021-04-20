@@ -95,6 +95,10 @@ and sig_item_t =
   | SiModuleType of ID.t * module_type_t
   | SiInclude of module_path_t
 
+and top_binding_t =
+  (module_path_t option * ID.t) * utype_t
+
+and top_bindings = top_binding_t list
 [@@deriving show { with_path = false },eq]
 
 type token =

@@ -87,6 +87,12 @@ value (module_expr_eoi : Grammar.Entry.e module_expr_t) = Grammar.Entry.create g
 value (module_type : Grammar.Entry.e module_type_t) = Grammar.Entry.create g "module_type";
 value (module_type_eoi : Grammar.Entry.e module_type_t) = Grammar.Entry.create g "module_type_eoi";
 
+value (top_binding : Grammar.Entry.e top_binding_t) = Grammar.Entry.create g "top_binding";
+value (top_binding_eoi : Grammar.Entry.e top_binding_t) = Grammar.Entry.create g "top_binding_eoi";
+
+value (top_bindings : Grammar.Entry.e (list top_binding_t)) = Grammar.Entry.create g "top_bindings";
+value (top_bindings_eoi : Grammar.Entry.e (list top_binding_t)) = Grammar.Entry.create g "top_bindings_eoi";
+
 EXTEND
   GLOBAL:
     utype utype_eoi
@@ -96,6 +102,8 @@ EXTEND
     sig_item sig_item_eoi
     module_expr module_expr_eoi
     module_type module_type_eoi
+    top_binding top_binding_eoi
+    top_bindings top_bindings_eoi
     ;
 
     mid: [ [ uid = UIDENT -> ID.of_string uid ] ] ;
@@ -295,6 +303,18 @@ EXTEND
     ] ]
   ;
 
+  top_binding: [ [
+      id = LIDENT ; "=" ; ut = utype ; ";" -> ((None, ID.of_string id), ut)
+    | "." ; l = LIST1 [ s = mid ; "." -> s ] ; id = LIDENT ; "=" ; ut = utype ; ";" ->
+      ((Some (make_module_path True l), ID.of_string id), ut)
+    ] ]
+  ;
+  top_bindings: [ [
+      l = LIST0 top_binding -> l
+    ] ]
+  ;
+
+
   utype_eoi : [ [ e = utype ; EOI -> e ] ] ;
   structure_eoi : [ [ e = structure ; EOI -> e ] ] ;
   struct_item_eoi : [ [ e = struct_item ; EOI -> e ] ] ;
@@ -302,6 +322,8 @@ EXTEND
   sig_item_eoi : [ [ e = sig_item ; EOI -> e ] ] ;
   module_expr_eoi : [ [ e = module_expr ; EOI -> e ] ] ;
   module_type_eoi : [ [ e = module_type ; EOI -> e ] ] ;
+  top_binding_eoi : [ [ e = top_binding ; EOI -> e ] ] ;
+  top_bindings_eoi : [ [ e = top_bindings ; EOI -> e ] ] ;
 END;
 
 value parse_utype = Grammar.Entry.parse utype ;
@@ -324,6 +346,12 @@ value parse_module_expr_eoi = Grammar.Entry.parse module_expr_eoi ;
 
 value parse_module_type = Grammar.Entry.parse module_type ;
 value parse_module_type_eoi = Grammar.Entry.parse module_type_eoi ;
+
+value parse_top_binding = Grammar.Entry.parse top_binding ;
+value parse_top_binding_eoi = Grammar.Entry.parse top_binding_eoi ;
+
+value parse_top_bindings = Grammar.Entry.parse top_bindings ;
+value parse_top_bindings_eoi = Grammar.Entry.parse top_bindings_eoi ;
 
 value parse_string pf s = do {
   input_file.val := s ;

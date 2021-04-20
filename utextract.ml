@@ -848,6 +848,49 @@ let exec stl =
   dt.migrate_structure dt stl
 end
 
+(** Final extraction: returns a list of:
+
+(module_path_t option * ID.t) * utype_t
+
+where the module_path_t, if present, is an absolute module-path.
+*)
+
+module FinalExtract = struct
+
+let check_closed l =
+  let dt = make_dt () in
+  let old_migrate_utype_t = dt.migrate_utype_t in
+  let defined = List.map fst l in
+  let new_migrate_utype_t dt ut = match ut with
+      Ref (mpopt, id) ->
+      if not (List.mem (mpopt, id) defined) then
+        Fmt.(failwithf "FinalExtract.check_closed: reference %s not defined in extracted list" (Normal.printer ut)) ;
+      ut
+    | _ -> old_migrate_utype_t dt ut in
+  let dt = { dt with migrate_utype_t = new_migrate_utype_t } in
+  l |> List.iter (fun (_, ut) -> ignore(dt.migrate_utype_t dt ut))
+
+let rec extract_stl mpopt acc stl =
+  List.fold_left (extract_st mpopt) acc stl
+
+and extract_st mpopt acc = function
+    StTypes(_, l) ->
+    List.fold_left (fun acc (id, ut) -> ((mpopt, id), ut)::acc) acc l
+
+  | StModuleBinding(mid, MeStruct l) ->
+    let mpopt = match mpopt with None -> Some(TOP mid) | Some mp -> Some(DEREF(mp, mid)) in
+    extract_stl mpopt acc l
+
+  | st -> Fmt.(failwithf "FinalExtract: st should have been erased@.%s@." (Normal.struct_item_printer st))
+
+let exec stl =
+  let l = List.rev (extract_stl None [] stl) in
+  check_closed l ;
+  l
+
+end
+
+
 let full_extract x =
   x
   |> S1ElimImport.exec

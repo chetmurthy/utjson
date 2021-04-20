@@ -372,7 +372,7 @@ let typecheck = "typecheck" >::: (List.map typecheck1 all_files)
 let extract1 f =
   f >:: (fun ctxt ->
       let stl = convert1 f in
-      ignore (full_extract stl)
+      ignore (stl |> full_extract |> FinalExtract.exec)
     )
 
 let extract = "extract" >::: (List.map extract1 all_files)

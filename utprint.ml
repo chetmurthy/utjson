@@ -173,5 +173,16 @@ and pr_atomic pc = fun [
   | ContentEncoding s -> pprintf pc "contentEncoding %p;" qstring s
   | MultipleOf n ->  pprintf pc "multipleOf %s;" (string_of_jsonfloat n)
   ]
+
+and pr_top_binding pc = fun [
+      ((None, id), ut) -> pprintf pc "%s = %p;" (ID.to_string id) print_utype ut
+    | ((Some mp, id), ut) -> pprintf pc "%p.%s = %p;" print_module_path mp (ID.to_string id) print_utype ut
+    ]
+
+and pr_top_bindings pc l =
+    Prtools.vlist pr_top_binding pc l
+
+and print_top_binding pc x = pr_top_binding pc x
+and print_top_bindings pc x = pr_top_bindings pc x
 ;
 
