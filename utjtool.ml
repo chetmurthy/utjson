@@ -64,7 +64,7 @@ let cmd =
     let open Cmdliner in
     let doc = "path for finding UTJ files" in
     let env = Arg.env_var "UTJPATH" ~doc in
-    Arg.(value & opt_all (list ~sep:':' dir) [] & info ["utj-path"] ~env ~docv:"UTJ-PATH" ~doc) in
+    Arg.(value & opt_all (list ~sep:':' string) [] & info ["utj-path"] ~env ~docv:"UTJ-PATH" ~doc) in
 
   let with_predefined =
     let doc = "Add import of predefined.utj." in

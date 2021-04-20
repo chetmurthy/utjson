@@ -4,6 +4,7 @@ open Pa_ppx_utils.Std
 open Ututil
 open Utypes
 open Utmigrate
+open Utio
 
 let load_file ?(with_predefined=false) s =
   let open Fpath in
@@ -144,7 +145,7 @@ let rec tc_utype env ut =
           if List.mem (SiType t) l then
             ut
           else 
-            Fmt.(failwithf "tc_utype: utype %a not found in environment" pp_utype_t ut)
+            Fmt.(failwithf "tc_utype: utype %s not found in environment" (Normal.printer ut))
         | _ -> Fmt.(failwithf "tc_utype: module-path %a did not yield a signature" pp_module_path_t mpath)
       end
     | ut -> old_migrate_utype_t dt ut in

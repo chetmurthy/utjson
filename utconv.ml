@@ -16,14 +16,21 @@ type json =
 
 type json_list = json list [@@deriving show,eq]
 
+let is_capitalized s =
+  let c0 = String.get s 0 in
+  match c0 with
+  'A'..'Z' -> true | _ -> false
 
   let clean_path s =
+    let s0 = s in
     let s = Str.(substitute_first (regexp (quote "#/$defs/")) (fun _ -> "") s) in
     let s = Str.(substitute_first (regexp (quote "#/defs/")) (fun _ -> "") s) in
     let s = Str.(substitute_first (regexp (quote "#/refs/")) (fun _ -> "") s) in
     let s = Str.(substitute_first (regexp (quote "#/definitions/")) (fun _ -> "") s) in
-    let s = Str.(global_substitute (regexp "[#:/.-]") (fun _ -> "_") s) in
-    s
+    let s = Str.(global_substitute (regexp "[#:/.$-]") (fun _ -> "_") s) in
+    if is_capitalized s then
+      "_"^s
+    else s
 
   let typename_of_path s =
     let s = clean_path s in
@@ -42,7 +49,7 @@ type json_list = json list [@@deriving show,eq]
 
     (1) first, replace ".json" with ".utj" before proceeding.
 
-    (2) if that fails, then search for file on filepath
+    (2) search for file on filepath
 
     (3) and if that fails, then map original uri thru urimap.
 
@@ -78,17 +85,18 @@ module CC = struct
     let utj = if Fpath.has_ext "utj" uri then uri
       else if Fpath.has_ext "json" uri then
         Fpath.(uri |> rem_ext |> add_ext "utj")
-      else uri in
+      else
+        Fpath.(uri |> add_ext "utj") in
 
     match t.filepath |> List.find_map (fun dir ->
           let utj' = Fpath.(append (v dir) utj) in
           if utj' |> Bos.OS.File.exists |> Rresult.R.get_ok then
             Some (utj' |> Fpath.to_string)
           else None) with
-      Some s -> ("via filepath", s)
+      Some s -> ("filepath", s)
     | None ->
       match List.assoc s t.urimap with
-        v -> ("via urimap", v)
+        v -> ("urimap", v)
       | exception Not_found ->
         Fmt.(failwithf "CC.map_uri: uri %a not found@.CC: %a@."
                Dump.string s
@@ -96,8 +104,8 @@ module CC = struct
 
   let map_url t url =
     let (uri, typename) = match String.split_on_char '#' url with
-        [s] -> (s, ID.of_string "t")
-      | [uri;fragment] -> (uri, typename_of_path ("#"^fragment)) in
+        ([s] | [s;""]) -> (s, None)
+      | [uri;fragment] -> (uri, Some (typename_of_path ("#"^fragment))) in
     let (via, utj_uri) = map_uri t uri in
     if t.verbose then
       Fmt.(pf stderr "[%s -> %s via %s]\n%!" uri utj_uri via) ;
@@ -177,8 +185,12 @@ let xorList l =
       | _ -> Fmt.(failwithf "path %s mismatched with schema" path)
     in findrec (String.split_on_char '/' path, !entire_schema)
 
+  let assoc_path2type s = assoc_opt s !path2type
+  let add_path2type (s,t) =
+    Stack.push path2type (s, t)
+
   let rec lookup_definition_ref s =
-    match assoc_opt s !path2type with
+    match assoc_path2type s with
       Some v -> v
     | None ->
       let def = match (find_definition s, assoc_opt s !id2node) with
@@ -192,25 +204,25 @@ let xorList l =
       let tname = typename_of_path s in
       let t = Ref(None, tname) in
       Stack.push definitions_worklist (s,def) ;
-      Stack.push path2type (s, t) ;
+      add_path2type (s,t) ;
       t
-
-  let uri2type = ref []
-  let add_uri2type s r = uri2type := (s,r) :: !uri2type
 
   let imports = ref []
   let add_imports s mid = imports := (s, mid):: !imports 
 
   let lookup_import_ref s =
-    match List.assoc s !uri2type with
-      r -> r
-    | exception Not_found ->
-      let mid = newmid() in
-      let (filename, typename) = CC.map_url !cc s in
-      let r = Ref(Some (REL mid),typename) in
-      add_imports filename mid ;
-      add_uri2type s r ;
-      r
+    let (filename, typename) = CC.map_url !cc s in
+    let mid = match List.assoc filename !imports with
+        mid -> mid
+      | exception Not_found ->
+        let mid = newmid() in
+        add_imports filename mid ;
+        mid in begin match typename with
+        None -> 
+        Ref(Some (REL mid), ID.of_string "t")
+      | Some tname ->
+        Ref(Some (DEREF (REL mid, ID.of_string "DEFINITIONS")), tname)
+    end
 
   let lookup_ref s =
     if String.get s 0 = '#' then
@@ -224,7 +236,6 @@ let xorList l =
     definitions_worklist := [] ;
     path2type := [] ;
     counter := 0 ;
-    uri2type := [] ;
     imports := [] ;
     populate_id2node t
 
@@ -319,7 +330,8 @@ let known_keys = documentation_keys@known_useful_keys
        | None -> []
       )@
       (match assoc_opt "properties" l with
-         Some (`Assoc l) ->
+         Some (`Assoc []) -> []
+       | Some (`Assoc l) ->
          [Atomic (List.rev (List.rev_map (fun (k,v) -> Field(k,conv_type0 v)) l))]
        | Some v -> Fmt.(failwithf "conv_type: malformed properties member: %a" pp_json v)
        | None -> []
@@ -610,12 +622,12 @@ let recognize_definitions cc (t : Yojson.Basic.t) = match t with
       | (None, Some (`Assoc l), None) ->
         l |> List.iter (fun (k, v) ->
             if recognize_definition v then
-              ignore(lookup_ref (Printf.sprintf "#/definitions/%s" k))
+              ignore(lookup_ref (Printf.sprintf "#/$defs/%s" k))
           )
       | (None, None, Some (`Assoc l)) ->
         l |> List.iter (fun (k, v) ->
             if recognize_definition v then
-              ignore(lookup_ref (Printf.sprintf "#/definitions/%s" k))
+              ignore(lookup_ref (Printf.sprintf "#/defs/%s" k))
           )
       | (None, None, None) -> ()
       | _ -> Fmt.(failwithf "recognize_definitions: malformed %s" (Yojson.Basic.pretty_to_string t))

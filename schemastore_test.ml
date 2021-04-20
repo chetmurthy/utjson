@@ -343,15 +343,16 @@ let successf (expectf, f) =
     (convert_file ~with_predefined:true (CC.mk())  f)
 
 let convert1 f =
+  let cc = CC.mk ~filepath:["utj-generated"] () in
   let store_fp = "schemastore/src/schemas/json/"^f in
   let override_fp = "schema-overrides/"^f in
-  let cache_fp = "schema-cache/"^f in
+  let httpcache_fp = "http-schema-cache/"^f in
   if override_fp |>  Fpath.v |> Bos.OS.File.exists |> Rresult.R.get_ok then
-    convert_file ~with_predefined:true (CC.mk()) override_fp
-  else if cache_fp |>  Fpath.v |> Bos.OS.File.exists |> Rresult.R.get_ok then
-    convert_file ~with_predefined:true (CC.mk()) cache_fp
+    convert_file ~with_predefined:true cc override_fp
+  else if httpcache_fp |>  Fpath.v |> Bos.OS.File.exists |> Rresult.R.get_ok then
+    convert_file ~with_predefined:true cc httpcache_fp
   else 
-    convert_file ~with_predefined:true (CC.mk()) store_fp
+    convert_file ~with_predefined:true cc store_fp
 
 let convert_check1 f =
   f >:: (fun ctxt ->
@@ -366,7 +367,7 @@ let typecheck1 f =
       ignore (S4Typecheck.exec stl)
     )
 
-let typecheck = "typecheck" >::: (List.map typecheck1 (firstn 100 all_files))
+let typecheck = "typecheck" >::: (List.map typecheck1 (firstn 300 all_files))
 
 let tests = "all" >::: [
     convert_check

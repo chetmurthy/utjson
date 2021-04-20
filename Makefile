@@ -27,8 +27,10 @@ test:: all
 	rm -rf _build && mkdir -p _build
 	./syntax_test
 	./typing_test
-	./schemastore_test || true
 	./eval_test
+	rm -rf utj-generated
+	make -f Schema-Makefile all
+	./schemastore_test || true
 
 utjtool.TEST: utjtool
 	./utjtool --help
@@ -37,7 +39,7 @@ utjtool.TEST: utjtool
 	UTJPATH=_build:.git ./utjtool convert /dev/zero
 	./utjtool convert --utj-path _build:.git --utj-path _build:.git -o /tmp /dev/zero /dev/null
 
-utjtool:: utjtool.ml
+utjtool:: utjtool.ml $(OBJ)
 	$(OCAMLFIND) ocamlc $(DEBUG) $(OCAMLFLAGS) -package yojson,str,sedlex,pa_ppx.runtime,pa_ppx.base.link,fmt,bos,ppx_deriving.show,ppx_deriving_cmdliner,cmdliner -linkpkg -linkall $(OBJ) utjtool.ml -o utjtool
 
 syntax_test: $(OBJ) uttestutil.cmo syntax_test.cmo

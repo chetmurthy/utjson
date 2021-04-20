@@ -1,0 +1,102 @@
+
+TARGETS=utj-generated/http-schema-cache/kubernetesjsonschema.dev/master/_definitions.utj \
+	utj-generated/compilerdefaults-schema.utj \
+	utj-generated/http-schema-cache/json.schemastore.org/azure-iot-edge-deployment-2.0.utj \
+	utj-generated/http-schema-cache/json.schemastore.org/azure-iot-edge-deployment-1.0.utj \
+	utj-generated/schema-overrides/ansible-role-2.9.utj \
+	utj-generated/http-schema-cache/json.schemastore.org/web-manifest.utj \
+	utj-generated/http-schema-cache/json.schemastore.org/web-manifest-app-info.utj \
+	utj-generated/http-schema-cache/json.schemastore.org/tsconfig.utj \
+	utj-generated/http-schema-cache/tools.wmflabs.org/spdx/schema/licenses.utj \
+	utj-generated/http-schema-cache/www.iptc.org/std/ninjs/ninjs-schema_1.3.utj \
+	utj-generated/http-schema-cache/www.iptc.org/std/ninjs/ninjs-schema_1.2.utj \
+	utj-generated/http-schema-cache/www.iptc.org/std/ninjs/ninjs-schema_1.1.utj \
+	utj-generated/http-schema-cache/www.iptc.org/std/ninjs/ninjs-schema_1.0.utj \
+	utj-generated/lsdlschema-3.1.utj \
+	utj-generated/lsdlschema-3.0.utj \
+	utj-generated/lsdlschema-2.0.utj \
+	utj-generated/lsdlschema-1.2.utj \
+	utj-generated/lsdlschema-1.0.utj \
+	utj-generated/lsdlschema-0.7.utj \
+	utj-generated/http-schema-cache/json.schemastore.org/jsbeautifyrc.utj \
+	utj-generated/http-schema-cache/json.schemastore.org/grunt-task.utj \
+	utj-generated/http-schema-cache/json.schemastore.org/jshintrc.utj \
+	utj-generated/http-schema-cache/json.schemastore.org/feed-1.utj \
+
+
+all: $(TARGETS)
+UTJFLAGS=-p -t --utj-path utj-generated
+
+utj-generated/http-schema-cache/kubernetesjsonschema.dev/master/_definitions.utj: http-schema-cache/kubernetesjsonschema.dev/master/_definitions.json
+	./utjtool convert $(UTJFLAGS) -o $@ $<
+
+utj-generated/compilerdefaults-schema.utj: schemastore/src/schemas/json/compilerdefaults.json
+	./utjtool convert $(UTJFLAGS) -o $@ $<
+
+utj-generated/http-schema-cache/json.schemastore.org/azure-iot-edge-deployment-2.0.utj: schema-overrides/azure-iot-edge-deployment-2.0.json
+	./utjtool convert $(UTJFLAGS) -o $@ $<
+
+utj-generated/http-schema-cache/json.schemastore.org/azure-iot-edge-deployment-1.0.utj: schema-overrides/azure-iot-edge-deployment-1.0.json
+	./utjtool convert $(UTJFLAGS) -o $@ $<
+
+utj-generated/schema-overrides/ansible-role-2.9.utj: schema-overrides/ansible-role-2.9.json
+	./utjtool convert $(UTJFLAGS) -o $@ $<
+
+utj-generated/http-schema-cache/json.schemastore.org/web-manifest.utj: schemastore/src/schemas/json/web-manifest.json
+	./utjtool convert $(UTJFLAGS) -o $@ $<
+
+utj-generated/http-schema-cache/json.schemastore.org/web-manifest-app-info.utj: schemastore/src/schemas/json/web-manifest-app-info.json
+	./utjtool convert $(UTJFLAGS) -o $@ $<
+
+utj-generated/http-schema-cache/json.schemastore.org/tsconfig.utj: schemastore/src/schemas/json/tsconfig.json
+	./utjtool convert $(UTJFLAGS) -o $@ $<
+
+utj-generated/http-schema-cache/tools.wmflabs.org/spdx/schema/licenses.utj: schemastore/src/schemas/json/licenses.1.json
+	./utjtool convert $(UTJFLAGS) -o $@ $<
+
+utj-generated/http-schema-cache/www.iptc.org/std/ninjs/ninjs-schema_1.3.utj: schema-overrides/ninjs-schema_1.3.json
+	./utjtool convert $(UTJFLAGS) -o $@ $<
+
+utj-generated/http-schema-cache/www.iptc.org/std/ninjs/ninjs-schema_1.2.utj: schema-overrides/ninjs-schema_1.2.json
+	./utjtool convert $(UTJFLAGS) -o $@ $<
+
+utj-generated/http-schema-cache/www.iptc.org/std/ninjs/ninjs-schema_1.1.utj: schema-overrides/ninjs-schema_1.1.json
+	./utjtool convert $(UTJFLAGS) -o $@ $<
+
+utj-generated/http-schema-cache/www.iptc.org/std/ninjs/ninjs-schema_1.0.utj: schema-overrides/ninjs-schema_1.0.json
+	./utjtool convert $(UTJFLAGS) -o $@ $<
+
+utj-generated/lsdlschema-3.1.utj: schemastore/src/schemas/json/lsdlschema-3.1.json
+	./utjtool convert $(UTJFLAGS) -o $@ $<
+
+utj-generated/lsdlschema-3.0.utj: schemastore/src/schemas/json/lsdlschema-3.0.json
+	./utjtool convert $(UTJFLAGS) -o $@ $<
+
+utj-generated/lsdlschema-2.0.utj: schemastore/src/schemas/json/lsdlschema-2.0.json
+	./utjtool convert $(UTJFLAGS) -o $@ $<
+
+utj-generated/lsdlschema-1.2.utj: schemastore/src/schemas/json/lsdlschema-1.2.json
+	./utjtool convert $(UTJFLAGS) -o $@ $<
+
+utj-generated/lsdlschema-1.0.utj: schemastore/src/schemas/json/lsdlschema-1.0.json
+	./utjtool convert $(UTJFLAGS) -o $@ $<
+
+utj-generated/lsdlschema-0.7.utj: schemastore/src/schemas/json/lsdlschema-0.7.json
+	./utjtool convert $(UTJFLAGS) -o $@ $<
+
+utj-generated/http-schema-cache/json.schemastore.org/jsbeautifyrc.utj: schemastore/src/schemas/json/jsbeautifyrc.json
+	./utjtool convert $(UTJFLAGS) -o $@ $<
+
+utj-generated/http-schema-cache/json.schemastore.org/grunt-task.utj: schema-overrides/grunt-task.json
+	./utjtool convert $(UTJFLAGS) -o $@ $<
+
+utj-generated/http-schema-cache/json.schemastore.org/jshintrc.utj: schemastore/src/schemas/json/jshintrc.json
+	./utjtool convert $(UTJFLAGS) -o $@ $<
+
+utj-generated/http-schema-cache/json.schemastore.org/feed-1.utj: schemastore/src/schemas/json/feed-1.json
+	./utjtool convert $(UTJFLAGS) -o $@ $<
+
+
+
+clean:
+	rm -rf utj-generated

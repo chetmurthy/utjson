@@ -48,35 +48,6 @@
       ],
       "default": "slide"
     },
-    "models": {
-      "type": "object",
-      "base": {
-        "properties": {
-          "type": {
-            "type": "string",
-            "description": "Model class name",
-            "enum": [
-              "sap.ui.model.resource.ResourceModel",
-              "sap.ui.model.odata.v4.ODataModel",
-              "sap.ui.model.odata.v2.ODataModel",
-              "sap.ui.model.json.JSONModel"
-            ]
-          },
-          "uri": {
-            "type": "string",
-            "description": "Relative URL in the component, taking embeddedBy into account if filled, or server for absolute model"
-          },
-          "settings": {
-            "type": "object",
-            "description": "Object that is passed to the model constructor"
-          },
-          "dataSource": {
-            "type": "string",
-            "description": "String of key or alias from sap.app dataSources to reference an existing data source; the type, uri and settings properties are set according to the data source's type, uri and settings (if not already defined). If the type under sap.app dataSources is OData, an OData Model V2 is created automatically. If you need an OData Model V1, specify the type as well."
-          }
-        }
-      }
-    },
     "modules": {
       "type": "object",
       "properties": {
