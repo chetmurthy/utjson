@@ -8,7 +8,7 @@ let migration_error feature =
   raise (Migration_error feature)
 
 let _migrate_list subrw0 __dt__ l =
-  List.map (subrw0 __dt__) l
+  l |> List.rev_map (subrw0 __dt__) |> List.rev
 
 type base_type_t = [%import: Utypes.base_type_t]
 and 'a bound_t = [%import: 'a Utypes.Bound.t]

@@ -367,7 +367,7 @@ let typecheck1 f =
       ignore (S4Typecheck.exec stl)
     )
 
-let typecheck = "typecheck" >::: (List.map typecheck1 (firstn 300 all_files))
+let typecheck = "typecheck" >::: (List.map typecheck1 all_files)
 
 let tests = "all" >::: [
     convert_check

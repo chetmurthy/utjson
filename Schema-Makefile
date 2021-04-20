@@ -22,7 +22,18 @@ TARGETS=utj-generated/http-schema-cache/kubernetesjsonschema.dev/master/_definit
 	utj-generated/http-schema-cache/json.schemastore.org/grunt-task.utj \
 	utj-generated/http-schema-cache/json.schemastore.org/jshintrc.utj \
 	utj-generated/http-schema-cache/json.schemastore.org/feed-1.utj \
-
+	utj-generated/http-schema-cache/json-schema.org/draft-04/schema.utj \
+	utj-generated/http-schema-cache/json.schemastore.org/jsonld.utj \
+	utj-generated/http-schema-cache/json.schemastore.org/schema-org-thing.utj \
+	utj-generated/sarif-2.1.0-rtm.5.utj \
+	utj-generated/sarif-2.1.0-rtm.4.utj \
+	utj-generated/sarif-2.1.0-rtm.3.utj \
+	utj-generated/sarif-2.1.0-rtm.2.utj \
+	utj-generated/sarif-2.1.0-rtm.1.utj \
+	utj-generated/sarif-2.1.0-rtm.0.utj \
+	utj-generated/http-schema-cache/json.schemastore.org/sarif-2.1.0-rtm.0.utj \
+	utj-generated/sarif-schema-2.1.0.utj \
+	utj-generated/http-schema-cache/docs.renovatebot.com/renovate-schema.utj \
 
 all: $(TARGETS)
 UTJFLAGS=-p -t --utj-path utj-generated
@@ -93,9 +104,44 @@ utj-generated/http-schema-cache/json.schemastore.org/grunt-task.utj: schema-over
 utj-generated/http-schema-cache/json.schemastore.org/jshintrc.utj: schemastore/src/schemas/json/jshintrc.json
 	./utjtool convert $(UTJFLAGS) -o $@ $<
 
-utj-generated/http-schema-cache/json.schemastore.org/feed-1.utj: schemastore/src/schemas/json/feed-1.json
+utj-generated/http-schema-cache/json.schemastore.org/feed-1.utj: schema-overrides/feed-1.json
 	./utjtool convert $(UTJFLAGS) -o $@ $<
 
+utj-generated/http-schema-cache/json-schema.org/draft-04/schema.utj: schema-overrides/schema-draft-v4.json
+	./utjtool convert $(UTJFLAGS) -o $@ $<
+
+utj-generated/http-schema-cache/json.schemastore.org/jsonld.utj: schemastore/src/schemas/json/jsonld.json
+	./utjtool convert $(UTJFLAGS) -o $@ $<
+
+utj-generated/http-schema-cache/json.schemastore.org/schema-org-thing.utj: schemastore/src/schemas/json/schema-org-thing.json
+	./utjtool convert $(UTJFLAGS) -o $@ $<
+
+utj-generated/sarif-2.1.0-rtm.5.utj: schemastore/src/schemas/json/sarif-2.1.0-rtm.5.json
+	./utjtool convert $(UTJFLAGS) -o $@ $<
+
+utj-generated/sarif-2.1.0-rtm.4.utj: schemastore/src/schemas/json/sarif-2.1.0-rtm.4.json
+	./utjtool convert $(UTJFLAGS) -o $@ $<
+
+utj-generated/sarif-2.1.0-rtm.3.utj: schemastore/src/schemas/json/sarif-2.1.0-rtm.3.json
+	./utjtool convert $(UTJFLAGS) -o $@ $<
+
+utj-generated/sarif-2.1.0-rtm.2.utj: schemastore/src/schemas/json/sarif-2.1.0-rtm.2.json
+	./utjtool convert $(UTJFLAGS) -o $@ $<
+
+utj-generated/sarif-2.1.0-rtm.1.utj: schemastore/src/schemas/json/sarif-2.1.0-rtm.1.json
+	./utjtool convert $(UTJFLAGS) -o $@ $<
+
+utj-generated/sarif-2.1.0-rtm.0.utj: schemastore/src/schemas/json/sarif-2.1.0-rtm.0.json
+	./utjtool convert $(UTJFLAGS) -o $@ $<
+
+utj-generated/http-schema-cache/json.schemastore.org/sarif-2.1.0-rtm.0.utj: schemastore/src/schemas/json/sarif-2.1.0-rtm.0.json
+	./utjtool convert $(UTJFLAGS) -o $@ $<
+
+utj-generated/sarif-schema-2.1.0.utj: schemastore/src/schemas/json/sarif-2.1.0.json
+	./utjtool convert $(UTJFLAGS) -o $@ $<
+
+utj-generated/http-schema-cache/docs.renovatebot.com/renovate-schema.utj: schema-overrides/renovate-schema.json
+	./utjtool convert $(UTJFLAGS) -o $@ $<
 
 
 clean:

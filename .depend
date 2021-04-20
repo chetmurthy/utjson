@@ -98,10 +98,14 @@ utio.cmx : \
     utparse0.cmx
 utjtool.cmo : \
     ututil.cmo \
+    uttypecheck.cmo \
+    utparse0.cmo \
     utio.cmo \
     utconv.cmo
 utjtool.cmx : \
     ututil.cmx \
+    uttypecheck.cmx \
+    utparse0.cmx \
     utio.cmx \
     utconv.cmx
 uttestutil.cmo :
@@ -110,12 +114,14 @@ uttypecheck.cmo : \
     utypes.cmi \
     ututil.cmo \
     utparse0.cmo \
-    utmigrate.cmo
+    utmigrate.cmo \
+    utio.cmo
 uttypecheck.cmx : \
     utypes.cmx \
     ututil.cmx \
     utparse0.cmx \
-    utmigrate.cmx
+    utmigrate.cmx \
+    utio.cmx
 ututil.cmo :
 ututil.cmx :
 utmigrate.cmo : \

@@ -159,7 +159,7 @@ and tc_struct_item env = function
           env
     else env in
     let l =
-      l |> List.map (fun (id, ut) -> (id, tc_utype subenv ut)) in
+      l |> List.rev_map (fun (id, ut) -> (id, tc_utype subenv ut)) |> List.rev in
     let newenv = List.fold_left (fun env (id, _) -> TEnv.push_type env id) env l in
     (newenv,
      (StTypes(recflag, l),

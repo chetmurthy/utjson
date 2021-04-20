@@ -225,6 +225,8 @@ let xorList l =
     end
 
   let lookup_ref s =
+    if s = "#" then
+      Fmt.(failwithf "Cannot have a ref %a: need at least some kind of name; use $id" Dump.string s) ;
     if String.get s 0 = '#' then
       lookup_definition_ref s
     else

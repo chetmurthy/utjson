@@ -266,7 +266,7 @@ let printing = "printing" >::: [
       ; ({|object && [
     "productid": integer;
     "productName": string;
-    "price": number && [ bounds (0.,max]; ];
+    "price": number && [ bounds (0.0,max]; ];
     "tags": array && [
         of string;
         size [1,max);
@@ -305,7 +305,7 @@ and y = number;|},
       ; ({|local import "https://example.com/geographical-location.schema.json" as GeoLoc; in type nonrec product = object && [
     "productid": integer;
     "productName": string;
-    "price": number && [ bounds (0.,max]; ];
+    "price": number && [ bounds (0.0,max]; ];
     "tags": array && [
         of string;
         size [1,max);

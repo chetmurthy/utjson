@@ -15,6 +15,13 @@ value qstring pc s =
 ;
 value string pc s = pprintf pc "%s" s ;
 
+value string_of_jsonfloat f =
+  let s = string_of_float f in
+  if String.get s (String.length s - 1) = '.' then
+    s^"0"
+  else s
+;
+
 value rec print_utype pc x = pr_utype pc x
 and print_module_expr pc x = pr_module_expr pc x
 and print_module_type pc x = pr_module_type pc x
@@ -37,8 +44,8 @@ and print_range_constraint pc (lo,hi) =
   let open Bound in 
   pprintf pc "%s%s,%s%s"
     (if lo.exclusive then "(" else "[")
-    (match lo.it with [ None -> "min" | Some n -> string_of_float n ])
-    (match hi.it with [ None -> "max" | Some n -> string_of_float n ])
+    (match lo.it with [ None -> "min" | Some n -> string_of_jsonfloat n ])
+    (match hi.it with [ None -> "max" | Some n -> string_of_jsonfloat n ])
     (if hi.exclusive then ")" else "]")
 
 
@@ -164,7 +171,7 @@ and pr_atomic pc = fun [
   | PropertyNames t -> pprintf pc "propertyNames %p;" print_utype t
   | ContentMediaType s -> pprintf pc "contentMediaType %p;" qstring s
   | ContentEncoding s -> pprintf pc "contentEncoding %p;" qstring s
-  | MultipleOf n ->  pprintf pc "multipleOf %f;" n
+  | MultipleOf n ->  pprintf pc "multipleOf %s;" (string_of_jsonfloat n)
   ]
 ;
 
