@@ -22,7 +22,6 @@ let is_capitalized s =
   'A'..'Z' -> true | _ -> false
 
   let clean_path s =
-    let s0 = s in
     let s = Str.(substitute_first (regexp (quote "#/$defs/")) (fun _ -> "") s) in
     let s = Str.(substitute_first (regexp (quote "#/defs/")) (fun _ -> "") s) in
     let s = Str.(substitute_first (regexp (quote "#/refs/")) (fun _ -> "") s) in

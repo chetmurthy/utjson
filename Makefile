@@ -9,14 +9,14 @@ IMPORT_OCAMLCFLAGS = -ppopt -pa_import-I -ppopt . -ppopt -pa_passthru-debug
 
 
 OBJ=ututil.cmo utypes.cmo utlexing.cmo utmigrate.cmo utparse0.cmo utprint.cmo \
-    utio.cmo utconv.cmo uttypecheck.cmo uteval.cmo
-OML=ututil.ml uttestutil.ml utio.ml utconv.ml uttypecheck.ml uteval.ml \
-    syntax_test.ml schemastore_test.ml typing_test.ml eval_test.ml utjtool.ml
+    utio.cmo utconv.cmo uttypecheck.cmo utextract.cmo
+OML=ututil.ml uttestutil.ml utio.ml utconv.ml uttypecheck.ml utextract.ml \
+    syntax_test.ml schemastore_test.ml typing_test.ml extract_test.ml utjtool.ml
 IMPORT_OML=utypes.ml utmigrate.ml
 LEXML=utlexing.ml
 RML=utparse0.ml utprint.ml
 
-all: $(OBJ) utjtool syntax_test typing_test schemastore_test eval_test
+all: $(OBJ) utjtool syntax_test typing_test schemastore_test extract_test
 
 doc: README.html
 
@@ -27,7 +27,7 @@ test:: all
 	rm -rf _build && mkdir -p _build
 	./syntax_test
 	./typing_test
-	./eval_test
+	./extract_test
 	rm -rf utj-generated
 	make -f Schema-Makefile all
 	./schemastore_test || true
@@ -51,7 +51,7 @@ typing_test: $(OBJ) uttestutil.cmo typing_test.cmo
 schemastore_test: $(OBJ) uttestutil.cmo schemastore_test.cmo
 	$(OCAMLFIND) ocamlc $(DEBUG) $(OCAMLCFLAGS) -package $(PACKAGES),oUnit -linkpkg -linkall -syntax camlp5r $^ -o $@
 
-eval_test: $(OBJ) uttestutil.cmo eval_test.cmo
+extract_test: $(OBJ) uttestutil.cmo extract_test.cmo
 	$(OCAMLFIND) ocamlc $(DEBUG) $(OCAMLCFLAGS) -package $(PACKAGES),oUnit -linkpkg -linkall -syntax camlp5r $^ -o $@
 
 utmigrate.cmo: utmigrate.ml

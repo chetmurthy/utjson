@@ -10,7 +10,7 @@ open Utio
 open Utio.Debug
 open Utconv
 open Uttypecheck
-open Uteval
+open Utextract
 
 let simple = "simple" >::: [
     "simple" >:: (fun ctxt ->
