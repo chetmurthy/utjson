@@ -162,8 +162,7 @@ and pr_atomic pc = fun [
   | Size sc -> pprintf pc "size %p;" print_size_constraint sc
   | StringRE re -> pprintf pc "/%s/" (Escape.regexp re)
   | NumberBound rc -> pprintf pc "bounds %p;" print_range_constraint rc
-  | Sealed True -> pprintf pc "sealed;"
-  | Sealed False -> pprintf pc "unsealed;"
+  | Sealed -> pprintf pc "sealed;"
   | OrElse t -> pprintf pc "orelse %p;" print_utype t
   | Enum l -> pprintf pc "enum %p;" (plist_with "," print_json 0) l
   | Default j -> pprintf pc "default %p;" print_json j

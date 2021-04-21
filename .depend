@@ -160,6 +160,18 @@ uttypecheck.cmx : \
     utio.cmx
 ututil.cmo :
 ututil.cmx :
+utvalidate.cmo : \
+    utypes.cmi \
+    ututil.cmo \
+    uttypecheck.cmo \
+    utmigrate.cmo \
+    utio.cmo
+utvalidate.cmx : \
+    utypes.cmx \
+    ututil.cmx \
+    uttypecheck.cmx \
+    utmigrate.cmx \
+    utio.cmx
 utmigrate.cmo : \
     utypes.cmi
 utmigrate.cmx : \

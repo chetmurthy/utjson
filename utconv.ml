@@ -456,7 +456,8 @@ let known_keys = documentation_keys@known_useful_keys
        | None -> []
       )@
       (match assoc_opt "additionalProperties" l with
-         Some (`Bool b) -> [And(Simple JObject, Atomic[Sealed (not b)])]
+         Some (`Bool false) -> [And(Simple JObject, Atomic[Sealed])]
+       | Some (`Bool true) -> [Simple JObject]
        | Some (`Assoc _ as j) ->
          let l = conv_type_l j in
          if l = [] then Fmt.(failwithf "additionalProperties %a yielded no type-constraints" pp_json j) ;
@@ -465,7 +466,8 @@ let known_keys = documentation_keys@known_useful_keys
        | None -> []
       )@
       (match assoc_opt "additionalItems" l with
-         Some (`Bool b) -> [And(Simple JArray, Atomic[Sealed (not b)])]
+         Some (`Bool false) -> [And(Simple JArray, Atomic[Sealed])]
+       | Some (`Bool true) -> []
        | Some (`Assoc _ as j) ->
          let l = conv_type_l j in
          if l = [] then Fmt.(failwithf "additionalItems %a yielded no type-constraints" pp_json j) ;
@@ -474,7 +476,8 @@ let known_keys = documentation_keys@known_useful_keys
        | None -> []
       )@
       (match assoc_opt "unevaluatedProperties" l with
-         Some (`Bool b) -> [And(Simple JObject, Atomic[Sealed (not b)])]
+         Some (`Bool false) -> [And(Simple JObject, Atomic[Sealed])]
+       | Some (`Bool true) -> []
        | Some (`Assoc _ as j) ->
          let l = conv_type_l j in
          if l = [] then Fmt.(failwithf "unevaluatedProperties %a yielded no type-constraints" pp_json j) ;

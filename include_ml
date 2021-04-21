@@ -85,6 +85,8 @@ open Uttypecheck ;;
 open Utextract ;;
 #load "utsimplify.cmo";;
 open Utsimplify ;;
+#load "utvalidate.cmo";;
+open Utvalidate ;;
 (*
 #load "syntax_test.cmo";;
 open Syntax_test ;;
@@ -108,13 +110,14 @@ open Eval_test ;;
 #trace ElimCastCast.exec ;;
 #trace S10ReduceFunctorApp.exec ;;
 *)
+(*
 #load "simplify_test.cmo";;
 open Simplify_test ;;
+*)
 
-(*
 #load "schemastore_test.cmo";;
 open Schemastore_test ;;
-*)
+
 (*
 #use "jq_examples.ml";;
 *)

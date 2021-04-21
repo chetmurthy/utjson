@@ -149,8 +149,7 @@ EXTEND
       | n=INT ; ":" ; t=utype -> ArrayIndex (int_of_string n) t
       | "size" ; s=size_constraint -> Size s
       | "bounds" ; s=range_constraint -> NumberBound s
-      | "sealed" -> Sealed True
-      | "unsealed" -> Sealed False
+      | "sealed" -> Sealed
       | "orelse" ; t=utype -> OrElse t
       | "multipleOf" ; n = FLOAT -> MultipleOf (float_of_string n)
       | "enum" ; l = LIST1 json SEP "," -> Enum l

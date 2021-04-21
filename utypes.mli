@@ -36,7 +36,7 @@ type atomic_utype_t =
   | Size of size_constraint_t
   | StringRE of string
   | NumberBound of range_constraint_t
-  | Sealed of bool
+  | Sealed
   | OrElse of utype_t
   | MultipleOf of float
   | Enum of Yojson.Basic.t list
