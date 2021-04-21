@@ -172,6 +172,28 @@ utvalidate.cmx : \
     uttypecheck.cmx \
     utmigrate.cmx \
     utio.cmx
+validate_test.cmo : \
+    utypes.cmi \
+    utvalidate.cmo \
+    uttypecheck.cmo \
+    uttestutil.cmo \
+    utsimplify.cmo \
+    utprint.cmo \
+    utparse0.cmo \
+    utio.cmo \
+    utextract.cmo \
+    utconv.cmo
+validate_test.cmx : \
+    utypes.cmx \
+    utvalidate.cmx \
+    uttypecheck.cmx \
+    uttestutil.cmx \
+    utsimplify.cmx \
+    utprint.cmx \
+    utparse0.cmx \
+    utio.cmx \
+    utextract.cmx \
+    utconv.cmx
 utmigrate.cmo : \
     utypes.cmi
 utmigrate.cmx : \
