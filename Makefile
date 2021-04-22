@@ -42,7 +42,7 @@ utjtool.TEST: utjtool
 	./utjtool convert --utj-path _build:.git --utj-path _build:.git -o /tmp /dev/zero /dev/null
 
 utjtool:: utjtool.ml $(OBJ)
-	$(OCAMLFIND) ocamlc $(DEBUG) $(OCAMLFLAGS) -package yojson,str,sedlex,pa_ppx.runtime,pa_ppx.base.link,fmt,bos,ppx_deriving.show,ppx_deriving_cmdliner,cmdliner -linkpkg -linkall $(OBJ) utjtool.ml -o utjtool
+	$(OCAMLFIND) ocamlc $(DEBUG) $(OCAMLFLAGS) -package yojson,str,sedlex,pa_ppx.runtime,pa_ppx.base.link,fmt,bos,cmdliner -linkpkg -linkall $(OBJ) utjtool.ml -o utjtool
 
 syntax_test: $(OBJ) uttestutil.cmo syntax_test.cmo
 	$(OCAMLFIND) ocamlc $(DEBUG) $(OCAMLCFLAGS) -package $(PACKAGES),oUnit -linkpkg -linkall -syntax camlp5r $^ -o $@

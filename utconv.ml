@@ -645,6 +645,7 @@ let conv_schema cc t =
       None -> Fmt.(pf stderr "WARNING: top_conv_type: conversion produced no result\n") ; UtTrue
     | Some t -> t in
   let defs = conv_definitions() in
+  let defs = List.stable_sort Stdlib.compare defs in
   let l = List.map (fun (id, mid) -> StImport(id, mid)) !imports in
   let l = if defs <> [] then
       l@[
