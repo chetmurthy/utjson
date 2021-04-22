@@ -1,7 +1,0 @@
-local type rec group = object && [
-    "hosts": string || object && [ /[a-zA-Z.-_0-9]/ : (null || object); ];
-    "vars": object;
-    "children": [ /[a-zA-Z-_0-9]/ : group; ];
-];
-in type nonrec t = object && [ "all": group; ];
-end;

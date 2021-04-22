@@ -115,9 +115,13 @@ open Eval_test ;;
 open Simplify_test ;;
 *)
 
+#load "validate_test.cmo";;
+open Validate_test ;;
+
+(*
 #load "schemastore_test.cmo";;
 open Schemastore_test ;;
-
+*)
 (*
 #use "jq_examples.ml";;
 *)

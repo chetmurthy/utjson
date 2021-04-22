@@ -468,7 +468,7 @@ module Predefined = struct
       "productId": .Predefined.integer;
       "productName": string;
       "price": number && [ bounds (0.0,max]; ];
-      "tags": array && [ of string; ] && [ unique; ] && array && [ size [1,max]; ];
+      "tags": array && [ of string; ] && [ unique; ] && [ size [1,max]; ];
       "dimensions": object && [
           "length": number;
           "width": number;
@@ -505,7 +505,7 @@ t = object && [
     "productId": .Predefined.integer;
     "productName": string;
     "price": number && [ bounds (0.0,max]; ];
-    "tags": array && [ of string; ] && [ unique; ] && array && [ size [1,max]; ];
+    "tags": array && [ of string; ] && [ unique; ] && [ size [1,max]; ];
     "dimensions": object && [
         "length": number;
         "width": number;

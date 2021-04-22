@@ -5,6 +5,18 @@ open Utio
 open Utmigrate
 open Uttypecheck
 
+module REC = struct
+  let cache = ref []
+  let get s =
+    match List.assoc s !cache with
+      v -> v
+    | exception Not_found ->
+      let re = Pcre.regexp s in
+      Stack.push cache (s,re) ;
+      re
+end
+module RECache = REC
+
 let lookup_tid tdl (mpopt, id as tid) =
   begin match List.assoc tid tdl with
       t -> t
@@ -142,17 +154,29 @@ let tdl = ref []
         | Some (Ctxt.Assoc { validated_keys ; sealed=true ; patterns = [] ; orelse=None }) ->
           l |> List.for_all (fun (k, _) -> List.mem k validated_keys)
 
-        (* TODO add support for patterns HERE *)
-        | Some (Ctxt.Assoc { validated_keys ; sealed=false ; patterns = [] ; orelse=Some ut }) ->
-          l |> List.for_all (fun (k, v) ->
-              if List.mem k validated_keys then true
-              else enter_utype v ut)
+        | Some (Ctxt.Assoc ({ validated_keys ; sealed=false } as a)) ->
+          finish_assoc l a
         | Some _ -> assert false
       end
     | _ -> begin match utype j Ctxt.start_other ut with
           None -> false
         | Some _ -> true
       end
+
+  and finish_assoc l = function
+      { validated_keys ; sealed=false ; patterns ; orelse } ->
+      l |> List.for_all (fun (k, j) ->
+          if List.mem k validated_keys then true
+          else match patterns |> List.find_map (fun (restr, ut) ->
+              if Pcre.pmatch ~rex:(REC.get restr) k then Some ut else None) with
+            Some ut -> enter_utype j ut
+          | None ->
+            match orelse with
+              None -> true
+            | Some ut -> enter_utype j ut
+        )
+
+
 
   and atomic_type_list j ctxt l =
     List.fold_left (fun ctxt t ->
@@ -218,8 +242,10 @@ let tdl = ref []
   | (`Float f, MultipleOf n) ->
     float_multipleOf ctxt f n
 
+  | (j, Enum jl) ->
+    if List.mem j jl then Some ctxt else None
+
 (*
-  | Enum of Yojson.Basic.t list
   | Default of Yojson.Basic.t
   | Format of string
   | ContentMediaType of string

@@ -5,7 +5,7 @@ and primitiveType = string && [ enum "null", "boolean", "int", "long", "float", 
 ]
 and primitiveTypeWithMetadata = object && [ "type": primitiveType; ] && [ required "type"; ]
 and customTypeReference = string && [ /^[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)*$/ ] && not primitiveType
-and avroUnion = array && [ of avroSchema; ] && array && [ size [1,max]; ]
+and avroUnion = array && [ of avroSchema; ] && [ size [1,max]; ]
 and avroField = object && [
     "name": name;
     "type": types;

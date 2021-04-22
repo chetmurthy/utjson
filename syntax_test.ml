@@ -344,7 +344,7 @@ let item_to_string t = print_struct_item Pprintf.empty_pc t
 let item_printer x = "<<"^(show_struct_item_t x)^">>"
 let item_cmp = equal_struct_item_t
 
-let structure_printer x = structure_printer (normalize_structure x)
+let structure_printer x = Normal.structure_printer (normalize_structure x)
 let structure_cmp a b = structure_cmp (normalize_structure a) (normalize_structure b)
 
 let success (expect, f) =
@@ -354,7 +354,7 @@ let success (expect, f) =
 
 let successf (expectf, f) =
   let filepath = ["schema-golden/schema-overrides"] in
-  assert_equal ~msg:f ~printer:Normal.structure_printer ~cmp:structure_cmp
+  assert_equal ~msg:f ~printer:structure_printer ~cmp:structure_cmp
     (load_file expectf)
     (convert_file (CC.mk ~filepath ()) f)
 

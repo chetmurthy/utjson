@@ -368,7 +368,7 @@ let known_keys = documentation_keys@known_useful_keys
            | Some (`Int n) -> Some n
            | Some (`Float f) -> Some (int_of_float f)
            | Some j -> Fmt.(failwithf "conv_type: maxLength must be number: %a" pp_json j) in
-         [And(Simple JString, Atomic [(Size Bound.({it=min; exclusive = false}, {it=max; exclusive = false}))])]
+         [Atomic [(Size Bound.({it=min; exclusive = false}, {it=max; exclusive = false}))]]
       )@
       (match (assoc_opt "minItems" l, assoc_opt "maxItems" l) with
          (None, None) -> []
@@ -383,7 +383,7 @@ let known_keys = documentation_keys@known_useful_keys
            | Some (`Float f) -> int_of_float f
            | Some j -> Fmt.(failwithf "conv_type: minItems must be number: %a" pp_json j)
            | None -> 0 in
-         [And(Simple JArray, Atomic [(Size Bound.({it=min; exclusive = false}, {it=max; exclusive = false}))])]
+         [Atomic [(Size Bound.({it=min; exclusive = false}, {it=max; exclusive = false}))]]
       )@
       (match (assoc_opt "minProperties" l, assoc_opt "maxProperties" l) with
          (None, None) -> []

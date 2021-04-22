@@ -5,10 +5,10 @@
   "description": "Root schema of Ansible Playbook",
   "definitions": {
     "any_errors_fatal": {
-      "$ref": "#/definitions/boolean"
+      "$ref": "#/definitions/_boolean"
     },
     "become": {
-      "$ref": "#/definitions/boolean"
+      "$ref": "#/definitions/_boolean"
     },
     "become_flags": {
       "type": "string"
@@ -28,7 +28,7 @@
     "become_user": {
       "type": "string"
     },
-    "boolean": {
+    "_boolean": {
       "anyOf": [
         {
           "type": "boolean"
@@ -46,7 +46,7 @@
       ]
     },
     "check_mode": {
-      "$ref": "#/definitions/boolean"
+      "$ref": "#/definitions/_boolean"
     },
     "connection": {
       "type": "string",
@@ -90,7 +90,7 @@
       ]
     },
     "diff": {
-      "$ref": "#/definitions/boolean"
+      "$ref": "#/definitions/_boolean"
     },
     "environment": {
       "patternProperties": {
@@ -123,12 +123,12 @@
       }
     },
     "force_handlers": {
-      "$ref": "#/definitions/boolean"
+      "$ref": "#/definitions/_boolean"
     },
     "gather_facts": {
       "anyOf": [
         {
-          "$ref": "#/definitions/boolean"
+          "$ref": "#/definitions/_boolean"
         },
         {
           "$ref": "#/definitions/gather_subset"
@@ -165,7 +165,7 @@
       ]
     },
     "ignore_errors": {
-      "$ref": "#/definitions/boolean"
+      "$ref": "#/definitions/_boolean"
     },
     "max_fail_percentage": {
       "type": "integer"
@@ -177,7 +177,7 @@
       "type": "string"
     },
     "no_log": {
-      "$ref": "#/definitions/boolean"
+      "$ref": "#/definitions/_boolean"
     },
     "serial": {
       "anyOf": [
@@ -214,7 +214,7 @@
     }
   },
   "type": "array",
-  "minLength": 1,
+  "minItems": 1,
   "items": {
     "title": "Ansible Playbook schema",
     "type": "object",
@@ -401,7 +401,7 @@
             "$ref": "schema-overrides/ansible-role-2.9.json"
           }
         ],
-        "minLength": 1
+        "minItems": 1
       },
       "vars": {
         "default": {},

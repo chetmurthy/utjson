@@ -12,7 +12,7 @@ type nonrec t = object && [
         "libraries": array && [
             of object && [
                 "userSymbol": string && [ default "OAuth2"; ];
-                "libraryId": string && (string && [ size [57,57]; ]) && [ default "1B7FSrk5Zi6L1rSxxTDgDEUsPzlukDsi4KGuTMorsTQHhGBzBkMun4iDF"; ];
+                "libraryId": string && [ size [57,57]; ] && [ default "1B7FSrk5Zi6L1rSxxTDgDEUsPzlukDsi4KGuTMorsTQHhGBzBkMun4iDF"; ];
                 "version": string && [ default 32; ];
                 "developmentMode": boolean && [ default true; ];
 ] && [ required "userSymbol",  "libraryId",  "version"; ];

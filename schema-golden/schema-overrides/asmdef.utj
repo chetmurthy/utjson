@@ -11,9 +11,9 @@ type rec platformValues = array && [
 end ;
 open DEFINITIONS ;
 type nonrec t = object && [
-    "name": string && string && [ size [1,max]; ];
-    "rootNamespace": string && string && [ size [1,max]; ];
-    "references": array && [ of string && string && [ size [1,max]; ]; ] && [ unique; ];
+    "name": string && [ size [1,max]; ];
+    "rootNamespace": string && [ size [1,max]; ];
+    "references": array && [ of string && [ size [1,max]; ]; ] && [ unique; ];
     "includePlatforms": platformValues;
     "excludePlatforms": platformValues;
     "allowUnsafeCode": boolean && [ default false; ];
@@ -31,12 +31,12 @@ type nonrec t = object && [
 ] && [ required "name",  "expression",  "define"; ];
 ] && [ unique; ];
 ] && ([
-    "includePlatforms": array && [ size [1,max]; ];
-    "excludePlatforms": array && [ size [0,0]; ];
+    "includePlatforms": [ size [1,max]; ];
+    "excludePlatforms": [ size [0,0]; ];
 ] || [
-    "includePlatforms": array && [ size [0,0]; ];
-    "excludePlatforms": array && [ size [1,max]; ];
+    "includePlatforms": [ size [0,0]; ];
+    "excludePlatforms": [ size [1,max]; ];
 ] || [
-    "includePlatforms": array && [ size [0,0]; ];
-    "excludePlatforms": array && [ size [0,0]; ];
+    "includePlatforms": [ size [0,0]; ];
+    "excludePlatforms": [ size [0,0]; ];
 ]) && [ required "name"; ]; end;

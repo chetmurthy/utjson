@@ -3,7 +3,7 @@ import "schema-golden/schema-overrides/geographical-location.schema.utj" as M0;
     "productId": Predefined.integer;
     "productName": string;
     "price": number && [ bounds (0.,max] ];
-    "tags": array && [ of string ] && [ unique ] && array && [ size [1,max] ];
+    "tags": array && [ of string ] && [ unique ] && [ size [1,max] ];
     "dimensions": object && [
         "length": number;
         "width": number;
