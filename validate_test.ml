@@ -71,12 +71,18 @@ let exceptions = "exceptions" >::: [
     success_file ("schema-overrides/product-schema.json","schema-overrides/product.json")
   ; success_file ("schema-overrides/ansible-inventory-FIXED.utj","schemastore/src/test/ansible-inventory/inventory.json")
   ; success_file ("schema-overrides/ansible-inventory-FIXED.utj","schemastore/src/test/ansible-inventory/inventory-2.json")
+  ; success_file ("schema-overrides/azure-iot-edge-deployment-template-2.0-FIXED.utj",
+                  "schemastore/src/test/azure-iot-edge-deployment-template-2.0/deployment.template.json")
+  ; success_file ("schema-overrides/azure-iot-edge-deployment-template-1.0-FIXED.utj",
+                  "schemastore/src/test/azure-iot-edge-deployment-template-1.0/deployment.template.json")
 ]
 
 let testfiles = subtract all_schemastore_files [
     "ansible-inventory.json"
+  ; "azure-iot-edge-deployment-template-2.0.json"
+  ; "azure-iot-edge-deployment-template-1.0.json"
   ]
-let testfiles = (firstn 30 testfiles)
+let testfiles = (firstn 60 testfiles)
 let schemastore = "schemastore" >::: (
    testfiles |> List.concat_map schema_test_pairs |> List.map success_file
   )

@@ -11,6 +11,8 @@
 #require "sedlex" ;;
 #require "cmdliner";;
 #require "ipaddr";;
+#require "emile";;
+#require "uri";;
 #require "pa_ppx.testutils" ;;
 #require "pa_ppx.base" ;;
 #require "pa_ppx.runtime" ;;
