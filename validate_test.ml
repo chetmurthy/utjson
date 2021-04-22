@@ -1,5 +1,6 @@
 open OUnit2
 open OUnitTest
+open Pa_ppx_utils.Std
 open Pa_ppx_testutils
 open Uttestutil
 
@@ -45,48 +46,45 @@ let success_json (schema, instance) =
                                       ())
     )
 
+let schema_test_pairs schema =
+  let schemafile = select_schema_file schema in
+  let testroot = Fpath.("schemastore/src/test" |> v) in
+  let dirname = Fpath.(schema |> v |> rem_ext) in
+  let testfiles =
+    let testdir = Fpath.(append testroot dirname) in
+    if testdir |> Bos.OS.Dir.exists |> Rresult.R.get_ok then
+      testdir
+      |> Bos.OS.Dir.contents
+      |> Rresult.R.get_ok
+      |> List.map Fpath.to_string
+    else []
+  in
+  testfiles |> List.map (fun t -> (schemafile, t))
+
 let simple = "simple" >::: [
     "simple" >:: (fun ctxt ->
         ()
       )
-  ; success_file ("schema-overrides/product-schema.json","schema-overrides/product.json")
-  ; success_file ("schema-overrides/ansible-inventory-FIXED.utj","schemastore/src/test/ansible-inventory/inventory.json")
-  ; success_file ("schema-overrides/ansible-inventory-FIXED.utj","schemastore/src/test/ansible-inventory/inventory-2.json")
-  ; success_file ("schema-overrides/ansible-playbook.json","schemastore/src/test/ansible-playbook/playbook-1.json")
-  ; success_file ("schema-overrides/ansible-role-2.9.json","schemastore/src/test/ansible-role-2.9/apt.json")
-  ; success_file ("schema-overrides/ansible-role-2.9.json","schemastore/src/test/ansible-role-2.9/copy.json")
-  ; success_file ("schema-overrides/apibuilder.json","schemastore/src/test/apibuilder/apibuilder-api.json")
-  ; success_file ("schemastore/src/schemas/json/apple-app-site-association.json",
-                  "schemastore/src/test/apple-app-site-association/apple-app-site-association_getting-started.json")
-  ; success_file ("schema-overrides/appsettings.json","schemastore/src/test/appsettings/nlog.json")
-  ; success_file ("schema-overrides/appsettings.json","schemastore/src/test/appsettings/umbraco.json")
-  ; success_file ("schema-overrides/appsettings.json","schemastore/src/test/appsettings/umbraco-more-settings.json")
-  ; success_file ("schema-overrides/appsettings.json","schemastore/src/test/appsettings/weboptimizer.json")
-  ; success_file ("schema-overrides/appveyor.json",
-                  "schemastore/src/test/appveyor/appveyor-matrix-config.json")
-  ; success_file ("schema-overrides/appveyor.json",
-                  "schemastore/src/test/appveyor/reference.json")
-  ; success_file ("schemastore/src/schemas/json/asmdef.json",
-                  "schemastore/src/test/asmdef/test01.asmdef.json")
-  ; success_file ("schemastore/src/schemas/json/asmdef.json",
-                  "schemastore/src/test/asmdef/test02.asmdef.json")
-  ; success_file ("schemastore/src/schemas/json/asmdef.json",
-                  "schemastore/src/test/asmdef/test03.asmdef.json")
-  ; success_file ("schemastore/src/schemas/json/avro-avsc.json",
-                  "schemastore/src/test/avro-avsc/sample.avsc.json")
-  ; success_file ("schemastore/src/schemas/json/azure-iot-edgeagent-deployment-1.0.json",
-                  "schemastore/src/test/azure-iot-edgeagent-deployment-1.0/deployment.json")
-  ; success_file ("schemastore/src/schemas/json/azure-iot-edgeagent-deployment-1.1.json",
-                  "schemastore/src/test/azure-iot-edgeagent-deployment-1.1/deployment.json")
-  ; success_file ("schema-overrides/azure-iot-edge-deployment-1.0.json",
-                  "schemastore/src/test/azure-iot-edge-deployment-1.0/deployment.json")
   ]
 
+let exceptions = "exceptions" >::: [
+    success_file ("schema-overrides/product-schema.json","schema-overrides/product.json")
+  ; success_file ("schema-overrides/ansible-inventory-FIXED.utj","schemastore/src/test/ansible-inventory/inventory.json")
+  ; success_file ("schema-overrides/ansible-inventory-FIXED.utj","schemastore/src/test/ansible-inventory/inventory-2.json")
+]
 
-
+let testfiles = subtract all_schemastore_files [
+    "ansible-inventory.json"
+  ]
+let testfiles = (firstn 30 testfiles)
+let schemastore = "schemastore" >::: (
+   testfiles |> List.concat_map schema_test_pairs |> List.map success_file
+  )
 
 let tests = "all" >::: [
     simple
+  ; exceptions
+  ; schemastore
 ]
 
 if not !Sys.interactive then
