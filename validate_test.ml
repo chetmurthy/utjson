@@ -74,6 +74,12 @@ let simple = "simple" >::: [
                   "schemastore/src/test/asmdef/test03.asmdef.json")
   ; success_file ("schemastore/src/schemas/json/avro-avsc.json",
                   "schemastore/src/test/avro-avsc/sample.avsc.json")
+  ; success_file ("schemastore/src/schemas/json/azure-iot-edgeagent-deployment-1.0.json",
+                  "schemastore/src/test/azure-iot-edgeagent-deployment-1.0/deployment.json")
+  ; success_file ("schemastore/src/schemas/json/azure-iot-edgeagent-deployment-1.1.json",
+                  "schemastore/src/test/azure-iot-edgeagent-deployment-1.1/deployment.json")
+  ; success_file ("schema-overrides/azure-iot-edge-deployment-1.0.json",
+                  "schemastore/src/test/azure-iot-edge-deployment-1.0/deployment.json")
   ]
 
 

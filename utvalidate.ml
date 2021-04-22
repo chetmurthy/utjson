@@ -114,7 +114,17 @@ let check_format ctxt s fmts =
     if s |> Ipaddr.V4.of_string |> Rresult.R.is_ok then Some ctxt else None
   | "ipv6" ->
     if s |> Ipaddr.V6.of_string |> Rresult.R.is_ok then Some ctxt else None
+
   | _ -> Fmt.(failwithf "Utvalidate.check_format: unhandled format %a" Dump.string fmts)
+
+let check_media_type ctxt s fmts =
+  match fmts with
+    "application/json" -> begin match Yojson.Basic.from_string s with
+        _ -> Some ctxt
+      | exception Yojson.Json_error _ -> None
+    end
+
+  | _ -> Fmt.(failwithf "Utvalidate.check_media_type: unhandled media type %a" Dump.string fmts)
 
 let tdl = ref []
 
@@ -267,8 +277,9 @@ let tdl = ref []
 
   | (`String s, Format fmt) -> check_format ctxt s fmt
 
+  | (`String s, ContentMediaType fmt) -> check_media_type ctxt s fmt
+
 (*
-  | ContentMediaType of string
   | ContentEncoding of string
 *)
 
