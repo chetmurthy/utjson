@@ -344,6 +344,7 @@ let item_to_string t = print_struct_item Pprintf.empty_pc t
 let item_printer x = "<<"^(show_struct_item_t x)^">>"
 let item_cmp = equal_struct_item_t
 
+let structure_printer x = structure_printer (normalize_structure x)
 let structure_cmp a b = structure_cmp (normalize_structure a) (normalize_structure b)
 
 let success (expect, f) =
