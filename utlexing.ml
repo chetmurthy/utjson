@@ -44,7 +44,7 @@ let c_comment = [%sedlex.regexp? "/*" , Star(Compl '*'| "*", Compl '/'), Star '*
 
 let comment = [%sedlex.regexp? perl_comment | cpp_comment | c_comment ]
 
-let regexp = [%sedlex.regexp? "/", Star(Compl '/' | "\\/") , "/" ]
+let regexp = [%sedlex.regexp? "/", Plus(Compl '/' | "\\/") , "/" ]
 
 let readn n lb =
   let buf = Buffer.create 23 in

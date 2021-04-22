@@ -7,6 +7,7 @@ open Uttestutil
 open Utypes
 open Utparse0
 open Utprint
+open Ututil
 open Utio
 open Utio.Debug
 open Utconv
@@ -20,15 +21,25 @@ let load_and_convert cc f =
     load_file f
   else convert_file ~with_predefined:true cc f
 
-let validate_file ?(filepath=["schema-golden/schema-overrides";"utj-generated"]) ~schema ~instance ?(tid=(None, ID.of_string "t")) () =
-  let tdl = 
-    FinalExtract.exec (full_extract (load_and_convert (CC.mk ~filepath ()) schema)) in
-  validate tdl (Yojson.Basic.from_file instance) tid
+let traverse j paths =
+  if paths = "" then j else
+  traverse_json j (String.split_on_char '/' paths)
 
-let validate_json ?(filepath=["schema-golden/schema-overrides";"utj-generated"]) ~schema ~instance ?(tid=(None, ID.of_string "t")) () =
+let validate_file ?(filepath=["schema-golden/schema-overrides";"utj-generated"]) ~schema ~instance ?(utype="t") ?(path="") () =
+  let ut = of_string_exn utype in
   let tdl = 
     FinalExtract.exec (full_extract (load_and_convert (CC.mk ~filepath ()) schema)) in
-  validate tdl (Yojson.Basic.from_string instance) tid
+  let j = Yojson.Basic.from_file instance in
+  let j = traverse j path in
+  validate tdl j ut
+
+let validate_json ?(filepath=["schema-golden/schema-overrides";"utj-generated"]) ~schema ~instance ?(utype="t") ?(path="") () =
+  let ut = of_string_exn utype in
+  let tdl = 
+    FinalExtract.exec (full_extract (load_and_convert (CC.mk ~filepath ()) schema)) in
+  let j = Yojson.Basic.from_string instance in
+  let j = traverse j path in
+  validate tdl j ut
 
 let success_file (schema, instance) =
   (schema^" || "^instance) >:: (fun ctxt ->
@@ -46,7 +57,7 @@ let success_json (schema, instance) =
                                       ())
     )
 
-let schema_test_pairs schema =
+let schema_test_pairs ~excluded_tests schema =
   let schemafile = select_schema_file schema in
   let testroot = Fpath.("schemastore/src/test" |> v) in
   let dirname = Fpath.(schema |> v |> rem_ext) in
@@ -57,6 +68,7 @@ let schema_test_pairs schema =
       |> Bos.OS.Dir.contents
       |> Rresult.R.get_ok
       |> List.map Fpath.to_string
+      |> List.filter (fun s -> not (List.mem s excluded_tests))
     else []
   in
   testfiles |> List.map (fun t -> (schemafile, t))
@@ -75,16 +87,42 @@ let exceptions = "exceptions" >::: [
                   "schemastore/src/test/azure-iot-edge-deployment-template-2.0/deployment.template.json")
   ; success_file ("schema-overrides/azure-iot-edge-deployment-template-1.0-FIXED.utj",
                   "schemastore/src/test/azure-iot-edge-deployment-template-1.0/deployment.template.json")
+  ; success_file ("schema-overrides/cloud-sdk-pipeline-config-schema-FIXED.utj",
+                  "schemastore/src/test/cloud-sdk-pipeline-config-schema/empty.json")
+  ; success_file ("schema-overrides/cloud-sdk-pipeline-config-schema-FIXED.utj",
+                  "schemastore/src/test/cloud-sdk-pipeline-config-schema/prodDeployment.json")
+(*
+  ; success_file ("schema-overrides/cloudify.json",
+                  "schema-overrides/azure-windows-iis-loadbalanced-FIXED.json")
+  ; success_file ("schema-overrides/cloudify.json",
+                  "schema-overrides/utilities-cloudinit-aws-FIXED.json")
+  ; success_file ("schema-overrides/cloudify.json",
+                  "schema-overrides/openstack-FIXED.json")
+  ; success_file ("schema-overrides/cloudify.json",
+                  "schema-overrides/openstack-blueprint-FIXED.json")
+*)
 ]
 
-let testfiles = subtract all_schemastore_files [
-    "ansible-inventory.json"
-  ; "azure-iot-edge-deployment-template-2.0.json"
-  ; "azure-iot-edge-deployment-template-1.0.json"
-  ]
+let excluded_schema = [
+  "ansible-inventory.json"
+; "azure-iot-edge-deployment-template-2.0.json"
+; "azure-iot-edge-deployment-template-1.0.json"
+; "cloud-sdk-pipeline-config-schema.json"
+]
+
+let excluded_tests = [
+(*
+  "schemastore/src/test/cloudify/azure-windows-iis-loadbalanced.json"
+; "schemastore/src/test/cloudify/utilities-cloudinit-aws.json"
+; "schemastore/src/test/cloudify/openstack.json"
+; "schemastore/src/test/cloudify/openstack-blueprint.json"
+*)
+]
+
+let testfiles = subtract all_schemastore_files excluded_schema
 let testfiles = (firstn 60 testfiles)
 let schemastore = "schemastore" >::: (
-   testfiles |> List.concat_map schema_test_pairs |> List.map success_file
+   testfiles |> List.concat_map (schema_test_pairs ~excluded_tests) |> List.map success_file
   )
 
 let tests = "all" >::: [

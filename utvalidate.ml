@@ -27,18 +27,31 @@ let lookup_tid tdl (mpopt, id as tid) =
   end
 
 module Ctxt = struct
-type assoc_t = {
+module As = struct
+type t = {
   validated_keys : string list
 ; sealed : bool
 ; patterns: (string * utype_t) list
 ; orelse : utype_t option
 }
+let mk () = { validated_keys = [] ; sealed = false ; patterns = [] ; orelse = None }
+end
+module Ar = struct
+type t = {
+  tuple : int option ;
+  orelse : utype_t option ;
+  sealed : bool ;
+}
+let mk () = { tuple = None ; orelse = None ; sealed = false }
+end
 
 type t =
-    Assoc of assoc_t
+    Assoc of As.t
+  | Array of Ar.t
   | Other
 
-let start_assoc () = Assoc { validated_keys = [] ; sealed = false ; patterns = [] ; orelse = None }
+let start_assoc () = Assoc (As.mk())
+let start_array () = Array (Ar.mk())
 let start_other = Other
 
 let add_field ctxt fname = match ctxt with
@@ -54,11 +67,25 @@ let set_sealed ctxt  = match ctxt with
     Assoc ({ sealed=_ ; orelse = None } as a) -> Ok (Assoc { a with sealed = true })
   | Assoc _ -> 
     Fmt.(failwithf "ERROR: setting Sealed when Orelse already set%!")
+
+  | Array (Ar.{ orelse=None; _ } as a) -> Ok (Array { a with sealed = true })
+  | Array Ar.{ orelse=Some _; _ } ->
+    Fmt.(failwithf "ERROR: setting Sealed when Orelse already set%!")
+
+  | _ -> Fmt.(failwithf "Ctxt.set_sealed: internal error: wrong kind of context")
+
+let set_tuple ctxt n  = match ctxt with
+    Array a -> Ok (Array { a with tuple = Some n })
+
   | _ -> Fmt.(failwithf "Ctxt.set_sealed: internal error: wrong kind of context")
 
 let set_orelse ctxt ut  = match ctxt with
     Assoc ({ sealed=false ; orelse = None } as a) -> Ok (Assoc { a with orelse = Some ut })
   | Assoc _ -> 
+    Fmt.(failwithf "ERROR: setting Orelse when Sealed already set%!")
+
+  | Array ({ sealed=false; _ } as a) -> Ok (Array { a with orelse = Some ut })
+  | Array { sealed=true; _ } ->
     Fmt.(failwithf "ERROR: setting Orelse when Sealed already set%!")
 
   | _ -> Fmt.(failwithf "Ctxt.set_orelse: internal error: wrong kind of context")
@@ -191,10 +218,33 @@ let tdl = ref []
           finish_assoc path l a
         | Ok _ -> assert false
       end
+
+    | `List l -> begin
+        match utype path j (Ctxt.start_array ()) ut with
+          Error l -> Error l
+        | Ok (Ctxt.Array a) -> finish_array path l a 
+        | Ok _ -> assert false
+          
+      end
+
     | _ -> begin match utype path j Ctxt.start_other ut with
           Error l -> Error l
         | Ok _ -> Ok ()
       end
+
+  and finish_array path l = function
+      { tuple = None } -> Ok ()
+    | { tuple = Some n } when n = List.length l -> Ok ()
+    | { tuple = Some n ; sealed=false ; orelse = Some ut } ->
+      let l = nthtail l n in
+      l |> List.mapi (fun i x -> (i+n, x))
+      |> lifted_forall (fun (i,j) ->
+          enter_utype ((string_of_int i)::path) j ut)
+
+    | { tuple = Some n ; sealed=false ; orelse = None } ->
+      Ok ()
+    | { tuple = Some n ; sealed=true ; orelse = None } ->
+      Error [path, UtFalse]
 
   and finish_assoc path l = function
       { validated_keys ; sealed ; patterns ; orelse } ->
@@ -237,6 +287,9 @@ let tdl = ref []
     | (`Assoc _, Sealed) ->
       Ctxt.set_sealed ctxt
 
+    | (`List _, Sealed) ->
+      Ctxt.set_sealed ctxt
+
     | (`Assoc _, OrElse ut) -> Ctxt.set_orelse ctxt ut
 
     | (`Assoc l, PropertyNames ut) ->
@@ -253,9 +306,24 @@ let tdl = ref []
       | Error l -> Error l
       end
 
-(*
-  | ArrayTuple of utype_t list
-*)
+  | (`List l, ArrayTuple utl) ->
+    let utlen = List.length utl in
+    if List.length l < utlen then
+      Error [path, Atomic[t]]
+    else
+      let l =
+      if List.length l > utlen then
+        firstn utlen l
+      else l in
+      let pairs = List.map2 (fun a b -> (a,b)) l utl in
+      let numbered_pairs = List.mapi (fun i x -> (i,x)) pairs in
+      begin match numbered_pairs |> lifted_forall (fun (i, (j, ut)) ->
+          enter_utype ((string_of_int i)::path) j ut) with
+        Ok () ->
+        Ctxt.set_tuple ctxt utlen
+      | Error l -> Error l
+      end
+
     | (`List l, ArrayUnique) ->
       if List.length (List.sort_uniq Stdlib.compare l) = List.length l then
         Ok ctxt else Error [path,Atomic[t]]
@@ -306,9 +374,9 @@ let tdl = ref []
                   (String.concat "/" (List.rev path))
                )
 
-let validate new_tdl j tid =
+let validate new_tdl j ut =
   tdl := new_tdl ;
-  match enter_utype [] j (lookup_tid !tdl tid) with
+  match enter_utype [] j ut with
     Ok () -> true
   | Error l ->
     let pp1 pps (path, ut) = Fmt.(pf pps "%s: %s" (String.concat "/" (List.rev path)) (Normal.printer ut)) in

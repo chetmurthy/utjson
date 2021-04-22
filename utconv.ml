@@ -339,7 +339,12 @@ let known_keys = documentation_keys@known_useful_keys
       )@
       (match assoc_opt "patternProperties" l with
          Some (`Assoc l) ->
-         [Atomic (List.map (fun (k,v) -> FieldRE(k,conv_type0 v)) l)]
+         [Atomic (List.map (fun (k,v) ->
+              let ut = conv_type0 v in
+              if k <> "" then
+                FieldRE(k,ut)
+              else OrElse ut
+            ) l)]
        | Some v -> Fmt.(failwithf "conv_type: malformed patternProperties member: %a" pp_json v)
        | None -> []
       )@
@@ -506,7 +511,9 @@ let known_keys = documentation_keys@known_useful_keys
       )@
       (match assoc_opt "pattern" l with
          Some (`String re)  ->
-         [Atomic[StringRE re]]
+         if re <> "" then
+           [Atomic[StringRE re]]
+         else [Simple JString]
        | Some v -> Fmt.(failwithf "conv_type: pattern did not have string payload: %a" pp_json v)
        | None -> []
       )@
@@ -565,7 +572,7 @@ let known_keys = documentation_keys@known_useful_keys
          (Some ifj, Some thenj, Some elsej) ->
          let ift = conv_type0 ifj in
          [And(Impl(ift, conv_type0 thenj),
-              Impl(ift, conv_type0 elsej))]
+              Impl(Not ift, conv_type0 elsej))]
 
        | (Some ifj, Some thenj, None) ->
          let ift = conv_type0 ifj in

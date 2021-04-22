@@ -24,3 +24,27 @@ let mkdir_p s =
     end
   in mkrec p
 
+let rec traverse_json j p = match (j,p) with
+    (j,[]) -> j
+  | (`Assoc l, h::t) -> begin match List.assoc h l with
+        v -> traverse_json v t
+      | exception Not_found ->
+        Fmt.(failwithf "traverse_json: path %a was not valid for JSON@.%s@."
+               (list Dump.string) p
+               (Yojson.Basic.pretty_to_string j))
+    end
+  | (`List l, h::t) -> begin match int_of_string h with
+        n -> if n < List.length l then
+          traverse_json (List.nth l n) t
+        else Fmt.(failwith "traverse_json: path component %a was not an integer for JSON@.%s@."
+                    Dump.string h
+                    (Yojson.Basic.pretty_to_string j))
+      | exception Not_found ->
+        Fmt.(failwithf "traverse_json: path %a was not valid for JSON@.%s@."
+               (list Dump.string) p
+               (Yojson.Basic.pretty_to_string j))
+    end
+  | _ ->
+    Fmt.(failwithf "traverse_json: path %a was not valid for JSON@.%s@."
+           (list Dump.string) p
+           (Yojson.Basic.pretty_to_string j))
