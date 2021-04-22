@@ -1,7 +1,7 @@
 DEBUG=-g
 OCAMLFIND=ocamlfind
 NOT_OCAMLFIND=not-ocamlfind
-BASEPACKAGES=bos,uutf,fmt,camlp5.extprint,pcre,yaml
+BASEPACKAGES=bos,uutf,fmt,camlp5.extprint,pcre,yaml,ipaddr,cmdliner
 PACKAGES=$(BASEPACKAGES),camlp5.extprint,camlp5.extend,camlp5.pprintf,pa_ppx.utils,pa_ppx.deriving_plugins.std,pa_ppx.base.link,pa_ppx.runtime,pa_ppx.testutils,sedlex
 
 IMPORT_PACKAGES = pa_ppx_migrate,pa_ppx.import
@@ -23,6 +23,14 @@ doc: README.html
 README.html: README.rst
 	pandoc -t html $< > README.html
 
+test0:: all
+	rm -rf _build && mkdir -p _build
+	./syntax_test
+	./typing_test
+	./extract_test
+	./simplify_test
+	./validate_test
+
 test:: all
 	rm -rf _build && mkdir -p _build
 	./syntax_test
@@ -42,7 +50,7 @@ utjtool.TEST: utjtool
 	./utjtool convert --utj-path _build:.git --utj-path _build:.git -o /tmp /dev/zero /dev/null
 
 utjtool:: utjtool.ml $(OBJ)
-	$(OCAMLFIND) ocamlc $(DEBUG) $(OCAMLFLAGS) -package yojson,str,sedlex,pa_ppx.runtime,pa_ppx.base.link,fmt,bos,cmdliner -linkpkg -linkall $(OBJ) utjtool.ml -o utjtool
+	$(OCAMLFIND) ocamlc $(DEBUG) $(OCAMLFLAGS) -package $(PACKAGES) -linkpkg -linkall $(OBJ) utjtool.ml -o utjtool
 
 syntax_test: $(OBJ) uttestutil.cmo syntax_test.cmo
 	$(OCAMLFIND) ocamlc $(DEBUG) $(OCAMLCFLAGS) -package $(PACKAGES),oUnit -linkpkg -linkall -syntax camlp5r $^ -o $@

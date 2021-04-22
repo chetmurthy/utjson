@@ -9,6 +9,8 @@
 #require "camlp5.pa_o";;
 #require "yojson" ;;
 #require "sedlex" ;;
+#require "cmdliner";;
+#require "ipaddr";;
 #require "pa_ppx.testutils" ;;
 #require "pa_ppx.base" ;;
 #require "pa_ppx.runtime" ;;

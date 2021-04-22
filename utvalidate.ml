@@ -45,26 +45,23 @@ let add_field ctxt fname = match ctxt with
   | _ -> Fmt.(failwithf "Ctxt.add_field(%a): internal error: wrong kind of context" Dump.string fname)
 
 let add_pattern ctxt (re, ut) = match ctxt with
-    Assoc ({ patterns ; sealed=false ; orelse=None } as a) -> Some (Assoc { a with patterns = (re,ut)::patterns })
-  | Assoc _ ->
-    Fmt.(pf stderr "WARNING: setting FieldRE when Orelse/Sealed already set") ;
-    None
+    Assoc ({ patterns } as a) -> Some (Assoc { a with patterns = (re,ut)::patterns })
   | _ -> Fmt.(failwithf "Ctxt.add_pattern(%a,%s): internal error: wrong kind of context"
                 Dump.string re (Normal.printer ut))
 
 let set_sealed ctxt  = match ctxt with
-    Assoc ({ sealed=_ ; orelse = None ; patterns = [] } as a) -> Some (Assoc { a with sealed = true })
+    Assoc ({ sealed=_ ; orelse = None } as a) -> Some (Assoc { a with sealed = true })
   | Assoc _ -> 
-    Fmt.(pf stderr "WARNING: setting Sealed when Orelse/FieldRE already set") ;
+    Fmt.(pf stderr "WARNING: setting Sealed when Orelse already set%!") ;
     None
   | _ -> Fmt.(failwithf "Ctxt.set_sealed: internal error: wrong kind of context")
 
 let set_orelse ctxt ut  = match ctxt with
-    Assoc ({ sealed=false ; orelse = None ; patterns = [] } as a) -> Some (Assoc { a with orelse = Some ut })
+    Assoc ({ sealed=false ; orelse = None } as a) -> Some (Assoc { a with orelse = Some ut })
   | Assoc _ -> 
-    Fmt.(pf stderr "WARNING: setting Orelse when Sealed/FieldRE already set") ;
+    Fmt.(pf stderr "WARNING: setting Orelse when Sealed already set%!") ;
     None
-  | _ -> Fmt.(failwithf "Ctxt.set_sealed: internal error: wrong kind of context")
+  | _ -> Fmt.(failwithf "Ctxt.set_orelse: internal error: wrong kind of context")
 end
 
 let float_multipleOf ctxt f n =
@@ -102,6 +99,22 @@ let float_numberBounds ctxt f (lo, hi) =
    | {it=Some hi; exclusive=false} -> f <= hi) then
     Some ctxt
   else None
+
+let check_format ctxt s fmts =
+  match fmts with
+    "regex" -> begin
+      let slen = String.length s in
+      if slen >= 2 && String.get s 0 = '/' && String.get s (slen -1) = '/' then
+        match Pcre.regexp s with
+          _ -> Some ctxt
+        | exception Pcre.Error _ -> None
+      else None
+    end
+  | "ipv4" ->
+    if s |> Ipaddr.V4.of_string |> Rresult.R.is_ok then Some ctxt else None
+  | "ipv6" ->
+    if s |> Ipaddr.V6.of_string |> Rresult.R.is_ok then Some ctxt else None
+  | _ -> Fmt.(failwithf "Utvalidate.check_format: unhandled format %a" Dump.string fmts)
 
 let tdl = ref []
 
@@ -151,10 +164,7 @@ let tdl = ref []
         | Some (Ctxt.Assoc { validated_keys ; sealed=false ; patterns = [] ; orelse=None }) ->
           true
 
-        | Some (Ctxt.Assoc { validated_keys ; sealed=true ; patterns = [] ; orelse=None }) ->
-          l |> List.for_all (fun (k, _) -> List.mem k validated_keys)
-
-        | Some (Ctxt.Assoc ({ validated_keys ; sealed=false } as a)) ->
+        | Some (Ctxt.Assoc a) ->
           finish_assoc l a
         | Some _ -> assert false
       end
@@ -164,7 +174,8 @@ let tdl = ref []
       end
 
   and finish_assoc l = function
-      { validated_keys ; sealed=false ; patterns ; orelse } ->
+      { validated_keys ; sealed ; patterns ; orelse } ->
+      assert ((orelse = None) || not sealed) ;
       l |> List.for_all (fun (k, j) ->
           if List.mem k validated_keys then true
           else match patterns |> List.find_map (fun (restr, ut) ->
@@ -227,9 +238,16 @@ let tdl = ref []
 *)
     | (`List l, Size range) ->
       inrange ctxt (List.length l) range
-(*
-  | StringRE of string
-*)
+
+    | (`String s, Size range) ->
+      inrange ctxt (String.length s) range
+
+    | (`Assoc l, Size range) ->
+      inrange ctxt (List.length l) range
+
+    | (`String s, StringRE restr) ->
+      if Pcre.pmatch ~rex:(REC.get restr) s then Some ctxt else None
+
   | (`Int f, NumberBound range) ->
     float_numberBounds ctxt (float_of_int f) range
 
@@ -245,9 +263,11 @@ let tdl = ref []
   | (j, Enum jl) ->
     if List.mem j jl then Some ctxt else None
 
+  | (_, Default _) -> Some ctxt
+
+  | (`String s, Format fmt) -> check_format ctxt s fmt
+
 (*
-  | Default of Yojson.Basic.t
-  | Format of string
   | ContentMediaType of string
   | ContentEncoding of string
 *)

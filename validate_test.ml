@@ -53,6 +53,27 @@ let simple = "simple" >::: [
   ; success_file ("schema-overrides/ansible-inventory-FIXED.utj","schemastore/src/test/ansible-inventory/inventory.json")
   ; success_file ("schema-overrides/ansible-inventory-FIXED.utj","schemastore/src/test/ansible-inventory/inventory-2.json")
   ; success_file ("schema-overrides/ansible-playbook.json","schemastore/src/test/ansible-playbook/playbook-1.json")
+  ; success_file ("schema-overrides/ansible-role-2.9.json","schemastore/src/test/ansible-role-2.9/apt.json")
+  ; success_file ("schema-overrides/ansible-role-2.9.json","schemastore/src/test/ansible-role-2.9/copy.json")
+  ; success_file ("schema-overrides/apibuilder.json","schemastore/src/test/apibuilder/apibuilder-api.json")
+  ; success_file ("schemastore/src/schemas/json/apple-app-site-association.json",
+                  "schemastore/src/test/apple-app-site-association/apple-app-site-association_getting-started.json")
+  ; success_file ("schema-overrides/appsettings.json","schemastore/src/test/appsettings/nlog.json")
+  ; success_file ("schema-overrides/appsettings.json","schemastore/src/test/appsettings/umbraco.json")
+  ; success_file ("schema-overrides/appsettings.json","schemastore/src/test/appsettings/umbraco-more-settings.json")
+  ; success_file ("schema-overrides/appsettings.json","schemastore/src/test/appsettings/weboptimizer.json")
+  ; success_file ("schema-overrides/appveyor.json",
+                  "schemastore/src/test/appveyor/appveyor-matrix-config.json")
+  ; success_file ("schema-overrides/appveyor.json",
+                  "schemastore/src/test/appveyor/reference.json")
+  ; success_file ("schemastore/src/schemas/json/asmdef.json",
+                  "schemastore/src/test/asmdef/test01.asmdef.json")
+  ; success_file ("schemastore/src/schemas/json/asmdef.json",
+                  "schemastore/src/test/asmdef/test02.asmdef.json")
+  ; success_file ("schemastore/src/schemas/json/asmdef.json",
+                  "schemastore/src/test/asmdef/test03.asmdef.json")
+  ; success_file ("schemastore/src/schemas/json/avro-avsc.json",
+                  "schemastore/src/test/avro-avsc/sample.avsc.json")
   ]
 
 
