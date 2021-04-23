@@ -25,18 +25,19 @@ let traverse j paths =
   if paths = "" then j else
   traverse_json j (String.split_on_char '/' paths)
 
+let load_and_extract ?(filepath=["schema-golden/schema-overrides";"utj-generated"]) schema =
+  FinalExtract.exec (full_extract (load_and_convert (CC.mk ~filepath ()) schema))
+
 let validate_file ?(filepath=["schema-golden/schema-overrides";"utj-generated"]) ~schema ~instance ?(utype="t") ?(path="") () =
   let ut = of_string_exn utype in
-  let tdl = 
-    FinalExtract.exec (full_extract (load_and_convert (CC.mk ~filepath ()) schema)) in
+  let tdl = load_and_extract ~filepath schema in
   let j = Yojson.Basic.from_file instance in
   let j = traverse j path in
   validate tdl j ut
 
 let validate_json ?(filepath=["schema-golden/schema-overrides";"utj-generated"]) ~schema ~instance ?(utype="t") ?(path="") () =
   let ut = of_string_exn utype in
-  let tdl = 
-    FinalExtract.exec (full_extract (load_and_convert (CC.mk ~filepath ()) schema)) in
+  let tdl = load_and_extract ~filepath schema in
   let j = Yojson.Basic.from_string instance in
   let j = traverse j path in
   validate tdl j ut
@@ -114,7 +115,6 @@ let testfiles = subtract testfiles [
   ; "jsonld.json"
   ; "jsone.json"
   ]
-let testfiles = (firstn 250 testfiles)
 let schemastore = "schemastore" >:::
                    (testfiles
                     |> List.map Fpath.v

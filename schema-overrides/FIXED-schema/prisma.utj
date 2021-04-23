@@ -1,0 +1,31 @@
+import "lib/predefined.utj" as Predefined;
+  module DEFINITIONS = struct
+    type rec subscription = object && [
+        "query": string;
+        "webhook": string xor object && [
+            "url": string;
+            "headers": object;
+] && [ required "url"; ];
+] && [ required "query",  "webhook"; ];
+    end;
+  open DEFINITIONS;
+  type nonrec t = [
+      "datamodel": (string || array && [ of string || array; ]);
+      "secret": string;
+      "disableAuth": boolean;
+      "generate": array && [
+          of object && [
+              "generator": string;
+              "output": string;
+];
+];
+      "seed": object && [
+          "import": string;
+          "run": string;
+];
+      "subscriptions": object && [ orelse subscription; ];
+      "custom": object;
+      "hooks": object;
+      "endpoint": string;
+      "databaseType": string && [ enum "relational", "document"; ];
+] && (object && [ sealed; ]) && [ required "datamodel"; ];

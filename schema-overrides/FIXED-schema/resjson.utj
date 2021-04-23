@@ -1,0 +1,6 @@
+import "lib/predefined.utj" as Predefined;
+  module DEFINITIONS = struct
+    type rec resource = object && [ orelse (string || resource && (object && [ size [1,max]; ])); ];
+    end;
+  open DEFINITIONS;
+  type nonrec t = resource ;

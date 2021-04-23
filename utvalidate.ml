@@ -139,11 +139,13 @@ let check_format s fmts =
     s |> Ipaddr.V6.of_string |> Rresult.R.is_ok
   | "email" ->
     s |> Emile.of_string |> Rresult.R.is_ok
-  | ("uri"|"uri-reference") -> begin match Uri.(s |> of_string) with
+  | ("iri"|"uri"|"uri-reference"|"iri-reference") -> begin match Uri.(s |> of_string) with
         _ -> true
       | exception _ -> false
     end
-  | "date-time" -> s |> Ptime.of_rfc3339 |> Rresult.R.is_ok
+  | "date-time" -> s |> Utlexing.RFC3339.datetime
+  | "date" -> s |> Utlexing.RFC3339.date
+  | "time" -> s |> Utlexing.RFC3339.time
 
   | _ -> Fmt.(failwithf "Utvalidate.check_format: unhandled format %a for string %a"
                 Dump.string fmts
@@ -297,6 +299,7 @@ and utype path (j : Yojson.Basic.t) (ctxt : Ctxt.t) t = match t with
       Ctxt.set_sealed ctxt
 
     | (`Assoc _, OrElse ut) -> Ctxt.set_orelse ctxt ut
+    | (`List _, OrElse ut) -> Ctxt.set_orelse ctxt ut
 
     | (`Assoc l, PropertyNames ut) ->
       begin match l |> lifted_forall (fun (k,_) -> enter_utype (k::path) (`String k) ut) with

@@ -1,0 +1,17 @@
+import "lib/predefined.utj" as Predefined;
+  module DEFINITIONS = struct
+    type rec notScheduled = [ "runMode": string && [ enum "Continuous", "OnDemand"; ]; ] && shared && [ required "runMode"; ]
+    and scheduled = [ "runMode": string && [ enum "Scheduled"; ]; ] && shared && [
+        required "webJobName",  "startTime",  "endTime", 
+        "jobRecurrenceFrequency",  "interval";
+]
+    and shared = [
+        "webJobName": string;
+        "startTime": string && ([ format "date-time"; ] || [ format "date"; ]);
+        "endTime": string && ([ format "date-time"; ] || [ format "date"; ]);
+        "jobRecurrenceFrequency": string && [ enum "Second", "Minute", "Hour", "Day", "Week", "Month"; ];
+        "interval": Predefined.integer;
+];
+    end;
+  open DEFINITIONS;
+  type nonrec t = object && (scheduled xor notScheduled) && [ required "runMode"; ];

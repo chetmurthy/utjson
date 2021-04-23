@@ -184,3 +184,64 @@ module Escape = struct
   let regexp s =
     Str.global_replace slash_re "\\/" s
 end
+
+module RFC3339 = struct
+  (* from RFC3339 *)
+
+let digit = [%sedlex.regexp? '0'..'9']
+(*   date-fullyear   = 4DIGIT *)
+let date_fullyear = [%sedlex.regexp? Rep(digit,4)]
+
+(*   date-month      = 2DIGIT  ; 01-12 *)
+let date_month = [%sedlex.regexp? Rep(digit,2)]
+(*    date-mday       = 2DIGIT  ; 01-28, 01-29, 01-30, 01-31 based on
+                             ; month/year *)
+let date_mday = [%sedlex.regexp? Rep(digit,2)]
+    (*   time-hour       = 2DIGIT  ; 00-23 *)
+let time_hour = [%sedlex.regexp? Rep(digit,2)]
+    (*   time-minute     = 2DIGIT  ; 00-59 *)
+let time_minute = [%sedlex.regexp? Rep(digit,2)]
+(*   time-second     = 2DIGIT  ; 00-58, 00-59, 00-60 based on leap second
+                             ; rules *)
+let time_second = [%sedlex.regexp? Rep(digit,2)]
+    (*   time-secfrac    = "." 1*DIGIT *)
+let time_secfrac = [%sedlex.regexp? ".", Star(digit)]
+    (*   time-numoffset  = ("+" / "-") time-hour ":" time-minute *)
+let time_numoffset = [%sedlex.regexp? ('+'|'-'), time_hour, ":", time_minute]
+    (*   time-offset     = "Z" / time-numoffset *)
+let time_offset = [%sedlex.regexp? ("Z" | time_numoffset)]
+
+(*   partial-time    = time-hour ":" time-minute ":" time-second
+                     [time-secfrac] *)
+let partial_time = [%sedlex.regexp? time_hour, ":", time_minute, ":", time_second, Opt(time_secfrac)]
+    (*   full-date       = date-fullyear "-" date-month "-" date-mday *)
+let full_date = [%sedlex.regexp? date_fullyear, "-", date_month, "-", date_mday]
+    (*   full-time       = partial-time time-offset *)
+let full_time = [%sedlex.regexp? partial_time, time_offset]
+
+(*   date-time       = full-date "T" full-time *)
+let date_time = [%sedlex.regexp? full_date, "T", full_time]
+
+let datetime s =
+  let buf = Buffer.create (String.length s) in
+  let lb = Sedlexing.Latin1.from_gen (gen_of_string s) in
+  match%sedlex lb with
+    date_time, eof -> true
+  | _ -> false
+
+let date s =
+  let buf = Buffer.create (String.length s) in
+  let lb = Sedlexing.Latin1.from_gen (gen_of_string s) in
+  match%sedlex lb with
+    full_date, eof -> true
+  | _ -> false
+
+let time s =
+  let buf = Buffer.create (String.length s) in
+  let lb = Sedlexing.Latin1.from_gen (gen_of_string s) in
+  match%sedlex lb with
+    full_time, eof -> true
+  | partial_time, eof -> true
+  | _ -> false
+
+end

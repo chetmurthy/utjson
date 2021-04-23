@@ -30,3 +30,7 @@ module UnfoldTop = struct
     tdl |> List.map (fun (n, ut) -> (n, unfold tdl ut))
 
 end
+
+let unfold_utype tdl uts =
+  let ut = of_string_exn uts in
+  UnfoldTop.unfold tdl ut

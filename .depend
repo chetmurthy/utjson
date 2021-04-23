@@ -132,6 +132,18 @@ utjtool.cmx : \
     utio.cmx \
     utextract.cmx \
     utconv.cmx
+utpostprocess.cmo : \
+    utypes.cmi \
+    ututil.cmo \
+    uttypecheck.cmo \
+    utmigrate.cmo \
+    utio.cmo
+utpostprocess.cmx : \
+    utypes.cmx \
+    ututil.cmx \
+    uttypecheck.cmx \
+    utmigrate.cmx \
+    utio.cmx
 utsimplify.cmo : \
     utypes.cmi \
     ututil.cmo \
@@ -175,6 +187,7 @@ utvalidate.cmx : \
 validate_test.cmo : \
     utypes.cmi \
     utvalidate.cmo \
+    ututil.cmo \
     uttypecheck.cmo \
     uttestutil.cmo \
     utsimplify.cmo \
@@ -186,6 +199,7 @@ validate_test.cmo : \
 validate_test.cmx : \
     utypes.cmx \
     utvalidate.cmx \
+    ututil.cmx \
     uttypecheck.cmx \
     uttestutil.cmx \
     utsimplify.cmx \

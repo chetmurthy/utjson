@@ -1,0 +1,72 @@
+import "lib/predefined.utj" as Predefined;
+  module DEFINITIONS = struct
+    type rec app = object && [
+        "script": string;
+        "name": string;
+        "cwd": string;
+        "args": (array && [ of string; ] || string);
+        "interpreter": string;
+        "node_args": (array && [ of string; ] || string);
+        "output": string && [ default "~/.pm2/logs/-out.log"; ];
+        "error": string && [ default "~/.pm2/logs/-error.err"; ];
+        "log": (boolean || string) && [ default "/dev/null"; ];
+        "disable_logs": boolean;
+        "log_type": string && [ enum "json"; ];
+        "log_date_format": string;
+        "env": (object && [ orelse string; ] || string);
+        "max_memory_restart": string || number;
+        "pid_file": string;
+        "restart_delay": number;
+        "source_map_support": boolean && [ default true; ];
+        "disable_source_map_support": boolean;
+        "wait_ready": boolean;
+        "instances": number && [ default 1; ];
+        "kill_timeout": number && [ default 1600; ];
+        "listen_timeout": number;
+        "cron_restart": string;
+        "merge_logs": boolean;
+        "vizion": boolean && [ default true; ];
+        "autorestart": boolean && [ default true; ];
+        "watch": boolean || array || string;
+        "ignore_watch": array || string;
+        "watch_options": object;
+        "min_uptime": (number || string) && [ default 1000; ];
+        "max_restarts": number && [ default 16; ];
+        "exec_mode": string && [ enum "fork", "cluster"; ] && [ default "fork"; ];
+        "force": boolean;
+        "append_env_to_name": boolean;
+        "post_update": array && [ of string; ];
+        "trace": boolean;
+        "disable_trace": boolean && [ default true; ];
+        "increment_var": string;
+        "instance_var": string;
+        "pmx": boolean && [ default true; ];
+        "automation": boolean && [ default true; ];
+        "treekill": boolean && [ default true; ];
+        "port": number;
+        "uid": string;
+        "gid": string;
+] && [ /^env_\S*$/ : (object && [ orelse string; ] || string); ] && [ required "script"; ]
+    and deploymentEnvironment = object && [
+        "key": string;
+        "user": string;
+        "host": (array && [ of string; ] || string);
+        "ssh_options": (string || array && [ of string; ]);
+        "ref": string;
+        "repo": string;
+        "path": string;
+        "pre-setup": string;
+        "post-setup": string;
+        "pre-deploy-local": string;
+        "post-deploy": string;
+];
+    end;
+  open DEFINITIONS;
+  type nonrec t = object && [
+      "apps": array && [ of app; ];
+      "deploy": object && [
+          "production": deploymentEnvironment;
+          "staging": deploymentEnvironment;
+          "development": deploymentEnvironment;
+];
+];

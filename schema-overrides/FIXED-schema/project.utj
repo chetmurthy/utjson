@@ -1,0 +1,180 @@
+import "lib/predefined.utj" as Predefined;
+  module DEFINITIONS = struct
+    type rec buildOptions = object && [
+        "define": array && [ of string; ] && [ unique; ];
+        "nowarn": array && [ of string; ] && [ unique; ];
+        "warningsAsErrors": boolean && [ default false; ];
+        "allowUnsafe": boolean && [ default false; ];
+        "emitEntryPoint": boolean && [ default false; ];
+        "optimize": boolean && [ default false; ];
+        "platform": string && [ enum "anycpu", "anycpu32bitpreferred", "ARM", "x86", "x64", "Itanium"; ];
+        "languageVersion": string && [
+            enum "csharp1", "csharp2", "csharp3", "csharp4", "csharp5",
+            "csharp6", "experimental";
+];
+        "keyFile": string;
+        "delaySign": boolean && [ default false; ];
+        "publicSign": boolean && [ default false; ];
+        "debugType": string && [ enum "portable", "full", "none"; ];
+        "preserveCompilationContext": boolean;
+        "outputName": string;
+        "compilerName": string && [ default "csc"; ];
+        "compile": (string || array || object) && [
+            "include": (string || array) && [ of string; ];
+            "exclude": (string || array) && [ of string; ];
+            "includeFiles": (string || array) && [ of string; ];
+            "excludeFiles": (string || array) && [ of string; ];
+            "builtIns": (string || array || object) && [
+                "include": (string || array) && [ of string; ];
+                "exclude": (string || array) && [ of string; ];
+] && [ of string; ];
+            "mappings": object;
+] && [ of string; ];
+        "embed": buildOptions_properties_compile && Predefined.json;
+        "copyToOutput": buildOptions_properties_compile && Predefined.json;
+]
+    and buildOptions_properties_compile = (string || array || object) && [
+        "include": (string || array) && [ of string; ];
+        "exclude": (string || array) && [ of string; ];
+        "includeFiles": (string || array) && [ of string; ];
+        "excludeFiles": (string || array) && [ of string; ];
+        "builtIns": (string || array || object) && [
+            "include": (string || array) && [ of string; ];
+            "exclude": (string || array) && [ of string; ];
+] && [ of string; ];
+        "mappings": object;
+] && [ of string; ]
+    and compilationOptions = object && [
+        "define": array && [ of string; ] && [ unique; ];
+        "nowarn": array && [ of string; ] && [ unique; ];
+        "warningsAsErrors": boolean && [ default false; ];
+        "allowUnsafe": boolean && [ default false; ];
+        "emitEntryPoint": boolean && [ default false; ];
+        "optimize": boolean && [ default false; ];
+        "platform": string && [ enum "anycpu", "anycpu32bitpreferred", "ARM", "x86", "x64", "Itanium"; ];
+        "languageVersion": string && [
+            enum "csharp1", "csharp2", "csharp3", "csharp4", "csharp5",
+            "csharp6", "experimental";
+];
+        "keyFile": string;
+        "delaySign": boolean && [ default false; ];
+        "publicSign": boolean && [ default false; ];
+        "debugType": string && [ enum "portable", "full", "none"; ];
+        "preserveCompilationContext": boolean;
+        "outputName": string;
+]
+    and configType = object && [
+        "dependencies": dependencies;
+        "compilationOptions": compilationOptions;
+        "buildOptions": buildOptions;
+        "frameworkAssemblies": dependencies;
+        "imports": (string || array) && [ of string; ];
+]
+    and dependencies = object && [
+        orelse (string || object && [
+            "version": string;
+            "type": string && [ enum "default", "build", "platform"; ] && [ default "default"; ];
+            "target": string && [ enum "project", "package"; ];
+            "include": libraryIncludeFlags;
+            "exclude": libraryIncludeFlags;
+            "suppressParent": libraryIncludeFlags;
+]);
+]
+    and libraryIncludeFlag = string && [
+        enum "all", "runtime", "compile", "build", "contentFiles", "native",
+        "analyzers", "none";
+]
+    and libraryIncludeFlags = libraryIncludeFlag xor array && [ of libraryIncludeFlag; ]
+    and packOptions = object && [
+        "summary": string;
+        "tags": array && [ of string; ] && [ unique; ];
+        "owners": array && [ of string; ] && [ unique; ];
+        "releaseNotes": string;
+        "iconUrl": string;
+        "licenseUrl": string;
+        "requireLicenseAcceptance": boolean && [ default false; ];
+        "repository": object && [
+            "type": string && [ enum "git"; ] && [ default "git"; ];
+            "url": string && [ format "uri"; ];
+] && [ orelse string; ];
+        "files": buildOptions_properties_compile && Predefined.json;
+]
+    and publishOptions = buildOptions_properties_compile && Predefined.json
+    and runtimeOptions = object && [
+        "configProperties": object && [
+            "System.GC.Server": boolean && [ default false; ];
+            "System.GC.Concurrent": boolean && [ default false; ];
+];
+]
+    and script = (string || array) && [ of string; ];
+    end;
+  open DEFINITIONS;
+  type nonrec t = object && [
+      "authors": array && [ of string; ] && [ unique; ];
+      "packInclude": object;
+      "publishExclude": (string || array) && [ of string; ] && [ default ["obj/**/*.*","bin/**/*.*","**/.*/**"]; ];
+      "compile": (string || array) && [ of string; ] && [ default "**/*.cs"; ];
+      "compileExclude": (string || array) && [ of string; ];
+      "compileFiles": (string || array) && [ of string; ];
+      "content": (string || array) && [ of string; ] && [ default "**/*"; ];
+      "contentExclude": (string || array) && [ of string; ];
+      "contentFiles": (string || array) && [ of string; ];
+      "preprocess": (string || array) && [ of string; ] && [ default "compiler/preprocess/**/*.cs"; ];
+      "preprocessExclude": (string || array) && [ of string; ];
+      "preprocessFiles": (string || array) && [ of string; ];
+      "resource": (string || array) && [ of string; ] && [ default ["compiler/resources/**/*","**/*.resx"]; ];
+      "resourceExclude": (string || array) && [ of string; ];
+      "resourceFiles": (string || array) && [ of string; ];
+      "shared": (string || array) && [ of string; ] && [ default "compiler/shared/**/*.cs"; ];
+      "sharedExclude": (string || array) && [ of string; ];
+      "sharedFiles": (string || array) && [ of string; ];
+      "exclude": (string || array) && [ of string; ];
+      "excludeBuiltIn": (string || array) && [ of string; ] && [ default ["bin/**","obj/**","**/*.xproj"]; ];
+      "testRunner": string;
+      "commands": object && [ orelse string; ];
+      "compilationOptions": compilationOptions;
+      "buildOptions": buildOptions;
+      "packOptions": packOptions;
+      "runtimeOptions": runtimeOptions;
+      "publishOptions": publishOptions;
+      "configurations": object && [
+          orelse object && [
+              "compilationOptions": compilationOptions;
+              "buildOptions": buildOptions;
+];
+];
+      "dependencies": dependencies;
+      "copyright": string;
+      "iconUrl": string;
+      "licenseUrl": string;
+      "requireLicenseAcceptance": boolean && [ default false; ];
+      "owners": array && [ of string; ] && [ unique; ];
+      "projectUrl": string;
+      "summary": string;
+      "tags": array && [ of string; ] && [ unique; ];
+      "title": string;
+      "releaseNotes": string;
+      "language": string;
+      "description": string;
+      "frameworks": object && [ orelse configType; ];
+      "namedResource": object && [ orelse string; ];
+      "repository": object && [
+          "type": string && [ enum "git"; ] && [ default "git"; ];
+          "url": string && [ format "uri"; ];
+] && [ orelse string; ];
+      "scripts": object && [
+          "precompile": script;
+          "postcompile": script;
+          "prepack": script;
+          "postpack": script;
+          "prepublish": script;
+          "postpublish": script;
+          "prerestore": script;
+          "postrestore": script;
+          "prepare": script;
+];
+      "version": string;
+      "tools": object && [ orelse (string || object) && [ "version": string; ]; ];
+      "runtimes": object;
+      "userSecretsId": string;
+];

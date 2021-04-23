@@ -1,0 +1,933 @@
+import "lib/predefined.utj" as Predefined;
+  module DEFINITIONS = struct
+    type rec rule = (boolean || object && [
+        "severity": string && [ enum "default", "error", "warning", "warn", "off", "none"; ] && [ default "default"; ];
+] || array && [ size [1,max]; ])
+    and rules = [
+        "align": rule && [
+            "options": rules_properties_align_definitions_options xor rules_properties_align_definitions_options_items;
+            "severity": Predefined.json;
+] && [ boolean; ] && [ unique; ] && [ size [0,6]; ] && (object && [ sealed; ]) && array && [ orelse rules_properties_align_definitions_options_items; ];
+        "arrow-parens": rule && [
+            "options": rules_properties_arrow_parens_definitions_options xor rules_properties_arrow_parens_definitions_options_items;
+            "severity": Predefined.json;
+] && [ boolean; ] && [ size [0,2]; ] && (object && [ sealed; ]) && array && [ orelse rules_properties_arrow_parens_definitions_options_items; ];
+        "arrow-return-shorthand": rule && [
+            "options": rules_properties_arrow_return_shorthand_definitions_options xor rules_properties_arrow_return_shorthand_definitions_options_items;
+            "severity": Predefined.json;
+] && [ boolean; ] && [ size [0,2]; ] && (object && [ sealed; ]) && array && [ orelse rules_properties_arrow_return_shorthand_definitions_options_items; ];
+        "ban": rule && [
+            "options": rules_properties_ban_definitions_options xor rules_properties_ban_definitions_options_items;
+            "severity": Predefined.json;
+] && [ boolean; ] && [ unique; ] && (object && [ sealed; ]) && array && [ orelse rules_properties_ban_definitions_options_items; ];
+        "ban-comma-operator": rule && [ "severity": Predefined.json; ] && [ boolean; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "binary-expression-operand-order": rule && [ "severity": Predefined.json; ] && [ boolean; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "class-name": rule && [ "severity": Predefined.json; ] && [ boolean; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "comment-format": rule && [
+            "options": rules_properties_comment_format_definitions_options xor rules_properties_comment_format_definitions_options_items;
+            "severity": Predefined.json;
+] && [ boolean; ] && [ unique; ] && [ size [0,5]; ] && (object && [ sealed; ]) && array && [ orelse rules_properties_comment_format_definitions_options_items; ];
+        "completed-docs": rule && [
+            "options": rules_properties_completed_docs_definitions_options xor rules_properties_completed_docs_definitions_options_items;
+            "severity": Predefined.json;
+] && [ boolean; ] && [ unique; ] && [ size [0,11]; ] && (object && [ sealed; ]) && array && [ orelse rules_properties_completed_docs_definitions_options_items; ];
+        "curly": rule && [
+            "options": rules_properties_curly_definitions_options xor rules_properties_curly_definitions_options_items;
+            "severity": Predefined.json;
+] && [ boolean; ] && (object && [ sealed; ]) && array && [ orelse rules_properties_curly_definitions_options_items; ];
+        "cyclomatic-complexity": rule && [
+            "options": rules_properties_cyclomatic_complexity_definitions_options xor rules_properties_cyclomatic_complexity_definitions_options_items;
+            "severity": Predefined.json;
+] && [ boolean; ] && [ size [0,2]; ] && (object && [ sealed; ]) && array && [ orelse rules_properties_cyclomatic_complexity_definitions_options_items; ];
+        "deprecation": rule && [ "severity": Predefined.json; ] && [ boolean; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "encoding": rule && [ "severity": Predefined.json; ] && [ boolean; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "eofline": rule && [ "severity": Predefined.json; ] && [ boolean; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "file-header": rule && [
+            "options": rules_properties_file_header_definitions_options xor rules_properties_file_header_definitions_options_items;
+            "severity": Predefined.json;
+] && [ boolean; ] && [ size [0,3]; ] && (object && [ sealed; ]) && array && [ orelse rules_properties_file_header_definitions_options_items; ];
+        "file-name-casing": array && [
+            boolean * 
+            rules_properties_file_name_casing_definitions_file_name_cases xor object && (object && [ size [1,max]; ]) && [ orelse rules_properties_file_name_casing_definitions_file_name_cases; ];
+] && [ size [2,max]; ];
+        "forin": rule && [ "severity": Predefined.json; ] && [ boolean; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "import-blacklist": rule && [
+            "options": rules_properties_import_blacklist_definitions_options xor rules_properties_import_blacklist_definitions_options_items;
+            "severity": Predefined.json;
+] && [ boolean; ] && [ unique; ] && (object && [ sealed; ]) && array && [ orelse rules_properties_import_blacklist_definitions_options_items; ];
+        "import-spacing": rule && [ "severity": Predefined.json; ] && [ boolean; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "indent": rule && [
+            "options": rules_properties_indent_definitions_options xor rules_properties_indent_definitions_options_items_0;
+            "severity": Predefined.json;
+] && [
+            boolean *  rules_properties_indent_definitions_options_items_0 * 
+            rules_properties_indent_definitions_options_items_1;
+] && [ size [0,3]; ] && object && [ sealed; ];
+        "jsdoc-format": rule && [
+            "options": rules_properties_jsdoc_format_definitions_options xor rules_properties_jsdoc_format_definitions_options_items;
+            "severity": Predefined.json;
+] && [ boolean; ] && (object && [ sealed; ]) && array && [ orelse rules_properties_jsdoc_format_definitions_options_items; ];
+        "label-position": rule && [ "severity": Predefined.json; ] && [ boolean; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "linebreak-style": rule && [
+            "options": rules_properties_linebreak_style_definitions_options xor rules_properties_linebreak_style_definitions_options_items;
+            "severity": Predefined.json;
+] && [ boolean; ] && [ size [0,2]; ] && (object && [ sealed; ]) && array && [ orelse rules_properties_linebreak_style_definitions_options_items; ];
+        "max-classes-per-file": rule && [
+            "options": rules_properties_max_classes_per_file_definitions_options xor rules_properties_max_classes_per_file_definitions_options_items_0;
+            "severity": Predefined.json;
+] && [
+            boolean * 
+            rules_properties_max_classes_per_file_definitions_options_items_0 * 
+            rules_properties_max_classes_per_file_definitions_options_items_1;
+] && [ size [2,3]; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "max-file-line-count": rule && [
+            "options": rules_properties_max_file_line_count_definitions_options xor rules_properties_max_file_line_count_definitions_options_items;
+            "severity": Predefined.json;
+] && [ boolean; ] && [ size [0,2]; ] && (object && [ sealed; ]) && array && [ orelse rules_properties_max_file_line_count_definitions_options_items; ];
+        "max-line-length": rule && [
+            "options": rules_properties_max_line_length_definitions_options xor rules_properties_max_line_length_definitions_options_items;
+            "severity": Predefined.json;
+] && [ boolean; ] && [ size [0,2]; ] && (object && [ sealed; ]) && array && [ orelse rules_properties_max_line_length_definitions_options_items; ];
+        "member-ordering": rule && [
+            "options": rules_properties_member_ordering_definitions_options xor rules_properties_member_ordering_definitions_options_items;
+            "severity": Predefined.json;
+] && [ boolean; ] && [ size [0,2]; ] && (object && [ sealed; ]) && array && [ orelse rules_properties_member_ordering_definitions_options_items; ];
+        "newline-before-return": rule && [ "severity": Predefined.json; ] && [ boolean; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "newline-per-chained-call": rule && [ "severity": Predefined.json; ] && [ boolean; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "new-parens": rule && [ "severity": Predefined.json; ] && [ boolean; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "no-arg": rule && [ "severity": Predefined.json; ] && [ boolean; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "no-bitwise": rule && [ "severity": Predefined.json; ] && [ boolean; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "no-conditional-assignment": rule && [ "severity": Predefined.json; ] && [ boolean; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "no-consecutive-blank-lines": rule && [
+            "options": rules_properties_no_consecutive_blank_lines_definitions_options xor rules_properties_no_consecutive_blank_lines_definitions_options_items;
+            "severity": Predefined.json;
+] && [ boolean; ] && [ size [0,2]; ] && (object && [ sealed; ]) && array && [ orelse rules_properties_no_consecutive_blank_lines_definitions_options_items;
+];
+        "no-console": rule && [
+            "options": rules_properties_no_console_definitions_options xor rules_properties_no_console_definitions_options_items;
+            "severity": Predefined.json;
+] && [ boolean; ] && [ unique; ] && (object && [ sealed; ]) && array && [ orelse rules_properties_no_console_definitions_options_items; ];
+        "no-construct": rule && [ "severity": Predefined.json; ] && [ boolean; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "no-debugger": rule && [ "severity": Predefined.json; ] && [ boolean; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "no-default-export": rule && [ "severity": Predefined.json; ] && [ boolean; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "no-duplicate-imports": rule && [
+            "options": rules_properties_no_duplicate_imports_definitions_options;
+            "severity": Predefined.json;
+] && [ boolean *  rules_properties_no_duplicate_imports_definitions_options; ] && [ size [0,2]; ] && object && [ sealed; ];
+        "no-duplicate-super": rule && [ "severity": Predefined.json; ] && [ boolean; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "no-duplicate-switch-case": rule && [ "severity": Predefined.json; ] && [ boolean; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "no-duplicate-variable": rule && [
+            "options": rules_properties_no_duplicate_variable_definitions_options xor rules_properties_no_duplicate_variable_definitions_options_items;
+            "severity": Predefined.json;
+] && [ boolean; ] && [ size [0,2]; ] && (object && [ sealed; ]) && array && [ orelse rules_properties_no_duplicate_variable_definitions_options_items; ];
+        "no-dynamic-delete": rule && [ "severity": Predefined.json; ] && [ boolean; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "no-empty": rule && [
+            "options": rules_properties_no_empty_definitions_options xor rules_properties_no_empty_definitions_options_items;
+            "severity": Predefined.json;
+] && [ boolean; ] && [ unique; ] && [ size [0,3]; ] && (object && [ sealed; ]) && array && [ orelse rules_properties_no_empty_definitions_options_items; ];
+        "no-eval": rule && [ "severity": Predefined.json; ] && [ boolean; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "no-for-in-array": rule && [ "severity": Predefined.json; ] && [ boolean; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "no-implicit-dependencies": rule && [
+            "options": rules_properties_no_implicit_dependencies_definitions_options xor rules_properties_no_implicit_dependencies_definitions_options_items_0;
+            "severity": Predefined.json;
+] && [ boolean; ] && [ size [0,3]; ] && (object && [ sealed; ]) && array && [ orelse rules_properties_no_implicit_dependencies_definitions_options_items_0;
+];
+        "no-import-side-effect": rule && [
+            "options": rules_properties_no_import_side_effect_definitions_options xor rules_properties_no_import_side_effect_definitions_options_items;
+            "severity": Predefined.json;
+] && [ boolean; ] && [ size [0,2]; ] && (object && [ sealed; ]) && array && [ orelse rules_properties_no_import_side_effect_definitions_options_items; ];
+        "no-invalid-template-strings": rule && [ "severity": Predefined.json; ] && [ boolean; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "no-invalid-this": rule && [
+            "options": rules_properties_no_invalid_this_definitions_options xor rules_properties_no_invalid_this_definitions_options_items;
+            "severity": Predefined.json;
+] && [ boolean; ] && [ size [0,2]; ] && (object && [ sealed; ]) && array && [ orelse rules_properties_no_invalid_this_definitions_options_items; ];
+        "no-irregular-whitespace": rule && [ "severity": Predefined.json; ] && [ boolean; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "no-magic-numbers": rule && [
+            "options": rules_properties_no_magic_numbers_definitions_options xor rules_properties_no_magic_numbers_definitions_options_items;
+            "severity": Predefined.json;
+] && [ boolean; ] && [ unique; ] && (object && [ sealed; ]) && array && [ orelse rules_properties_no_magic_numbers_definitions_options_items; ];
+        "no-null-keyword": rule && [ "severity": Predefined.json; ] && [ boolean; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "no-parameter-reassignment": rule && [ "severity": Predefined.json; ] && [ boolean; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "no-reference": rule && [ "severity": Predefined.json; ] && [ boolean; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "no-return-await": rule && [ "severity": Predefined.json; ] && [ boolean; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "no-require-imports": rule && [ "severity": Predefined.json; ] && [ boolean; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "no-shadowed-variable": rule && [
+            "options": rules_properties_no_shadowed_variable_definitions_options xor rules_properties_no_shadowed_variable_definitions_options_items;
+            "severity": Predefined.json;
+] && [ boolean; ] && [ size [0,2]; ] && (object && [ sealed; ]) && array && [ orelse rules_properties_no_shadowed_variable_definitions_options_items; ];
+        "no-sparse-arrays": rule && [ "severity": Predefined.json; ] && [ boolean; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "no-string-literal": rule && [ "severity": Predefined.json; ] && [ boolean; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "no-string-throw": rule && [ "severity": Predefined.json; ] && [ boolean; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "no-submodule-imports": rule && [
+            "options": rules_properties_no_submodule_imports_definitions_options xor rules_properties_no_submodule_imports_definitions_options_items;
+            "severity": Predefined.json;
+] && [ boolean; ] && [ unique; ] && (object && [ sealed; ]) && array && [ orelse rules_properties_no_submodule_imports_definitions_options_items; ];
+        "no-switch-case-fall-through": rule && [ "severity": Predefined.json; ] && [ boolean; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "no-this-assignment": rule && [
+            "options": rules_properties_no_this_assignment_definitions_options xor rules_properties_no_this_assignment_definitions_options_items;
+            "severity": Predefined.json;
+] && [ boolean; ] && [ size [0,2]; ] && (object && [ sealed; ]) && array && [ orelse rules_properties_no_this_assignment_definitions_options_items; ];
+        "no-trailing-whitespace": rule && [
+            "options": rules_properties_no_trailing_whitespace_definitions_options xor rules_properties_no_trailing_whitespace_definitions_options_items;
+            "severity": Predefined.json;
+] && [ boolean; ] && [ unique; ] && [ size [0,5]; ] && (object && [ sealed; ]) && array && [ orelse rules_properties_no_trailing_whitespace_definitions_options_items; ];
+        "no-unnecessary-callback-wrapper": rule && [ "severity": Predefined.json; ] && [ boolean; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "no-unnecessary-class": rule && [
+            "options": rules_properties_no_unnecessary_class_definitions_options xor rules_properties_no_unnecessary_class_definitions_options_items;
+            "severity": Predefined.json;
+] && [ boolean; ] && [ size [0,4]; ] && (object && [ sealed; ]) && array && [ orelse rules_properties_no_unnecessary_class_definitions_options_items; ];
+        "no-unnecessary-initializer": rule && [ "severity": Predefined.json; ] && [ boolean; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "no-unsafe-finally": rule && [ "severity": Predefined.json; ] && [ boolean; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "no-unused-expression": rule && [
+            "options": rules_properties_no_unused_expression_definitions_options xor rules_properties_no_unused_expression_definitions_options_items;
+            "severity": Predefined.json;
+] && [ boolean; ] && [ unique; ] && [ size [0,4]; ] && (object && [ sealed; ]) && array && [ orelse rules_properties_no_unused_expression_definitions_options_items; ];
+        "no-use-before-declare": rule && [ "severity": Predefined.json; ] && [ boolean; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "no-var-keyword": rule && [ "severity": Predefined.json; ] && [ boolean; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "no-void-expression": rule && [
+            "options": rules_properties_no_void_expression_definitions_options xor rules_properties_no_void_expression_definitions_options_items;
+            "severity": Predefined.json;
+] && [ boolean; ] && [ size [0,2]; ] && (object && [ sealed; ]) && array && [ orelse rules_properties_no_void_expression_definitions_options_items; ];
+        "number-literal-format": rule && [ "severity": Predefined.json; ] && [ boolean; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "object-literal-key-quotes": rule && [
+            "options": rules_properties_object_literal_key_quotes_definitions_options xor rules_properties_object_literal_key_quotes_definitions_options_items;
+            "severity": Predefined.json;
+] && [ boolean; ] && [ size [0,2]; ] && (object && [ sealed; ]) && array && [ orelse rules_properties_object_literal_key_quotes_definitions_options_items;
+];
+        "object-literal-shorthand": rule && [
+            "options": rules_properties_object_literal_shorthand_definitions_options xor rules_properties_object_literal_shorthand_definitions_options_items;
+            "severity": Predefined.json;
+] && [ boolean; ] && (object && [ sealed; ]) && array && [ orelse rules_properties_object_literal_shorthand_definitions_options_items;
+];
+        "object-literal-sort-keys": rule && [
+            "options": rules_properties_object_literal_sort_keys_definitions_options xor rules_properties_object_literal_sort_keys_definitions_options_items;
+            "severity": Predefined.json;
+] && [ boolean; ] && [ unique; ] && [ size [0,5]; ] && (object && [ sealed; ]) && array && [ orelse rules_properties_object_literal_sort_keys_definitions_options_items;
+];
+        "one-line": rule && [
+            "options": rules_properties_one_line_definitions_options xor rules_properties_one_line_definitions_options_items;
+            "severity": Predefined.json;
+] && [ boolean; ] && [ unique; ] && [ size [0,6]; ] && (object && [ sealed; ]) && array && [ orelse rules_properties_one_line_definitions_options_items; ];
+        "one-variable-per-declaration": rule && [
+            "options": rules_properties_one_variable_per_declaration_definitions_options xor rules_properties_one_variable_per_declaration_definitions_options_items;
+            "severity": Predefined.json;
+] && [ boolean; ] && [ size [0,2]; ] && (object && [ sealed; ]) && array && [
+            orelse rules_properties_one_variable_per_declaration_definitions_options_items;
+];
+        "only-arrow-functions": rule && [
+            "options": rules_properties_only_arrow_functions_definitions_options xor rules_properties_only_arrow_functions_definitions_options_items;
+            "severity": Predefined.json;
+] && [ boolean; ] && [ unique; ] && [ size [0,3]; ] && (object && [ sealed; ]) && array && [ orelse rules_properties_only_arrow_functions_definitions_options_items; ];
+        "ordered-imports": rule && [
+            "options": rules_properties_ordered_imports_definitions_options xor rules_properties_ordered_imports_definitions_options_items;
+            "severity": Predefined.json;
+] && [ boolean; ] && [ size [0,2]; ] && (object && [ sealed; ]) && array && [ orelse rules_properties_ordered_imports_definitions_options_items; ];
+        "prefer-conditional-expression": rule && [
+            "options": rules_properties_prefer_conditional_expression_definitions_options xor rules_properties_prefer_conditional_expression_definitions_options_items;
+            "severity": Predefined.json;
+] && [ boolean; ] && [ size [0,2]; ] && (object && [ sealed; ]) && array && [
+            orelse rules_properties_prefer_conditional_expression_definitions_options_items;
+];
+        "prefer-const": rule && [
+            "options": rules_properties_prefer_const_definitions_options xor rules_properties_prefer_const_definitions_options_items;
+            "severity": Predefined.json;
+] && [ boolean; ] && [ size [0,2]; ] && (object && [ sealed; ]) && array && [ orelse rules_properties_prefer_const_definitions_options_items; ];
+        "prefer-for-of": rule && [ "severity": Predefined.json; ] && [ boolean; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "prefer-function-over-method": rule && [
+            "options": rules_properties_prefer_function_over_method_definitions_options xor rules_properties_prefer_function_over_method_definitions_options_items;
+            "severity": Predefined.json;
+] && [ boolean; ] && [ unique; ] && [ size [0,3]; ] && (object && [ sealed; ]) && array && [
+            orelse rules_properties_prefer_function_over_method_definitions_options_items;
+];
+        "prefer-method-signature": rule && [ "severity": Predefined.json; ] && [ boolean; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "prefer-object-spread": rule && [ "severity": Predefined.json; ] && [ boolean; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "prefer-switch": rule && [
+            "options": rules_properties_prefer_switch_definitions_options xor rules_properties_prefer_switch_definitions_options_items;
+            "severity": Predefined.json;
+] && [ boolean; ] && [ size [0,2]; ] && (object && [ sealed; ]) && array && [ orelse rules_properties_prefer_switch_definitions_options_items; ];
+        "prefer-template": rule && [
+            "options": rules_properties_prefer_template_definitions_options xor rules_properties_prefer_template_definitions_options_items;
+            "severity": Predefined.json;
+] && [ boolean; ] && [ size [0,2]; ] && (object && [ sealed; ]) && array && [ orelse rules_properties_prefer_template_definitions_options_items; ];
+        "prefer-while": rule && [ boolean; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "promise-function-async": rule && [ "severity": Predefined.json; ] && [ boolean; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "quotemark": rule && [
+            "options": rules_properties_quotemark_definitions_options xor rules_properties_quotemark_definitions_options_items;
+            "severity": Predefined.json;
+] && [ boolean; ] && [ unique; ] && [ size [0,5]; ] && (object && [ sealed; ]) && array && [ orelse rules_properties_quotemark_definitions_options_items; ];
+        "radix": rule && [ "severity": Predefined.json; ] && [ boolean; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "restrict-plus-operands": rule && [ "severity": Predefined.json; ] && [ boolean; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "return-undefined": rule && [ "severity": Predefined.json; ] && [ boolean; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "semicolon": rule && [
+            "options": rules_properties_semicolon_definitions_options xor rules_properties_semicolon_definitions_options_items_0;
+            "severity": Predefined.json;
+] && [
+            boolean * 
+            rules_properties_semicolon_definitions_options_items_0 * 
+            rules_properties_semicolon_definitions_options_items_1;
+] && [ size [0,3]; ] && object && [ sealed; ];
+        "space-before-function-paren": rule && [
+            "options": rules_properties_space_before_function_paren_definitions_options xor rules_properties_space_before_function_paren_definitions_options_items;
+            "severity": Predefined.json;
+] && [ boolean; ] && [ size [0,2]; ] && (object && [ sealed; ]) && array && [
+            orelse rules_properties_space_before_function_paren_definitions_options_items;
+];
+        "space-within-parens": rule && [
+            "options": rules_properties_space_within_parens_definitions_options xor rules_properties_space_within_parens_definitions_options_items;
+            "severity": Predefined.json;
+] && [ boolean; ] && [ size [0,2]; ] && (object && [ sealed; ]) && array && [ orelse rules_properties_space_within_parens_definitions_options_items; ];
+        "switch-default": rule && [ "severity": Predefined.json; ] && [ boolean; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "switch-final-break": rule && [
+            "options": rules_properties_switch_final_break_definitions_options xor rules_properties_switch_final_break_definitions_options_items;
+            "severity": Predefined.json;
+] && [ boolean; ] && [ size [0,2]; ] && (object && [ sealed; ]) && array && [ orelse rules_properties_switch_final_break_definitions_options_items; ];
+        "trailing-comma": rule && [
+            "options": rules_properties_trailing_comma_definitions_options xor rules_properties_trailing_comma_definitions_options_items;
+            "severity": Predefined.json;
+] && [ boolean; ] && [ size [0,2]; ] && (object && [ sealed; ]) && array && [ orelse rules_properties_trailing_comma_definitions_options_items; ];
+        "triple-equals": rule && [
+            "options": rules_properties_triple_equals_definitions_options xor rules_properties_triple_equals_definitions_options_items;
+            "severity": Predefined.json;
+] && [ boolean; ] && [ unique; ] && [ size [0,3]; ] && (object && [ sealed; ]) && array && [ orelse rules_properties_triple_equals_definitions_options_items; ];
+        "typeof-compare": rule && [ "severity": Predefined.json; ] && [ boolean; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "use-isnan": rule && [ "severity": Predefined.json; ] && [ boolean; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "variable-name": rule && [
+            "options": rules_properties_variable_name_definitions_options xor rules_properties_variable_name_definitions_options_items;
+            "severity": Predefined.json;
+] && [ boolean; ] && [ unique; ] && [ size [0,7]; ] && (object && [ sealed; ]) && array && [ orelse rules_properties_variable_name_definitions_options_items; ];
+        "whitespace": rule && [
+            "options": rules_properties_whitespace_definitions_options xor rules_properties_whitespace_definitions_options_items;
+            "severity": Predefined.json;
+] && [ boolean; ] && (object && [ sealed; ]) && array && [ orelse rules_properties_whitespace_definitions_options_items; ];
+]
+    and rules_properties_align_definitions_options = array && [
+        of string && [ enum "arguments", "elements", "members", "parameters", "statements"; ];
+] && [ unique; ] && [ size [1,5]; ]
+    and rules_properties_align_definitions_options_items = string && [ enum "arguments", "elements", "members", "parameters", "statements"; ]
+    and rules_properties_arrow_parens_definitions_options = array && [ of string && [ enum "ban-single-arg-parens"; ]; ] && [ size [1,1]; ]
+    and rules_properties_arrow_parens_definitions_options_items = string && [ enum "ban-single-arg-parens"; ]
+    and rules_properties_arrow_return_shorthand_definitions_options = array && [ of string && [ enum "multiline"; ]; ] && [ size [1,1]; ]
+    and rules_properties_arrow_return_shorthand_definitions_options_items = string && [ enum "multiline"; ]
+    and rules_properties_ban_definitions_options = array && [
+        of string || array && [ of string; ] && [ size [1,3]; ] || object && [
+            "name": string || array && [ of string; ] && [ size [1,3]; ];
+            "message": string;
+] && (object && [ sealed; ]) && [ required "name"; ];
+] && [ unique; ] && [ size [1,max]; ]
+    and rules_properties_ban_definitions_options_items = string || array && [ of string; ] && [ size [1,3]; ] || object && [
+        "name": string || array && [ of string; ] && [ size [1,3]; ];
+        "message": string;
+] && (object && [ sealed; ]) && [ required "name"; ]
+    and rules_properties_comment_format_definitions_options = array && [
+        of string && [ unique; ] && [ size [1,3]; ] && [ enum "check-space", "check-lowercase", "check-uppercase"; ] || object && [
+            "ignore-words": array && [ of string; ] && [ unique; ];
+            "ignore-pattern": string;
+] && object && [ size [1,1]; ];
+] && [ unique; ] && [ size [1,4]; ]
+
+    and rules_properties_comment_format_definitions_options_items =
+      string && [ enum "check-space", "check-lowercase", "check-uppercase"; ]
+   || object && ["ignore-words": array && [ of string; ] && [ unique; ];
+                 "ignore-pattern": string; ] && [ size [1,1]; ]
+
+    and rules_properties_completed_docs_definitions_options = array && [
+        of string && [
+            enum "classes", "enums", "enum-members", "functions",
+            "interfaces", "methods", "namespaces", "properties", "types",
+            "variables";
+] xor object && [
+            "classes": object && [ "visibilities": string && [ enum "all", "exported", "internal"; ]; ] && object && [ sealed; ];
+            "enums": object && [ "visibilities": string && [ enum "all", "exported", "internal"; ]; ] && object && [ sealed; ];
+            "enum-members": object && [ "visibilities": string && [ enum "all", "exported", "internal"; ]; ] && object && [ sealed; ];
+            "functions": object && [ "visibilities": string && [ enum "all", "exported", "internal"; ]; ] && object && [ sealed; ];
+            "interfaces": object && [ "visibilities": string && [ enum "all", "exported", "internal"; ]; ] && object && [ sealed; ];
+            "methods": object && [
+                "locations": string && [ enum "all", "instance", "static"; ];
+                "privacies": string && [ enum "all", "private", "protected", "public"; ];
+] && object && [ sealed; ];
+            "namespaces": object && [ "visibilities": string && [ enum "all", "exported", "internal"; ]; ] && object && [ sealed; ];
+            "properties": object && [
+                "locations": string && [ enum "all", "instance", "static"; ];
+                "privacies": string && [ enum "all", "private", "protected", "public"; ];
+] && object && [ sealed; ];
+            "types": object && [ "visibilities": string && [ enum "all", "exported", "internal"; ]; ] && object && [ sealed; ];
+            "variables": object && [ "visibilities": string && [ enum "all", "exported", "internal"; ]; ] && object && [ sealed; ];
+];
+] && [ unique; ] && [ size [1,10]; ]
+    and rules_properties_completed_docs_definitions_options_items = string && [
+        enum "classes", "enums", "enum-members", "functions", "interfaces",
+        "methods", "namespaces", "properties", "types", "variables";
+] xor object && [
+        "classes": object && [ "visibilities": string && [ enum "all", "exported", "internal"; ]; ] && object && [ sealed; ];
+        "enums": object && [ "visibilities": string && [ enum "all", "exported", "internal"; ]; ] && object && [ sealed; ];
+        "enum-members": object && [ "visibilities": string && [ enum "all", "exported", "internal"; ]; ] && object && [ sealed; ];
+        "functions": object && [ "visibilities": string && [ enum "all", "exported", "internal"; ]; ] && object && [ sealed; ];
+        "interfaces": object && [ "visibilities": string && [ enum "all", "exported", "internal"; ]; ] && object && [ sealed; ];
+        "methods": object && [
+            "locations": string && [ enum "all", "instance", "static"; ];
+            "privacies": string && [ enum "all", "private", "protected", "public"; ];
+] && object && [ sealed; ];
+        "namespaces": object && [ "visibilities": string && [ enum "all", "exported", "internal"; ]; ] && object && [ sealed; ];
+        "properties": object && [
+            "locations": string && [ enum "all", "instance", "static"; ];
+            "privacies": string && [ enum "all", "private", "protected", "public"; ];
+] && object && [ sealed; ];
+        "types": object && [ "visibilities": string && [ enum "all", "exported", "internal"; ]; ] && object && [ sealed; ];
+        "variables": object && [ "visibilities": string && [ enum "all", "exported", "internal"; ]; ] && object && [ sealed; ];
+]
+    and rules_properties_curly_definitions_options = array && [
+        of string && [ unique; ] && [ size [1,2]; ] && [ enum "as-needed", "ignore-same-line"; ];
+]
+    and rules_properties_curly_definitions_options_items = string && [ unique; ] && [ size [1,2]; ] && [ enum "as-needed", "ignore-same-line"; ]
+    and rules_properties_cyclomatic_complexity_definitions_options = array && [ of number && [ bounds [2.0,max]; ]; ] && [ size [1,1]; ]
+    and rules_properties_cyclomatic_complexity_definitions_options_items = number && [ bounds [2.0,max]; ]
+    and rules_properties_file_header_definitions_options = array && [ of string; ] && [ size [1,2]; ]
+    and rules_properties_file_header_definitions_options_items = string
+    and rules_properties_file_name_casing_definitions_file_name_cases = string && [ enum "camel-case", "pascal-case", "kebab-case", "snake-case"; ]
+    and rules_properties_import_blacklist_definitions_options = array && [
+        of string && [ size [1,max]; ] xor object && [ orelse array && [ of string && [ size [1,max]; ]; ] && [ size [1,max]; ];
+] xor array && [ of string; ] && [ size [1,max]; ];
+] && [ unique; ] && [ size [1,max]; ]
+    and rules_properties_import_blacklist_definitions_options_items = string && [ size [1,max]; ] xor object && [ orelse array && [ of string && [ size [1,max]; ]; ] && [ size [1,max]; ];
+] xor array && [ of string; ] && [ size [1,max]; ]
+    and rules_properties_indent_definitions_options = array && [ string && [ enum "tabs", "spaces"; ] *  number && [ enum 2.0, 4.0; ]; ] && [ size [1,2]; ]
+    and rules_properties_indent_definitions_options_items_0 = string && [ enum "tabs", "spaces"; ]
+    and rules_properties_indent_definitions_options_items_1 = number && [ enum 2.0, 4.0; ]
+    and rules_properties_jsdoc_format_definitions_options = array && [ of string && [ enum "check-multiline-start"; ]; ] && [ unique; ] && [ size [0,1]; ]
+    and rules_properties_jsdoc_format_definitions_options_items = string && [ enum "check-multiline-start"; ]
+    and rules_properties_linebreak_style_definitions_options = array && [ of string && [ enum "LF", "CRLF"; ]; ] && [ size [1,1]; ]
+    and rules_properties_linebreak_style_definitions_options_items = string && [ enum "LF", "CRLF"; ]
+    and rules_properties_max_classes_per_file_definitions_options = array && [
+        number && [ bounds [1.0,max]; ] * 
+        string && [ enum "exclude-class-expressions"; ];
+] && [ size [1,2]; ]
+    and rules_properties_max_classes_per_file_definitions_options_items_0 = number && [ bounds [1.0,max]; ]
+    and rules_properties_max_classes_per_file_definitions_options_items_1 = string && [ enum "exclude-class-expressions"; ]
+    and rules_properties_max_file_line_count_definitions_options = array && [ of number && [ bounds [1.0,max]; ]; ] && [ size [1,1]; ]
+    and rules_properties_max_file_line_count_definitions_options_items = number && [ bounds [1.0,max]; ]
+    and rules_properties_max_line_length_definitions_options = array && [
+        of number xor object && [
+            "limit": number;
+            "ignore-pattern": string;
+            "check-strings": boolean;
+            "check-regex": boolean;
+] && object && [ sealed; ];
+] && [ size [1,2]; ]
+    and rules_properties_max_line_length_definitions_options_items = number xor object && [
+        "limit": number;
+        "ignore-pattern": string;
+        "check-strings": boolean;
+        "check-regex": boolean;
+] && object && [ sealed; ]
+    and rules_properties_member_ordering_definitions_kinds = array && [
+        of string && [
+            enum "static-field", "instance-field", "static-method",
+            "instance-method", "constructor", "public-static-field",
+            "public-static-method", "protected-static-field",
+            "protected-static-method", "private-static-field",
+            "private-static-method", "public-instance-field",
+            "protected-instance-field", "private-instance-field",
+            "public-constructor", "protected-constructor",
+            "private-constructor", "public-instance-method",
+            "protected-instance-method", "private-instance-method",
+            "public-static-accessor", "protected-static-accessor",
+            "private-static-accessor", "public-instance-accessor",
+            "protected-instance-accessor", "private-instance-accessor";
+];
+] && [ unique; ] && [ size [1,15]; ]
+    and rules_properties_member_ordering_definitions_kinds_items = string && [
+        enum "static-field", "instance-field", "static-method",
+        "instance-method", "constructor", "public-static-field",
+        "public-static-method", "protected-static-field",
+        "protected-static-method", "private-static-field",
+        "private-static-method", "public-instance-field",
+        "protected-instance-field", "private-instance-field",
+        "public-constructor", "protected-constructor", "private-constructor",
+        "public-instance-method", "protected-instance-method",
+        "private-instance-method", "public-static-accessor",
+        "protected-static-accessor", "private-static-accessor",
+        "public-instance-accessor", "protected-instance-accessor",
+        "private-instance-accessor";
+]
+    and rules_properties_member_ordering_definitions_options = array && [
+        of object && [
+            "order": string && [ enum "fields-first", "instance-sandwich", "statics-first"; ] xor array && [
+                of rules_properties_member_ordering_definitions_kinds_items || object && [
+                    "name": string;
+                    "kinds": rules_properties_member_ordering_definitions_kinds;
+] && object && [ sealed; ];
+] && [ unique; ] && [ size [1,15]; ];
+            "alphabetize": boolean;
+] && object && [ sealed; ];
+] && [ size [1,1]; ]
+    and rules_properties_member_ordering_definitions_options_items = object && [
+        "order": string && [ enum "fields-first", "instance-sandwich", "statics-first"; ] xor array && [
+            of rules_properties_member_ordering_definitions_kinds_items || object && [
+                "name": string;
+                "kinds": rules_properties_member_ordering_definitions_kinds;
+] && object && [ sealed; ];
+] && [ unique; ] && [ size [1,15]; ];
+        "alphabetize": boolean;
+] && object && [ sealed; ]
+    and rules_properties_no_consecutive_blank_lines_definitions_options = array && [ of number && [ bounds [1.0,max]; ]; ] && [ size [1,1]; ]
+    and rules_properties_no_consecutive_blank_lines_definitions_options_items = number && [ bounds [1.0,max]; ]
+    and rules_properties_no_console_definitions_options = array && [ of string; ] && [ unique; ] && [ size [1,max]; ]
+    and rules_properties_no_console_definitions_options_items = string
+    and rules_properties_no_duplicate_imports_definitions_options = object && [ "allow-namespace-imports": boolean; ] && object && [ sealed; ]
+    and rules_properties_no_duplicate_variable_definitions_options = array && [ of string && [ enum "check-parameters"; ]; ] && [ size [1,1]; ]
+    and rules_properties_no_duplicate_variable_definitions_options_items = string && [ enum "check-parameters"; ]
+    and rules_properties_no_empty_definitions_options = array && [ of string && [ enum "allow-empty-catch", "allow-empty-functions"; ]; ] && [ unique; ] && [ size [1,2]; ]
+    and rules_properties_no_empty_definitions_options_items = string && [ enum "allow-empty-catch", "allow-empty-functions"; ]
+    and rules_properties_no_implicit_dependencies_definitions_options = array && [ string && [ enum "dev", "optional"; ] *  array; ] && [ size [0,3]; ]
+    and rules_properties_no_implicit_dependencies_definitions_options_items_0 = string && [ enum "dev", "optional"; ]
+    and rules_properties_no_import_side_effect_definitions_options = array && [ of object && [ "ignore-module": string; ] && object && [ sealed; ]; ] && [ size [1,1]; ]
+    and rules_properties_no_import_side_effect_definitions_options_items = object && [ "ignore-module": string; ] && object && [ sealed; ]
+    and rules_properties_no_invalid_this_definitions_options = array && [ of string && [ enum "check-function-in-method"; ]; ] && [ size [1,1]; ]
+    and rules_properties_no_invalid_this_definitions_options_items = string && [ enum "check-function-in-method"; ]
+    and rules_properties_no_magic_numbers_definitions_options = array && [ of number; ] && [ unique; ] && [ size [1,max]; ]
+    and rules_properties_no_magic_numbers_definitions_options_items = number
+    and rules_properties_no_shadowed_variable_definitions_options = array && [
+        of object && [
+            "class": boolean;
+            "enum": boolean;
+            "function": boolean;
+            "import": boolean;
+            "interface": boolean;
+            "namespace": boolean;
+            "typeAlias": boolean;
+            "typeParameter": boolean;
+] && object && [ sealed; ];
+] && [ size [1,1]; ]
+    and rules_properties_no_shadowed_variable_definitions_options_items = object && [
+        "class": boolean;
+        "enum": boolean;
+        "function": boolean;
+        "import": boolean;
+        "interface": boolean;
+        "namespace": boolean;
+        "typeAlias": boolean;
+        "typeParameter": boolean;
+] && object && [ sealed; ]
+    and rules_properties_no_submodule_imports_definitions_options = array && [ of string; ] && [ unique; ] && [ size [1,max]; ]
+    and rules_properties_no_submodule_imports_definitions_options_items = string
+    and rules_properties_no_this_assignment_definitions_options = array && [
+        of object && [
+            "allow-destructuring": boolean;
+            "allowed-names": array && [ of string; ] && [ unique; ] && [ size [1,max]; ];
+] && object && [ sealed; ];
+] && [ size [1,1]; ]
+    and rules_properties_no_this_assignment_definitions_options_items = object && [
+        "allow-destructuring": boolean;
+        "allowed-names": array && [ of string; ] && [ unique; ] && [ size [1,max]; ];
+] && object && [ sealed; ]
+    and rules_properties_no_trailing_whitespace_definitions_options = array && [
+        of string && [
+            enum "ignore-comments", "ignore-jsdoc", "ignore-template-strings",
+            "ignore-blank-lines";
+];
+] && [ unique; ] && [ size [1,4]; ]
+    and rules_properties_no_trailing_whitespace_definitions_options_items = string && [
+        enum "ignore-comments", "ignore-jsdoc", "ignore-template-strings",
+        "ignore-blank-lines";
+]
+    and rules_properties_no_unnecessary_class_definitions_options = array && [
+        of string && [ enum "allow-constructor-only", "allow-empty-class", "allow-static-only"; ];
+] && [ size [0,3]; ]
+    and rules_properties_no_unnecessary_class_definitions_options_items = string && [ enum "allow-constructor-only", "allow-empty-class", "allow-static-only"; ]
+    and rules_properties_no_unused_expression_definitions_options = array && [
+        of string && [ enum "allow-fast-null-checks", "allow-new", "allow-tagged-template"; ];
+] && [ unique; ] && [ size [1,3]; ]
+    and rules_properties_no_unused_expression_definitions_options_items = string && [ enum "allow-fast-null-checks", "allow-new", "allow-tagged-template"; ]
+    and rules_properties_no_void_expression_definitions_options = array && [ of string && [ enum "ignore-arrow-function-shorthand"; ]; ] && [ size [1,1]; ]
+    and rules_properties_no_void_expression_definitions_options_items = string && [ enum "ignore-arrow-function-shorthand"; ]
+    and rules_properties_object_literal_key_quotes_definitions_options = array && [
+        of string && [ enum "always", "as-needed", "consistent", "consistent-as-needed"; ];
+] && [ size [1,1]; ]
+    and rules_properties_object_literal_key_quotes_definitions_options_items = string && [ enum "always", "as-needed", "consistent", "consistent-as-needed"; ]
+    and rules_properties_object_literal_shorthand_definitions_options = array && [ of string && [ enum "always", "never"; ]; ] && [ unique; ] && [ size [1,2]; ]
+    and rules_properties_object_literal_shorthand_definitions_options_items = string && [ enum "always", "never"; ]
+    and rules_properties_object_literal_sort_keys_definitions_options = array && [
+        of string && [
+            enum "ignore-case", "locale-compare", "match-declaration-order",
+            "shorthand-first";
+];
+] && [ unique; ] && [ size [1,4]; ]
+    and rules_properties_object_literal_sort_keys_definitions_options_items = string && [
+        enum "ignore-case", "locale-compare", "match-declaration-order",
+        "shorthand-first";
+]
+    and rules_properties_one_line_definitions_options = array && [
+        of string && [
+            enum "check-catch", "check-finally", "check-else",
+            "check-open-brace", "check-whitespace";
+];
+] && [ unique; ] && [ size [1,5]; ]
+    and rules_properties_one_line_definitions_options_items = string && [
+        enum "check-catch", "check-finally", "check-else", "check-open-brace",
+        "check-whitespace";
+]
+    and rules_properties_one_variable_per_declaration_definitions_options = array && [ of string && [ enum "ignore-for-loop"; ]; ] && [ size [1,1]; ]
+    and rules_properties_one_variable_per_declaration_definitions_options_items = string && [ enum "ignore-for-loop"; ]
+    and rules_properties_only_arrow_functions_definitions_options = array && [ of string && [ enum "allow-declarations", "allow-named-functions"; ]; ] && [ unique; ] && [ size [1,2]; ]
+    and rules_properties_only_arrow_functions_definitions_options_items = string && [ enum "allow-declarations", "allow-named-functions"; ]
+    and rules_properties_ordered_imports_definitions_options = array && [
+        of object && [
+            "grouped-imports": boolean;
+            "groups": array && [
+                of string xor object && [
+                    "name": string;
+                    "match": string;
+                    "order": number;
+] && [ required "match",  "order"; ];
+];
+            "import-sources-order": string && [
+                enum "case-insensitive", "case-insensitive-legacy",
+                "lowercase-first", "lowercase-last", "any";
+];
+            "named-imports-order": string && [
+                enum "case-insensitive", "case-insensitive-legacy",
+                "lowercase-first", "lowercase-last", "any";
+];
+            "module-source-path": string && [ enum "full", "basename"; ];
+] && object && [ sealed; ];
+] && [ size [1,1]; ]
+    and rules_properties_ordered_imports_definitions_options_items = object && [
+        "grouped-imports": boolean;
+        "groups": array && [
+            of string xor object && [
+                "name": string;
+                "match": string;
+                "order": number;
+] && [ required "match",  "order"; ];
+];
+        "import-sources-order": string && [
+            enum "case-insensitive", "case-insensitive-legacy",
+            "lowercase-first", "lowercase-last", "any";
+];
+        "named-imports-order": string && [
+            enum "case-insensitive", "case-insensitive-legacy",
+            "lowercase-first", "lowercase-last", "any";
+];
+        "module-source-path": string && [ enum "full", "basename"; ];
+] && object && [ sealed; ]
+    and rules_properties_prefer_conditional_expression_definitions_options = array && [ of string && [ enum "check-else-if"; ]; ] && [ size [1,1]; ]
+    and rules_properties_prefer_conditional_expression_definitions_options_items = string && [ enum "check-else-if"; ]
+    and rules_properties_prefer_const_definitions_options = array && [
+        of object && [ "destructuring": string && [ enum "all", "any"; ]; ] && object && [ sealed; ];
+] && [ size [1,1]; ]
+    and rules_properties_prefer_const_definitions_options_items = object && [ "destructuring": string && [ enum "all", "any"; ]; ] && object && [ sealed; ]
+    and rules_properties_prefer_function_over_method_definitions_options = array && [ of string && [ enum "allow-public", "allow-protected"; ]; ] && [ unique; ] && [ size [1,2]; ]
+    and rules_properties_prefer_function_over_method_definitions_options_items = string && [ enum "allow-public", "allow-protected"; ]
+    and rules_properties_prefer_switch_definitions_options = array && [
+        of object && [ "min-cases": number && [ bounds [0.0,max]; ]; ] && object && [ sealed; ];
+] && [ size [1,1]; ]
+    and rules_properties_prefer_switch_definitions_options_items = object && [ "min-cases": number && [ bounds [0.0,max]; ]; ] && object && [ sealed; ]
+    and rules_properties_prefer_template_definitions_options = array && [ of string && [ enum "allow-single-concat"; ]; ] && [ size [1,1]; ]
+    and rules_properties_prefer_template_definitions_options_items = string && [ enum "allow-single-concat"; ]
+    and rules_properties_quotemark_definitions_options = array && [
+        of string && [
+            enum "single", "double", "jsx-single", "jsx-double",
+            "avoid-escape", "avoid-template";
+];
+] && [ unique; ] && [ size [1,4]; ]
+    and rules_properties_quotemark_definitions_options_items = string && [
+        enum "single", "double", "jsx-single", "jsx-double", "avoid-escape",
+        "avoid-template";
+]
+    and rules_properties_semicolon_definitions_options = array && [
+        string && [ enum "always", "never"; ] * 
+        string && [
+            enum "ignore-interfaces", "ignore-bound-class-methods",
+            "strict-bound-class-methods";
+];
+] && [ size [1,3]; ]
+    and rules_properties_semicolon_definitions_options_items_0 = string && [ enum "always", "never"; ]
+    and rules_properties_semicolon_definitions_options_items_1 = string && [
+        enum "ignore-interfaces", "ignore-bound-class-methods",
+        "strict-bound-class-methods";
+]
+    and rules_properties_space_before_function_paren_definitions_options = array && [
+        of object && [
+            "anonymous": string && [ enum "always", "never"; ];
+            "asyncArrow": string && [ enum "always", "never"; ];
+            "constructor": string && [ enum "always", "never"; ];
+            "method": string && [ enum "always", "never"; ];
+            "named": string && [ enum "always", "never"; ];
+] && object && [ sealed; ];
+] && [ size [1,1]; ]
+    and rules_properties_space_before_function_paren_definitions_options_items = object && [
+        "anonymous": string && [ enum "always", "never"; ];
+        "asyncArrow": string && [ enum "always", "never"; ];
+        "constructor": string && [ enum "always", "never"; ];
+        "method": string && [ enum "always", "never"; ];
+        "named": string && [ enum "always", "never"; ];
+] && object && [ sealed; ]
+    and rules_properties_space_within_parens_definitions_options = array && [ of number && [ bounds [0.0,max]; ]; ] && [ size [1,1]; ]
+    and rules_properties_space_within_parens_definitions_options_items = number && [ bounds [0.0,max]; ]
+    and rules_properties_switch_final_break_definitions_options = array && [ of string && [ enum "always"; ]; ] && [ size [1,1]; ]
+    and rules_properties_switch_final_break_definitions_options_items = string && [ enum "always"; ]
+    and rules_properties_trailing_comma_definitions_options = array && [
+        of object && [
+            "multiline": string && [ enum "always", "never"; ] || object && [
+                "arrays": string && [ enum "always", "never", "ignore"; ];
+                "exports": string && [ enum "always", "never", "ignore"; ];
+                "functions": string && [ enum "always", "never", "ignore"; ];
+                "imports": string && [ enum "always", "never", "ignore"; ];
+                "objects": string && [ enum "always", "never", "ignore"; ];
+                "typeLiterals": string && [ enum "always", "never", "ignore"; ];
+] && object && [ sealed; ];
+            "singleline": string && [ enum "always", "never"; ] || object && [
+                "arrays": string && [ enum "always", "never", "ignore"; ];
+                "exports": string && [ enum "always", "never", "ignore"; ];
+                "functions": string && [ enum "always", "never", "ignore"; ];
+                "imports": string && [ enum "always", "never", "ignore"; ];
+                "objects": string && [ enum "always", "never", "ignore"; ];
+                "typeLiterals": string && [ enum "always", "never", "ignore"; ];
+] && object && [ sealed; ];
+            "esSpecCompliant": boolean;
+] && object && [ sealed; ];
+] && [ size [1,1]; ]
+    and rules_properties_trailing_comma_definitions_options_items = object && [
+        "multiline": string && [ enum "always", "never"; ] || object && [
+            "arrays": string && [ enum "always", "never", "ignore"; ];
+            "exports": string && [ enum "always", "never", "ignore"; ];
+            "functions": string && [ enum "always", "never", "ignore"; ];
+            "imports": string && [ enum "always", "never", "ignore"; ];
+            "objects": string && [ enum "always", "never", "ignore"; ];
+            "typeLiterals": string && [ enum "always", "never", "ignore"; ];
+] && object && [ sealed; ];
+        "singleline": string && [ enum "always", "never"; ] || object && [
+            "arrays": string && [ enum "always", "never", "ignore"; ];
+            "exports": string && [ enum "always", "never", "ignore"; ];
+            "functions": string && [ enum "always", "never", "ignore"; ];
+            "imports": string && [ enum "always", "never", "ignore"; ];
+            "objects": string && [ enum "always", "never", "ignore"; ];
+            "typeLiterals": string && [ enum "always", "never", "ignore"; ];
+] && object && [ sealed; ];
+        "esSpecCompliant": boolean;
+] && object && [ sealed; ]
+    and rules_properties_triple_equals_definitions_options = array && [ of string && [ enum "allow-null-check", "allow-undefined-check"; ]; ] && [ unique; ] && [ size [1,3]; ]
+    and rules_properties_triple_equals_definitions_options_items = string && [ enum "allow-null-check", "allow-undefined-check"; ]
+    and rules_properties_variable_name_definitions_options = array && [
+        of string && [
+            enum "check-format", "require-const-for-all-caps",
+            "allow-leading-underscore", "allow-trailing-underscore",
+            "allow-pascal-case", "allow-snake-case", "ban-keywords";
+];
+] && [ unique; ] && [ size [1,7]; ]
+    and rules_properties_variable_name_definitions_options_items = string && [
+        enum "check-format", "require-const-for-all-caps",
+        "allow-leading-underscore", "allow-trailing-underscore",
+        "allow-pascal-case", "allow-snake-case", "ban-keywords";
+]
+    and rules_properties_whitespace_definitions_options = array && [
+        of string && [ unique; ] && [ size [1,10]; ] && [
+            enum "check-branch", "check-decl", "check-operator",
+            "check-module", "check-separator", "check-rest-spread",
+            "check-type", "check-typecast", "check-type-operator",
+            "check-preblock", "check-postbrace";
+];
+]
+    and rules_properties_whitespace_definitions_options_items = string && [ unique; ] && [ size [1,10]; ] && [
+        enum "check-branch", "check-decl", "check-operator", "check-module",
+        "check-separator", "check-rest-spread", "check-type",
+        "check-typecast", "check-type-operator", "check-preblock",
+        "check-postbrace";
+]
+    and tsRules = [
+        "adjacent-overload-signatures": rule && [ "severity": Predefined.json; ] && [ boolean; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "array-type": rule && [
+            "options": tsRules_properties_array_type_definitions_options xor tsRules_properties_array_type_definitions_options_items;
+            "severity": Predefined.json;
+] && [ boolean; ] && [ size [0,2]; ] && (object && [ sealed; ]) && array && [ orelse tsRules_properties_array_type_definitions_options_items; ];
+        "await-promise": rule && [
+            "options": tsRules_properties_await_promise_definitions_options xor tsRules_properties_await_promise_definitions_options_items;
+            "severity": Predefined.json;
+] && [ boolean; ] && [ unique; ] && (object && [ sealed; ]) && array && [ orelse tsRules_properties_await_promise_definitions_options_items; ];
+        "ban-types": rule && [
+            "options": tsRules_properties_ban_types_definitions_options xor tsRules_properties_ban_types_definitions_options_items;
+            "severity": Predefined.json;
+] && [ boolean; ] && [ unique; ] && (object && [ sealed; ]) && array && [ orelse tsRules_properties_ban_types_definitions_options_items; ];
+        "callable-types": rule && [ "severity": Predefined.json; ] && [ boolean; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "interface-name": rule && [
+            "options": tsRules_properties_interface_name_definitions_options xor tsRules_properties_interface_name_definitions_options_items;
+            "severity": Predefined.json;
+] && [ boolean; ] && [ size [0,2]; ] && (object && [ sealed; ]) && array && [ orelse tsRules_properties_interface_name_definitions_options_items; ];
+        "interface-over-type-literal": rule && [ "severity": Predefined.json; ] && [ boolean; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "match-default-export-name": rule && [ "severity": Predefined.json; ] && [ boolean; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "member-access": rule && [
+            "options": tsRules_properties_member_access_definitions_options xor tsRules_properties_member_access_definitions_options_items;
+            "severity": Predefined.json;
+] && [ boolean; ] && [ unique; ] && [ size [0,4]; ] && (object && [ sealed; ]) && array && [ orelse tsRules_properties_member_access_definitions_options_items; ];
+        "no-angle-bracket-type-assertion": rule && [ "severity": Predefined.json; ] && [ boolean; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "no-any": rule && [ "severity": Predefined.json; ] && [ boolean *  object && [ "ignore-rest-args": boolean; ]; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "no-boolean-literal-compare": rule && [ "severity": Predefined.json; ] && [ boolean; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "no-empty-interface": rule && [ "severity": Predefined.json; ] && [ boolean; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "no-floating-promises": rule && [
+            "options": tsRules_properties_no_floating_promises_definitions_options xor tsRules_properties_no_floating_promises_definitions_options_items;
+            "severity": Predefined.json;
+] && [ boolean; ] && [ unique; ] && (object && [ sealed; ]) && array && [ orelse tsRules_properties_no_floating_promises_definitions_options_items; ];
+        "no-inferrable-types": rule && [
+            "options": tsRules_properties_no_inferrable_types_definitions_options xor tsRules_properties_no_inferrable_types_definitions_options_items;
+            "severity": Predefined.json;
+] && [ boolean; ] && [ unique; ] && [ size [0,3]; ] && (object && [ sealed; ]) && array && [ orelse tsRules_properties_no_inferrable_types_definitions_options_items; ];
+        "no-inferred-empty-object-type": rule && [ "severity": Predefined.json; ] && [ boolean; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "no-internal-module": rule && [ "severity": Predefined.json; ] && [ boolean; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "no-mergeable-namespace": rule && [ "severity": Predefined.json; ] && [ boolean; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "no-misused-new": rule && [ "severity": Predefined.json; ] && [ boolean; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "no-namespace": rule && [
+            "options": tsRules_properties_no_namespace_definitions_options xor tsRules_properties_no_namespace_definitions_options_items;
+            "severity": Predefined.json;
+] && [ boolean; ] && [ size [0,2]; ] && (object && [ sealed; ]) && array && [ orelse tsRules_properties_no_namespace_definitions_options_items; ];
+        "no-non-null-assertion": rule && [ "severity": Predefined.json; ] && [ boolean; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "no-object-literal-type-assertion": rule && [ "severity": Predefined.json; ] && [ boolean; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "no-parameter-properties": rule && [ "severity": Predefined.json; ] && [ boolean; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "no-redundant-jsdoc": rule && [ "severity": Predefined.json; ] && [ boolean; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "no-reference-import": rule && [ "severity": Predefined.json; ] && [ boolean; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "no-unbound-method": rule && [
+            "options": tsRules_properties_no_unbound_method_definitions_options xor tsRules_properties_no_unbound_method_definitions_options_items;
+            "severity": Predefined.json;
+] && [ boolean; ] && [ size [0,2]; ] && (object && [ sealed; ]) && array && [ orelse tsRules_properties_no_unbound_method_definitions_options_items; ];
+        "no-unnecessary-qualifier": rule && [ "severity": Predefined.json; ] && [ boolean; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "no-unnecessary-type-assertion": rule && [
+            "options": tsRules_properties_no_unnecessary_type_assertion_definitions_options xor tsRules_properties_no_unnecessary_type_assertion_definitions_options_items;
+            "severity": Predefined.json;
+] && [ boolean; ] && [ unique; ] && (object && [ sealed; ]) && array && [
+            orelse tsRules_properties_no_unnecessary_type_assertion_definitions_options_items;
+];
+        "no-unsafe-any": rule && [ "severity": Predefined.json; ] && [ boolean; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "no-unused-variable": rule && [
+            "options": tsRules_properties_no_unused_variable_definitions_options xor tsRules_properties_no_unused_variable_definitions_options_items;
+            "severity": Predefined.json;
+] && [ boolean; ] && [ unique; ] && [ size [0,3]; ] && (object && [ sealed; ]) && array && [ orelse tsRules_properties_no_unused_variable_definitions_options_items; ];
+        "no-var-requires": rule && [ "severity": Predefined.json; ] && [ boolean; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "prefer-readonly": rule && [
+            "options": tsRules_properties_prefer_readonly_definitions_options xor tsRules_properties_prefer_readonly_definitions_options_items;
+            "severity": Predefined.json;
+] && [ boolean; ] && [ size [0,2]; ] && (object && [ sealed; ]) && array && [ orelse tsRules_properties_prefer_readonly_definitions_options_items; ];
+        "strict-boolean-expressions": rule && [
+            "options": tsRules_properties_strict_boolean_expressions_definitions_options xor tsRules_properties_strict_boolean_expressions_definitions_options_items;
+            "severity": Predefined.json;
+] && [ boolean; ] && [ unique; ] && [ size [0,6]; ] && (object && [ sealed; ]) && array && [
+            orelse tsRules_properties_strict_boolean_expressions_definitions_options_items;
+];
+        "strict-type-predicates": rule && [ "severity": Predefined.json; ] && [ boolean; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "typedef": rule && [
+            "options": tsRules_properties_typedef_definitions_options xor tsRules_properties_typedef_definitions_options_items;
+            "severity": Predefined.json;
+] && [ boolean; ] && [ unique; ] && [ size [0,10]; ] && (object && [ sealed; ]) && array && [ orelse tsRules_properties_typedef_definitions_options_items; ];
+        "typedef-whitespace": rule && [
+            "options": tsRules_properties_typedef_whitespace_definitions_options xor tsRules_properties_typedef_whitespace_definitions_options_items_0;
+            "severity": Predefined.json;
+] && [
+            boolean * 
+            tsRules_properties_typedef_whitespace_definitions_options_items_0 * 
+            tsRules_properties_typedef_whitespace_definitions_options_items_1;
+] && [ size [0,3]; ] && object && [ sealed; ];
+        "type-literal-delimiter": rule && [ "severity": Predefined.json; ] && [
+            boolean * 
+            object && [ "singleLine": string && [ enum "always", "never"; ]; ];
+] && (object && [ sealed; ]) && array && [ sealed; ];
+        "unified-signatures": rule && [ "severity": Predefined.json; ] && [ boolean; ] && (object && [ sealed; ]) && array && [ sealed; ];
+        "use-default-type-parameter": rule && [ "severity": Predefined.json; ] && [ boolean; ] && (object && [ sealed; ]) && array && [ sealed; ];
+]
+    and tsRules_properties_array_type_definitions_options = array && [ of string && [ enum "array", "generic", "array-simple"; ]; ] && [ size [1,1]; ]
+    and tsRules_properties_array_type_definitions_options_items = string && [ enum "array", "generic", "array-simple"; ]
+    and tsRules_properties_await_promise_definitions_options = array && [ of string; ] && [ unique; ] && [ size [1,max]; ]
+    and tsRules_properties_await_promise_definitions_options_items = string
+    and tsRules_properties_ban_types_definitions_options = array && [ of array && [ of string; ] && [ size [1,2]; ]; ] && [ unique; ] && [ size [1,max]; ]
+    and tsRules_properties_ban_types_definitions_options_items = array && [ of string; ] && [ size [1,2]; ]
+    and tsRules_properties_interface_name_definitions_options = array && [ of string && [ enum "always-prefix", "never-prefix"; ]; ] && [ size [1,1]; ]
+    and tsRules_properties_interface_name_definitions_options_items = string && [ enum "always-prefix", "never-prefix"; ]
+    and tsRules_properties_member_access_definitions_options = array && [
+        of string && [
+            enum "no-public", "check-accessor", "check-constructor",
+            "check-parameter-property";
+];
+] && [ unique; ] && [ size [1,4]; ]
+    and tsRules_properties_member_access_definitions_options_items = string && [
+        enum "no-public", "check-accessor", "check-constructor",
+        "check-parameter-property";
+]
+    and tsRules_properties_no_floating_promises_definitions_options = array && [ of string; ] && [ unique; ] && [ size [1,max]; ]
+    and tsRules_properties_no_floating_promises_definitions_options_items = string
+    and tsRules_properties_no_inferrable_types_definitions_options = array && [ of string && [ enum "ignore-params", "ignore-properties"; ]; ] && [ unique; ] && [ size [1,2]; ]
+    and tsRules_properties_no_inferrable_types_definitions_options_items = string && [ enum "ignore-params", "ignore-properties"; ]
+    and tsRules_properties_no_namespace_definitions_options = array && [ of string && [ enum "allow-declarations"; ]; ] && [ size [1,1]; ]
+    and tsRules_properties_no_namespace_definitions_options_items = string && [ enum "allow-declarations"; ]
+    and tsRules_properties_no_unbound_method_definitions_options = array && [ of string && [ enum "ignore-static"; ]; ] && [ size [1,1]; ]
+    and tsRules_properties_no_unbound_method_definitions_options_items = string && [ enum "ignore-static"; ]
+    and tsRules_properties_no_unnecessary_type_assertion_definitions_options = array && [ of string; ] && [ unique; ] && [ size [1,max]; ]
+    and tsRules_properties_no_unnecessary_type_assertion_definitions_options_items = string
+    and tsRules_properties_no_unused_variable_definitions_options = array && [
+        of string && [ enum "check-parameters"; ] xor object && [ "ignore-pattern": string; ] && object && [ sealed; ];
+] && [ unique; ] && [ size [1,2]; ]
+    and tsRules_properties_no_unused_variable_definitions_options_items = string && [ enum "check-parameters"; ] xor object && [ "ignore-pattern": string; ] && object && [ sealed; ]
+    and tsRules_properties_prefer_readonly_definitions_options = array && [ of string && [ enum "only-inline-lambdas"; ]; ]
+    and tsRules_properties_prefer_readonly_definitions_options_items = string && [ enum "only-inline-lambdas"; ]
+    and tsRules_properties_strict_boolean_expressions_definitions_options = array && [
+        of string && [
+            enum "allow-null-union", "allow-undefined-union", "allow-string",
+            "allow-enum", "allow-number", "allow-mix",
+            "allow-boolean-or-undefined", "ignore-rhs";
+];
+] && [ unique; ] && [ size [1,8]; ]
+    and tsRules_properties_strict_boolean_expressions_definitions_options_items = string && [
+        enum "allow-null-union", "allow-undefined-union", "allow-string",
+        "allow-enum", "allow-number", "allow-mix",
+        "allow-boolean-or-undefined", "ignore-rhs";
+]
+    and tsRules_properties_typedef_definitions_options = array && [
+        of string && [
+            enum "call-signature", "arrow-call-signature", "parameter",
+            "arrow-parameter", "property-declaration", "variable-declaration",
+            "member-variable-declaration", "object-destructuring",
+            "array-destructuring";
+];
+] && [ unique; ] && [ size [1,9]; ]
+    and tsRules_properties_typedef_definitions_options_items = string && [
+        enum "call-signature", "arrow-call-signature", "parameter",
+        "arrow-parameter", "property-declaration", "variable-declaration",
+        "member-variable-declaration", "object-destructuring",
+        "array-destructuring";
+]
+    and tsRules_properties_typedef_whitespace_definitions_options = array && [
+        object && [
+            "call-signature": string && [ enum "nospace", "onespace", "space"; ];
+            "index-signature": string && [ enum "nospace", "onespace", "space"; ];
+            "parameter": string && [ enum "nospace", "onespace", "space"; ];
+            "property-declaration": string && [ enum "nospace", "onespace", "space"; ];
+            "variable-declaration": string && [ enum "nospace", "onespace", "space"; ];
+] && object && [ sealed; ] * 
+        object && [
+            "call-signature": string && [ enum "nospace", "onespace", "space"; ];
+            "index-signature": string && [ enum "nospace", "onespace", "space"; ];
+            "parameter": string && [ enum "nospace", "onespace", "space"; ];
+            "property-declaration": string && [ enum "nospace", "onespace", "space"; ];
+            "variable-declaration": string && [ enum "nospace", "onespace", "space"; ];
+] && object && [ sealed; ];
+] && [ size [1,2]; ]
+    and tsRules_properties_typedef_whitespace_definitions_options_items_0 = object && [
+        "call-signature": string && [ enum "nospace", "onespace", "space"; ];
+        "index-signature": string && [ enum "nospace", "onespace", "space"; ];
+        "parameter": string && [ enum "nospace", "onespace", "space"; ];
+        "property-declaration": string && [ enum "nospace", "onespace", "space"; ];
+        "variable-declaration": string && [ enum "nospace", "onespace", "space"; ];
+] && object && [ sealed; ]
+    and tsRules_properties_typedef_whitespace_definitions_options_items_1 = object && [
+        "call-signature": string && [ enum "nospace", "onespace", "space"; ];
+        "index-signature": string && [ enum "nospace", "onespace", "space"; ];
+        "parameter": string && [ enum "nospace", "onespace", "space"; ];
+        "property-declaration": string && [ enum "nospace", "onespace", "space"; ];
+        "variable-declaration": string && [ enum "nospace", "onespace", "space"; ];
+] && object && [ sealed; ];
+    end;
+  open DEFINITIONS;
+  type nonrec t = object && [
+      "extends": (string || array) && [ of string; ];
+      "rulesDirectory": (string || array) && [ of string; ];
+      "rules": tsRules && rules;
+      "jsRules": rules;
+      "defaultSeverity": string && [ enum "error", "warning", "warn", "off", "none"; ] && [ default "error"; ];
+      "linterOptions": object && [ "exclude": array && [ of string; ]; ];
+];

@@ -1,0 +1,463 @@
+import "lib/predefined.utj" as Predefined;
+  module DEFINITIONS = struct
+    type rec alwaysMultiLineRule = (null || string || array) && (null xor string && [ enum "always", "always-multi-line", []; ] xor array && [
+        of (string || object) && (string && [ enum "always", "always-multi-line", {}; ] || coreRule);
+] && [ unique; ] && [ size [2,2]; ])
+    and alwaysNeverRule = (null || string || array) && (null xor string && [ enum "always", "never", []; ] xor array && [
+        of (string || object) && (string && [ enum "always", "never", {}; ] || coreRule);
+] && [ unique; ] && [ size [2,2]; ])
+    and arrayStringRule = (null || string || array) && ((null || string) xor array && [
+        of (string || array || object) && (string && [ enum [], {}; ] || simpleArrayStringRule || coreRule);
+] && [ unique; ] && [ size [1,max]; ])
+    and atRule = [
+        "at-rule-blacklist": arrayStringRule;
+        "at-rule-empty-line-before": (null || string || array) && (null xor string && [ enum "always", "never", []; ] xor array && [
+            of (string || object) && (string && [ enum "always", "never", {}; ] || object && [
+                "except": array && [
+                    of string && [
+                        enum "after-same-name", "inside-block",
+                        "blockless-after-same-name-blockless",
+                        "blockless-after-blockless", "first-nested";
+];
+] && [ unique; ] && [ size [1,max]; ];
+                "ignore": array && [
+                    of string && [
+                        enum "after-comment", "first-nested", "inside-block",
+                        "blockless-after-same-name-blockless",
+                        "blockless-after-blockless";
+];
+] && [ unique; ] && [ size [1,max]; ];
+                "ignoreAtRules": simpleStringOrArrayStringRule;
+] && coreRule);
+] && [ unique; ] && [ size [2,2]; ]);
+        "at-rule-name-case": lowerUpperRule;
+        "at-rule-name-newline-after": alwaysMultiLineRule;
+        "at-rule-name-space-after": (null || string || array) && (null xor string && [ enum "always", "always-single-line", []; ] xor array && [
+            of (string || object) && (string && [ enum "always", "always-single-line", {}; ] || coreRule);
+] && [ unique; ] && [ size [2,2]; ]);
+        "at-rule-no-unknown": (null || boolean || array) && (null xor boolean && [ enum true, []; ] xor array && [
+            of (boolean || object) && (boolean && [ enum true, {}; ] || object && [ "ignoreAtRules": simpleArrayStringRule; ] && coreRule);
+] && [ unique; ] && [ size [2,2]; ]);
+        "at-rule-no-vendor-prefix": booleanRule;
+        "at-rule-semicolon-newline-after": (null || string || array) && (null xor string && [ enum "always", []; ] xor array && [ of (string || object) && (string && [ enum "always", {}; ] || coreRule);
+] && [ unique; ] && [ size [2,2]; ]);
+        "at-rule-whitelist": arrayStringRule;
+]
+    and block = [
+        "block-closing-brace-empty-line-before": (null || string || array) && (null xor string && [ enum "always-multi-line", "never", []; ] xor array && [
+            of (string || object) && (string && [ enum "always-multi-line", "never", {}; ] || coreRule);
+] && [ unique; ] && [ size [2,2]; ]);
+        "block-closing-brace-newline-after": newlineSpaceWithIgnoreRule;
+        "block-closing-brace-newline-before": newlineRule;
+        "block-closing-brace-space-afte": newlineSpaceRule;
+        "block-closing-brace-space-before": newlineSpaceRule;
+        "block-no-empty": booleanRule;
+        "block-no-single-line": booleanRule;
+        "block-opening-brace-newline-after": newlineRule;
+        "block-opening-brace-newline-before": (null || string || array) && (null xor string && [
+            enum "always", "always-single-line", "never-single-line",
+            "always-multi-line", "never-multi-line", [];
+] xor array && [
+            of (string || object) && (string && [
+                enum "always", "always-single-line", "never-single-line",
+                "always-multi-line", "never-multi-line", {};
+] || coreRule);
+] && [ unique; ] && [ size [2,2]; ]);
+        "block-opening-brace-space-after": newlineSpaceRule;
+        "block-opening-brace-space-before": newlineSpaceWithIgnoreRule;
+]
+    and booleanRule = (null || boolean || array) && (null xor boolean && [ enum true, []; ] xor array && [ of (boolean || object) && (boolean && [ enum true, {}; ] || coreRule); ] && [ unique; ] && [ size [2,2]; ]) && [ default true; ]
+    and color = [
+        "color-hex-case": lowerUpperRule;
+        "color-hex-length": (null || string || array) && (null xor string && [ enum "short", "long", []; ] xor array && [
+            of (string || object) && (string && [ enum "short", "long", {}; ] || coreRule);
+] && [ unique; ] && [ size [2,2]; ]);
+        "color-named": (null || string || array) && (null xor string && [ enum "always-where-possible", "never", []; ] xor array && [
+            of (string || object) && (string && [ enum "always-where-possible", "never", {}; ] || object && [ "ignore": simpleArrayStringRule; ] && coreRule);
+] && [ unique; ] && [ size [2,2]; ]);
+        "color-no-hex": booleanRule;
+        "color-no-invalid-hex": booleanRule;
+]
+    and comment = [
+        "comment-empty-line-before": (null || string || array) && (null xor string && [ enum "always", "never", []; ] xor array && [
+            of (string || object) && (string && [ enum "always", "never", {}; ] || object && [
+                "except": array && [ of string && [ enum "first-nested"; ]; ] && [ unique; ] && [ size [1,max]; ];
+                "ignore": array && [
+                    of string && [ enum "between-comments", "after-comment", "stylelint-commands"; ];
+] && [ unique; ] && [ size [1,max]; ];
+] && coreRule);
+] && [ unique; ] && [ size [2,2]; ]);
+        "comment-no-empty": booleanRule;
+        "comment-whitespace-inside": alwaysNeverRule;
+        "comment-word-blacklist": arrayStringRule;
+]
+    and coreRule = [
+        "message": string;
+        "severity": string && [ enum "warning", "error"; ];
+]
+    and customMedia = [ "custom-media-pattern": stringRule; ]
+    and customProperty = [
+        "custom-property-empty-line-before": (null || string || array) && (null xor string && [ enum "always", "never", []; ] xor array && [
+            of (string || object) && (string && [ enum "always", "never", {}; ] || object && [
+                "except": array && [
+                    of string && [ enum "after-comment", "after-custom-property", "first-nested"; ];
+] && [ unique; ] && [ size [1,max]; ];
+                "ignore": array && [ of string && [ enum "after-comment", "inside-single-line-block"; ]; ] && [ unique; ] && [ size [1,max]; ];
+] && coreRule);
+] && [ unique; ] && [ size [2,2]; ]);
+        "custom-property-no-outside-root": booleanRule;
+        "custom-property-pattern": stringRule;
+]
+    and declaration = [
+        "declaration-bang-space-after": alwaysNeverRule;
+        "declaration-bang-space-before": alwaysNeverRule;
+        "declaration-colon-newline-after": alwaysMultiLineRule;
+        "declaration-colon-space-after": (null || string || array) && (null xor string && [ enum "always", "never", "always-single-line", []; ] xor array && [
+            of (string || object) && (string && [ enum "always", "never", "always-single-line", {}; ] || coreRule);
+] && [ unique; ] && [ size [2,2]; ]);
+        "declaration-colon-space-before": alwaysNeverRule;
+        "declaration-empty-line-before": (null || string || array) && (null xor string && [ enum "always", "never", []; ] xor array && [
+            of (string || object) && (string && [ enum "always", "never", {}; ] || object && [
+                "except": array && [ of string && [ enum "after-comment", "after-declaration", "first-nested"; ];
+] && [ unique; ] && [ size [1,max]; ];
+                "ignore": array && [
+                    of string && [ enum "after-comment", "after-declaration", "inside-single-line-block"; ];
+] && [ unique; ] && [ size [1,max]; ];
+] && coreRule);
+] && [ unique; ] && [ size [2,2]; ]);
+        "declaration-no-important": booleanRule;
+        "declaration-property-unit-blacklist": objectRule;
+        "declaration-property-unit-whitelist": objectRule;
+        "declaration-property-value-blacklist": objectRule;
+        "declaration-property-value-whitelist": objectRule;
+]
+    and declarationBlock = [
+        "declaration-block-no-duplicate-properties": (null || boolean || array) && (null xor boolean && [ enum true, []; ] xor array && [
+            of (boolean || object) && (boolean && [ enum true, {}; ] || object && [
+                "ignore": array && [
+                    of string && [
+                        enum "consecutive-duplicates",
+                        "consecutive-duplicates-with-different-values";
+];
+] && [ unique; ] && [ size [1,max]; ];
+                "ignoreProperties": simpleArrayStringRule;
+] && coreRule);
+] && [ unique; ] && [ size [2,2]; ]);
+        "declaration-block-no-ignored-properties": booleanRule;
+        "declaration-block-no-redundant-longhand-properties": (null || boolean || array) && (null xor boolean && [ enum true, []; ] xor array && [
+            of (boolean || object) && (boolean && [ enum true, {}; ] || object && [ "ignoreShorthands": simpleArrayStringRule; ] && coreRule);
+] && [ unique; ] && [ size [2,2]; ]);
+        "declaration-block-no-shorthand-property-overrides": booleanRule;
+        "declaration-block-properties-order": (null || string || array) && (null xor string && [ enum "alphabetical", []; ] xor array && [
+            of (string || array || object) && (string && [ enum "alphabetical", [], {}; ] || string || simpleArrayStringRule || object && [
+                "unspecified": string && [ enum "top", "bottom", "bottomAlphabetical", "ignore"; ];
+                "order": string && [ enum "strict", "flexible"; ];
+                "properties": simpleArrayStringRule;
+] && coreRule && [ required "order"; ] => [ required "properties"; ] && [ required "properties"; ] => [ required "order"; ]);
+] && [ unique; ] && [ size [1,max]; ]);
+        "declaration-block-semicolon-newline-after": newlineRule;
+        "declaration-block-semicolon-newline-before": newlineRule;
+        "declaration-block-semicolon-space-after": spaceRule;
+        "declaration-block-semicolon-space-before": spaceRule;
+        "declaration-block-single-line-max-declarations": integerRule;
+        "declaration-block-trailing-semicolon": alwaysNeverRule;
+]
+    and font = [
+        "font-family-name-quotes": (null || string || array) && (null xor string && [
+            enum "always-where-required", "always-where-recommended",
+            "always-unless-keyword", [];
+] xor array && [
+            of (string || object) && (string && [
+                enum "always-where-required", "always-where-recommended",
+                "always-unless-keyword", {};
+] || coreRule);
+] && [ unique; ] && [ size [2,2]; ]);
+        "font-weight-notation": (null || string || array) && (null xor string && [ enum "numeric", "named-where-possible", []; ] xor array && [
+            of (string || object) && (string && [ enum "numeric", "named-where-possible", {}; ] || object && [
+                "ignore": array && [ of string && [ enum "relative"; ]; ] && [ unique; ] && [ size [1,max]; ];
+] && coreRule);
+] && [ unique; ] && [ size [2,2]; ]);
+]
+    and function = [
+        "function-blacklist": arrayStringRule;
+        "function-calc-no-unspaced-operator": booleanRule;
+        "function-comma-newline-after": newlineRule;
+        "function-comma-newline-before": newlineRule;
+        "function-comma-space-after": spaceRule;
+        "function-comma-space-before": spaceRule;
+        "function-linear-gradient-no-nonstandard-direction": booleanRule;
+        "function-max-empty-lines": integerRule;
+        "function-name-case": (null || string || array) && (null xor string && [ enum "lower", "upper", []; ] xor array && [
+            of (string || object) && (string && [ enum "lower", "upper", {}; ] || object && [ "ignoreFunctions": simpleArrayStringRule; ] && coreRule);
+] && [ unique; ] && [ size [2,2]; ]);
+        "function-parentheses-newline-inside": newlineRule;
+        "function-parentheses-space-inside": spaceRule;
+        "function-url-data-uris": alwaysNeverRule;
+        "function-url-no-scheme-relative": booleanRule;
+        "function-url-quotes": alwaysNeverRule;
+        "function-url-scheme-whitelist": arrayStringRule;
+        "function-whitelist": arrayStringRule;
+        "function-whitespace-after": alwaysNeverRule;
+]
+    and generalSheet = [
+        "indentation": (null || Predefined.integer || string || array) && ((null || Predefined.integer) xor string && [ enum "tab", []; ] xor array && [ of Predefined.integer; ] && [ unique; ] && [ size [1,max]; ] xor array && [
+            of (Predefined.integer || string || object) && (Predefined.integer || string && [ enum "tab", {}; ] || object && [
+                "indentInsideParens": string && [ enum "twice", "once-at-root-twice-in-block"; ];
+                "except": array && [ of string && [ enum "block", "param", "value"; ]; ] && [ unique; ] && [ size [1,max]; ];
+                "ignore": array && [ of string && [ enum "inside-parens", "param", "value"; ]; ] && [ unique; ] && [ size [1,max]; ];
+] && coreRule);
+] && [ unique; ] && [ size [2,2]; ]);
+        "max-empty-lines": integerRule;
+        "max-line-length": (null || Predefined.integer || array) && ((null || Predefined.integer) xor array && [
+            of (Predefined.integer || object) && (Predefined.integer || object && [
+                "ignore": (string || array) && (string && [ enum "non-comments", "comments"; ] || array && [ of string && [ enum "non-comments", "comments"; ]; ] && [ unique; ] && [ size [1,max]; ]);
+] && coreRule);
+] && [ unique; ] && [ size [2,2]; ]);
+        "max-nesting-depth": (null || Predefined.integer || array) && ((null || Predefined.integer) xor array && [
+            of (Predefined.integer || object) && (Predefined.integer || object && [
+                "ignore": array && [ of string && [ enum "blockless-at-rules", "pseudo-classes"; ]; ] && [ unique; ] && [ size [1,max]; ];
+                "ignoreAtRules": simpleArrayStringRule;
+] && coreRule);
+] && [ unique; ] && [ size [2,2]; ]);
+        "no-browser-hacks": (null || boolean || array) && (null xor boolean && [ enum true, []; ] xor array && [
+            of (boolean || object) && (boolean && [ enum true, {}; ] || object && [ "browsers": simpleStringOrArrayStringRule; ] && coreRule);
+] && [ unique; ] && [ size [2,2]; ]);
+        "no-descending-specificity": booleanRule;
+        "no-duplicate-selectors": booleanRule;
+        "no-empty-source": booleanRule;
+        "no-eol-whitespace": (null || boolean || array) && (null xor boolean && [ enum true, []; ] xor array && [
+            of (boolean || object) && (boolean && [ enum true, {}; ] || object && [
+                "ignore": array && [ of string && [ enum "empty-lines"; ]; ] && [ unique; ] && [ size [1,max]; ];
+] && coreRule);
+] && [ unique; ] && [ size [2,2]; ]);
+        "no-extra-semicolons": booleanRule;
+        "no-indistinguishable-colors": (null || boolean || array) && (null xor boolean && [ enum true, []; ] xor array && [
+            of (boolean || object) && (boolean && [ enum true, {}; ] || object && [
+                "threshold": Predefined.integer && [ bounds [0.0,100.0]; ] && [ default 3; ];
+                "ignore": simpleArrayStringRule;
+                "whitelist": array && [ of simpleArrayStringRule; ] && [ unique; ] && [ size [1,max]; ];
+] && coreRule);
+] && [ unique; ] && [ size [2,2]; ]);
+        "no-invalid-double-slash-comments": booleanRule;
+        "no-missing-end-of-source-newline": booleanRule;
+        "no-unknown-animations": booleanRule;
+        "no-unsupported-browser-features": (null || boolean || array) && (null xor boolean && [ enum true, []; ] xor array && [
+            of (boolean || object) && (boolean && [ enum true, {}; ] || object && [
+                "browsers": string;
+                "ignore": simpleStringOrArrayStringRule;
+] && coreRule);
+] && [ unique; ] && [ size [2,2]; ]);
+]
+    and integerRule = (null || Predefined.integer || array) && ((null || Predefined.integer) xor array && [
+        of (Predefined.integer || object) && (Predefined.integer && [ enum {}; ] || coreRule);
+] && [ unique; ] && [ size [2,2]; ])
+    and keyframeDeclaration = [ "keyframe-declaration-no-important": booleanRule; ]
+    and length = [ "length-zero-no-unit": booleanRule; ]
+    and lowerUpperRule = (null || string || array) && (null xor string && [ enum "lower", "upper", []; ] xor array && [
+        of (string || object) && (string && [ enum "lower", "upper", {}; ] || coreRule);
+] && [ unique; ] && [ size [2,2]; ])
+    and mediaFeature = [
+        "media-feature-colon-space-after": alwaysNeverRule;
+        "media-feature-colon-space-before": alwaysNeverRule;
+        "media-feature-name-case": lowerUpperRule;
+        "media-feature-name-no-unknown": (null || boolean || array) && (null xor boolean && [ enum true, []; ] xor array && [
+            of (boolean || object) && (boolean && [ enum true, {}; ] || object && [ "ignoreMediaFeatureNames": simpleArrayStringRule; ] && coreRule);
+] && [ unique; ] && [ size [2,2]; ]);
+        "media-feature-name-no-vendor-prefix": booleanRule;
+        "media-feature-no-missing-punctuation": booleanRule;
+        "media-feature-parentheses-space-inside": alwaysNeverRule;
+        "media-feature-range-operator-space-after": alwaysNeverRule;
+        "media-feature-range-operator-space-before": alwaysNeverRule;
+]
+    and mediaQueryList = [
+        "media-query-list-comma-newline-after": newlineRule;
+        "media-query-list-comma-newline-before": newlineRule;
+        "media-query-list-comma-space-after": spaceRule;
+        "media-query-list-comma-space-before": spaceRule;
+]
+    and newlineRule = (null || string || array) && (null xor string && [ enum "always", "always-multi-line", "never-multi-line", []; ] xor array && [
+        of (string || object) && (string && [ enum "always", "always-multi-line", "never-multi-line", {}; ] || coreRule);
+] && [ unique; ] && [ size [2,2]; ])
+    and newlineSpaceRule = (null || string || array) && (null xor string && [
+        enum "always", "never", "always-single-line", "never-single-line",
+        "always-multi-line", "never-multi-line", [];
+] xor array && [
+        of (string || object) && (string && [
+            enum "always", "never", "always-single-line", "never-single-line",
+            "always-multi-line", "never-multi-line", {};
+] || coreRule);
+] && [ unique; ] && [ size [2,2]; ])
+    and newlineSpaceWithIgnoreRule = (null || string || array) && (null xor string && [
+        enum "always", "never", "always-single-line", "never-single-line",
+        "always-multi-line", "never-multi-line", [];
+] xor array && [
+        of (string || object) && (string && [
+            enum "always", "always-single-line", "never-single-line",
+            "always-multi-line", "never-multi-line", {};
+] || object && [ "ignoreAtRules": simpleStringOrArrayStringRule; ] && coreRule);
+] && [ unique; ] && [ size [2,2]; ])
+    and number_ = [
+        "number-leading-zero": alwaysNeverRule;
+        "number-max-precision": integerRule;
+        "number-no-trailing-zeros": booleanRule;
+]
+    and objectRule = (null || object || array) && (null xor object && [ /.*/ : simpleArrayStringRule; ] xor array && [
+        of object && object && [ /^((?!message|severity).)*$/ : simpleArrayStringRule; ] && coreRule;
+] && [ unique; ] && [ size [2,2]; ])
+    and property = [
+        "property-blacklist": arrayStringRule;
+        "property-case": lowerUpperRule;
+        "property-no-unknown": (null || boolean || array) && (null xor boolean && [ enum true, []; ] xor array && [
+            of (boolean || object) && (boolean && [ enum true, {}; ] || object && [
+                "ignoreProperties": simpleArrayStringRule;
+                "checkPrefixed": boolean;
+] && coreRule);
+] && [ unique; ] && [ size [2,2]; ]);
+        "property-no-vendor-prefix": booleanRule;
+        "property-whitelist": arrayStringRule;
+]
+    and rootRule = [ "root-no-standard-properties": booleanRule; ]
+    and rule = [
+        "rule-nested-empty-line-before": (null || string || array) && (null xor string && [ enum "always", "never", "always-multi-line", "never-multi-line", []; ] xor array && [
+            of (string || object) && (string && [ enum "always", "never", "always-multi-line", "never-multi-line", {}; ] || object && [
+                "except": array && [ of string && [ enum "first-nested"; ]; ] && [ unique; ] && [ size [1,max]; ];
+                "ignore": array && [ of string && [ enum "after-comment"; ]; ] && [ unique; ] && [ size [1,max]; ];
+] && coreRule);
+] && [ unique; ] && [ size [2,2]; ]);
+        "rule-non-nested-empty-line-before": (null || string || array) && (null xor string && [ enum "always", "never", "always-multi-line", "never-multi-line", []; ] xor array && [
+            of (string || object) && (string && [ enum "always", "never", "always-multi-line", "never-multi-line", {}; ] || object && [
+                "except": array && [ of string && [ enum "after-single-line-comment"; ]; ] && [ unique; ] && [ size [1,max]; ];
+                "ignore": array && [ of string && [ enum "after-comment"; ]; ] && [ unique; ] && [ size [1,max]; ];
+] && coreRule);
+] && [ unique; ] && [ size [2,2]; ]);
+]
+    and selector = [
+        "selector-attribute-brackets-space-inside": alwaysNeverRule;
+        "selector-attribute-operator-blacklist": arrayStringRule;
+        "selector-attribute-operator-space-after": alwaysNeverRule;
+        "selector-attribute-operator-space-before": alwaysNeverRule;
+        "selector-attribute-operator-whitelist": arrayStringRule;
+        "selector-attribute-quotes": alwaysNeverRule;
+        "selector-class-pattern": (null || string || array) && ((null || string) xor array && [
+            of (string || object) && (string || object && [ "resolveNestedSelectors": boolean && [ default false; ]; ] && coreRule);
+] && [ unique; ] && [ size [2,2]; ]);
+        "selector-combinator-space-after": alwaysNeverRule;
+        "selector-combinator-space-before": alwaysNeverRule;
+        "selector-descendant-combinator-no-non-space": booleanRule;
+        "selector-id-pattern": stringRule;
+        "selector-max-compound-selectors": integerRule;
+        "selector-max-specificity": stringRule;
+        "selector-nested-pattern": stringRule;
+        "selector-no-attribute": booleanRule;
+        "selector-no-combinator": booleanRule;
+        "selector-no-id": booleanRule;
+        "selector-no-qualifying-type": (null || boolean || array) && (null xor boolean && [ enum true, []; ] xor array && [
+            of (boolean || object) && (boolean && [ enum true, {}; ] || object && [
+                "ignore": array && [ of string && [ enum "attribute", "class", "id"; ]; ] && [ unique; ] && [ size [1,max]; ];
+] && coreRule);
+] && [ unique; ] && [ size [2,2]; ]);
+        "selector-no-type": (null || boolean || array) && (null xor boolean && [ enum true, []; ] xor array && [
+            of (boolean || object) && (boolean && [ enum true, {}; ] || object && [
+                "ignore": array && [ of string && [ enum "compounded", "descendant"; ]; ] && [ unique; ] && [ size [1,max]; ];
+                "ignoreTypes": simpleArrayStringRule;
+] && coreRule);
+] && [ unique; ] && [ size [2,2]; ]);
+        "selector-no-universal": booleanRule;
+        "selector-no-vendor-prefix": booleanRule;
+        "selector-pseudo-class-case": lowerUpperRule;
+        "selector-pseudo-class-no-unknown": (null || boolean || array) && (null xor boolean && [ enum true, []; ] xor array && [
+            of (boolean || object) && (boolean && [ enum true, {}; ] || object && [ "ignorePseudoClasses": simpleArrayStringRule; ] && coreRule);
+] && [ unique; ] && [ size [2,2]; ]);
+        "selector-pseudo-class-parentheses-space-inside": alwaysNeverRule;
+        "selector-pseudo-class-whitelist": arrayStringRule;
+        "selector-pseudo-element-case": lowerUpperRule;
+        "selector-pseudo-element-colon-notation": singleDoubleRule;
+        "selector-pseudo-element-no-unknown": (null || boolean || array) && (null xor boolean && [ enum true, []; ] xor array && [
+            of (boolean || object) && (boolean && [ enum true, {}; ] || object && [ "ignorePseudoElements": simpleArrayStringRule; ] && coreRule);
+] && [ unique; ] && [ size [2,2]; ]);
+        "selector-root-no-composition": booleanRule;
+        "selector-type-case": lowerUpperRule;
+        "selector-type-no-unknown": (null || boolean || array) && (null xor boolean && [ enum true, []; ] xor array && [
+            of (boolean || object) && (boolean && [ enum true, {}; ] || object && [ "ignoreTypes": simpleArrayStringRule; ] && coreRule);
+] && [ unique; ] && [ size [2,2]; ]);
+        "selector-max-empty-lines": integerRule;
+]
+    and selectorList = [
+        "selector-list-comma-newline-after": newlineRule;
+        "selector-list-comma-newline-before": newlineRule;
+        "selector-list-comma-space-after": spaceRule;
+        "selector-list-comma-space-before": spaceRule;
+]
+    and shorthandProperty = [ "shorthand-property-no-redundant-values": booleanRule; ]
+    and simpleArrayStringRule = array && [ of string; ] && [ unique; ] && [ size [1,max]; ]
+    and simpleStringOrArrayStringRule = (string || array) && (string xor simpleArrayStringRule)
+    and singleDoubleRule = (null || string || array) && (null xor string && [ enum "single", "double", []; ] xor array && [
+        of (string || object) && (string && [ enum "single", "double", {}; ] || coreRule);
+] && [ unique; ] && [ size [2,2]; ])
+    and spaceRule = (null || string || array) && (null xor string && [ enum "always", "never", "always-single-line", "never-single-line", []; ] xor array && [
+        of (string || object) && (string && [ enum "always", "never", "always-single-line", "never-single-line", {}; ] || coreRule);
+] && [ unique; ] && [ size [2,2]; ])
+    and stringRule = (null || string || array) && ((null || string) xor array && [ of (string || object) && (string && [ enum {}; ] || coreRule); ] && [ unique; ] && [ size [2,2]; ])
+    and string_ = [
+        "string-no-newline": booleanRule;
+        "string-quotes": singleDoubleRule;
+]
+    and stylelintDisableComment = [
+        "stylelint-disable-reason": (null || string || array) && (null xor string && [ enum "always-before", "always-after", []; ] xor array && [
+            of (string || object) && (string && [ enum "always-before", "always-after", {}; ] || coreRule);
+] && [ unique; ] && [ size [2,2]; ]);
+]
+    and time = [ "time-no-imperceptible": booleanRule; ]
+    and unit = [
+        "unit-blacklist": unitRule;
+        "unit-case": lowerUpperRule;
+        "unit-no-unknown": (null || boolean || array) && (null xor boolean && [ enum true, []; ] xor array && [
+            of (boolean || object) && (boolean && [ enum true, {}; ] || object && [ "ignoreUnits": simpleArrayStringRule; ] && coreRule);
+] && [ unique; ] && [ size [2,2]; ]);
+        "unit-whitelist": unitRule;
+]
+    and unitRule = (null || string || array) && (null xor string && [
+        enum "em", "ex", "px", "%", "rem", "vw", "vh", "vm", "vmin", "vmax",
+        "ch", "in", "cm", "mm", "q", "pt", "pc", "deg", "grad", "rad", "turn",
+        "ms", "s", "Hz", "kHz", "dpi", "dpcm", "dppx", "fr", [];
+] xor array && [
+        of (string || array || object) && (string && [
+            enum "em", "ex", "px", "%", "rem", "vw", "vh", "vm", "vmin",
+            "vmax", "ch", "in", "cm", "mm", "q", "pt", "pc", "deg", "grad",
+            "rad", "turn", "ms", "s", "Hz", "kHz", "dpi", "dpcm", "dppx",
+            "fr", [], {};
+] || array && [
+            of string && [
+                enum "em", "ex", "px", "%", "rem", "vw", "vh", "vm", "vmin",
+                "vmax", "ch", "in", "cm", "mm", "q", "pt", "pc", "deg",
+                "grad", "rad", "turn", "ms", "s", "Hz", "kHz", "dpi", "dpcm",
+                "dppx", "fr";
+];
+] && [ unique; ] && [ size [1,max]; ] || object && [
+            "ignoreProperties": object && [ /(em|ex|ch|vw|vh|cm|mm|in|pt|pc|px|rem|vmin|vmax|%)/ : simpleArrayStringRule;
+];
+] && coreRule);
+] && [ unique; ] && [ size [1,max]; ])
+    and value = [
+        "value-keyword-case": (null || string || array) && (null xor string && [ enum "lower", "upper", []; ] xor array && [
+            of (string || object) && (string && [ enum "lower", "upper", {}; ] || object && [ "ignoreKeywords": simpleArrayStringRule; ] && coreRule);
+] && [ unique; ] && [ size [2,2]; ]);
+        "value-no-vendor-prefix": booleanRule;
+]
+    and valueList = [
+        "value-list-comma-newline-after": newlineRule;
+        "value-list-comma-newline-before": newlineRule;
+        "value-list-comma-space-after": spaceRule;
+        "value-list-comma-space-before": spaceRule;
+        "value-list-max-empty-lines": integerRule;
+];
+    end;
+  open DEFINITIONS;
+  type nonrec t = object && [
+      "extends": simpleStringOrArrayStringRule;
+      "plugins": simpleArrayStringRule;
+      "processors": array && [ of string || array && [ string; ] && array && [ orelse object; ]; ];
+      "ignoreFiles": simpleStringOrArrayStringRule;
+      "defaultSeverity": string && [ enum "warning", "error"; ];
+      "rules": object && atRule && block && color && comment && customMedia && customProperty && declaration && declarationBlock && font && function && generalSheet && keyframeDeclaration && length && mediaFeature && mediaQueryList && number_ && property && rootRule && rule && selector && selectorList && shorthandProperty && string_ && stylelintDisableComment && time && unit && value && valueList;
+];
