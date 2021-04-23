@@ -90,6 +90,8 @@ open Uttypecheck ;;
 open Utextract ;;
 #load "utsimplify.cmo";;
 open Utsimplify ;;
+#load "utpostprocess.cmo";;
+open Utpostprocess ;;
 #load "utvalidate.cmo";;
 open Utvalidate ;;
 (*

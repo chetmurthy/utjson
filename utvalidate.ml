@@ -139,13 +139,16 @@ let check_format s fmts =
     s |> Ipaddr.V6.of_string |> Rresult.R.is_ok
   | "email" ->
     s |> Emile.of_string |> Rresult.R.is_ok
-  | "uri" -> begin match Uri.(s |> of_string) with
+  | ("uri"|"uri-reference") -> begin match Uri.(s |> of_string) with
         _ -> true
       | exception _ -> false
     end
   | "date-time" -> s |> Ptime.of_rfc3339 |> Rresult.R.is_ok
 
-  | _ -> Fmt.(failwithf "Utvalidate.check_format: unhandled format %a" Dump.string fmts)
+  | _ -> Fmt.(failwithf "Utvalidate.check_format: unhandled format %a for string %a"
+                Dump.string fmts
+                Dump.string s
+             )
 
 let check_media_type s fmts =
   match fmts with

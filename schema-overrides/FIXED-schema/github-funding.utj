@@ -1,0 +1,13 @@
+import "lib/predefined.utj" as Predefined;
+  type nonrec t = object && [
+      "community_bridge": string || null;
+      "github": (string || array && [ of string; ] && [ unique; ] || null);
+      "issuehunt": string || null;
+      "ko_fi": string || null;
+      "liberapay": string || null;
+      "open_collective": string || null;
+      "otechie": string || null;
+      "patreon": (string && [ size [1,100]; ] || null);
+      "tidelift": (string && [ /^[A-Za-z]+\/.+$/ ] || null);
+      "custom": (string && [ format "uri-reference"; ] || array && [ of string && [ format "uri-reference"; ]; ] && [ unique; ] || null);
+];
