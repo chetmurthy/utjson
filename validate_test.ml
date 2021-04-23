@@ -114,7 +114,7 @@ let testfiles = subtract testfiles [
   ; "jsonld.json"
   ; "jsone.json"
   ]
-let testfiles = (firstn 150 testfiles)
+let testfiles = (firstn 250 testfiles)
 let schemastore = "schemastore" >:::
                    (testfiles
                     |> List.map Fpath.v

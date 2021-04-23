@@ -1,0 +1,67 @@
+import "lib/predefined.utj" as Predefined;
+  module DEFINITIONS = struct
+    type rec configType = object && [
+        "dependencies": dependencies;
+        "imports": string;
+]
+    and dependencies = object && [
+        orelse (string || object && [
+            "version": string;
+            "type": string && [ enum "default", "build"; ] && [ default "default"; ];
+]);
+];
+    end;
+  open DEFINITIONS;
+  type nonrec t = object && [
+      "dependencies": dependencies;
+      "frameworks": object && [ orelse configType; ];
+      "runtimes": object && [
+          "centos.7-x64": object;
+          "debian.8-x64": object;
+          "fedora.23-x64": object;
+          "fedora.24-x64": object;
+          "linuxmint.17-x64": object;
+          "linuxmint.17.1-x64": object;
+          "linuxmint.17.2-x64": object;
+          "linuxmint.17.3-x64": object;
+          "linuxmint.18-x64": object;
+          "ol.7.0-x64": object;
+          "ol.7.1-x64": object;
+          "ol.7.2-x64": object;
+          "opensuse.13.2-x64": object;
+          "opensuse.42.1-x64": object;
+          "osx.10.10-x64": object;
+          "osx.10.11-x64": object;
+          "osx.10.12-x64": object;
+          "rhel.7.0-x64": object;
+          "rhel.7.1-x64": object;
+          "rhel.7.2-x64": object;
+          "ubuntu.14.04-x64": object;
+          "ubuntu.14.10-x64": object;
+          "ubuntu.15.04-x64": object;
+          "ubuntu.15.10-x64": object;
+          "ubuntu.16.04-x64": object;
+          "ubuntu.16.10-x64": object;
+          "win": object;
+          "win-x86": object;
+          "win-x64": object;
+          "win7": object;
+          "win7-x86": object;
+          "win7-x64": object;
+          "win8": object;
+          "win8-x86": object;
+          "win8-x64": object;
+          "win8-arm": object;
+          "win81": object;
+          "win81-x86": object;
+          "win81-x64": object;
+          "win81-arm": object;
+          "win10-arm": object;
+          "win10-arm-aot": object;
+          "win10-x86": object;
+          "win10-x86-aot": object;
+          "win10-x64": object;
+          "win10-x64-aot": object;
+];
+      "supports": object && [ orelse object; ];
+];
