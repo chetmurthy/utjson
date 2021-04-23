@@ -1,0 +1,61 @@
+import "lib/predefined.utj" as Predefined;
+  module DEFINITIONS = struct
+    type rec _testConfigurationInner = testConfiguration && [
+        "presets": object && [ orelse testConfiguration; ];
+        "on_os": object && [ orelse testConfiguration; ];
+]
+    and browserAndNodeSettings = object && [
+        "arguments": string;
+        "executable": executable xor object && [
+            "linux": executable;
+            "mac_os": executable;
+            "windows": executable;
+] && object && [ sealed; ];
+        "headless": boolean;
+] && object && [ sealed; ]
+    and executable = string
+    and foldStackFrameOptions = object && [ "except": array && [ of string; ]; required "except" ] && [ sealed; ] xor object && [ "only": array && [ of string; ]; required "only" ] && [ sealed; ]
+    and runnerConfiguration = testConfiguration && [
+        "include": string && [ format "uri"; ];
+        "paths": array && [ of string; ] && [ default ["test"]; ];
+        "filename": string;
+        "names": array && [ of string; ];
+        "plain_names": array && [ of string; ];
+        "include_tags": string;
+        "exclude_tags": string;
+        "platforms": array && [ of string; ] && [ default ["vm"]; ];
+        "concurrency": Predefined.integer;
+        "pause_after_load": boolean;
+        "run_skipped": boolean;
+        "reporter": string;
+        "file_reporters": object && [ orelse string; ];
+        "fold_stack_frames": foldStackFrameOptions;
+        "custom_html_template_path": string;
+        "presets": object && [ orelse runnerConfiguration; ];
+        "add_presets": array && [ of string; ];
+        "on_os": object && [ orelse runnerConfiguration; ];
+        "override_platforms": object && [ orelse object && [ "settings": browserAndNodeSettings; ]; ];
+        "define_platforms": object && [
+            orelse object && [
+                "name": string;
+                "extends": string;
+                "settings": browserAndNodeSettings;
+];
+];
+]
+    and skip = boolean xor string
+    and testConfiguration = object && [
+        "timeout": timeout;
+        "verbose_trace": boolean && [ default false; ];
+        "chain_stack_traces": boolean;
+        "js_trace": boolean && [ default false; ];
+        "skip": skip;
+        "retry": number;
+        "test_on": string;
+        "tags": object && [ orelse _testConfigurationInner; ];
+        "add_tags": array && [ of string; ];
+        "on_platform": object && [ orelse _testConfigurationInner; ];
+]
+    and timeout = [ enum "none"; ] xor string && [ /^(?:[^a-df-zA-DF-Z\s]+(?:[umUM][sS]|[dhmsDHMS])\s?)+$/ ] xor string && [ /^[^a-df-zA-DF-Z\s]+[xX]$/ ];
+    end;
+  open DEFINITIONS; type nonrec t = runnerConfiguration;

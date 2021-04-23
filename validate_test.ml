@@ -214,6 +214,16 @@ let exceptions = "exceptions" >::: [
 
   ; success_file ("schema-overrides/bukkit-plugin-FIXED.utj",
                   "schemastore/src/test/bukkit-plugin/bukkit-plugin-test.json")
+  ; success_file ("schema-overrides/dart-test-FIXED.utj",
+                  "schemastore/src/test/dart-test/from-pkg-test.json")
+  ; success_file ("schema-overrides/datalogic-scan2deploy-android-FIXED.utj",
+                  "schemastore/src/test/datalogic-scan2deploy-android/sample.json")
+  ; success_file ("schema-overrides/eslintrc-FIXED.utj",
+                  "schemastore/src/test/eslintrc/WebAnalyzer.json")
+  ; success_file ("schema-overrides/eslintrc-FIXED.utj",
+                  "schemastore/src/test/eslintrc/withOverrides.json")
+
+
 ]
 
 let excluded_schema = [
@@ -223,6 +233,9 @@ let excluded_schema = [
 ; "cloud-sdk-pipeline-config-schema.json"
 ; "bukkit-plugin.json"
 ; "cloudify.json"
+; "dart-test.json"
+; "datalogic-scan2deploy-android.json"
+; "eslintrc.json"
 ]
 
 let excluded_tests = [
@@ -238,7 +251,7 @@ let excluded_tests = [
 ]
 
 let testfiles = subtract all_schemastore_files excluded_schema
-let testfiles = (firstn 46 testfiles)
+let testfiles = (firstn 60 testfiles)
 let schemastore = "schemastore" >::: (
    testfiles |> List.concat_map (schema_test_pairs ~excluded_tests) |> List.map success_file
   )
