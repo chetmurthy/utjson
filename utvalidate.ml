@@ -143,7 +143,7 @@ let check_format s fmts =
         Some _ -> true
       | None -> false
     end
-
+  | "date-time" -> s |> Ptime.of_rfc3339 |> Rresult.R.is_ok
 
   | _ -> Fmt.(failwithf "Utvalidate.check_format: unhandled format %a" Dump.string fmts)
 
@@ -356,7 +356,7 @@ let tdl = ref []
     if float_multipleOf f n then Ok ctxt else Error [path, Atomic[t]]
 
   | (j, Enum jl) ->
-    if List.mem j jl then Ok ctxt else Error[path,Atomic[t]]
+    if List.mem (canon_json j) jl then Ok ctxt else Error[path,Atomic[t]]
 
   | (_, Default _) -> Ok ctxt
 
@@ -380,4 +380,4 @@ let validate new_tdl j ut =
     Ok () -> true
   | Error l ->
     let pp1 pps (path, ut) = Fmt.(pf pps "%s: %s" (String.concat "/" (List.rev path)) (Normal.printer ut)) in
-    Fmt.(failwithf "validate: errors@.%a@." (list ~sep:(const string "\n") pp1) l)
+    Fmt.(failwithf "validate: errors@.  %a@." (list ~sep:(const string "\n") pp1) l)

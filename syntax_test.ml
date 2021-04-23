@@ -62,7 +62,7 @@ let parsing = "parsing" >::: [
       ; ((Ref (Some (REL (ID.of_string "M")), ID.of_string "t")), "M.t")
       ; ((Atomic
             [(Enum
-                [`List ([`Int (1); `Int (2)]); `Assoc ([("a", `Int (2))]);
+                [`List ([`Float (1.); `Float (2.)]); `Assoc ([("a", `Float (2.))]);
                  `Bool (true)])
             ]),
          {|[ enum [1,2], {"a":2}, true ; ]|})

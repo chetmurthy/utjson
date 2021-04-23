@@ -156,7 +156,7 @@ EXTEND
       | "sealed" -> Sealed
       | "orelse" ; t=utype -> OrElse t
       | "multipleOf" ; n = FLOAT -> MultipleOf (float_of_string n)
-      | "enum" ; l = LIST1 json SEP "," -> Enum l
+      | "enum" ; l = LIST1 json SEP "," -> Enum (List.map canon_json l)
       | "default" ; j=json -> Default j
       | "format" ; s=STRING -> Format s
       | "propertyNames" ; t = utype -> PropertyNames t

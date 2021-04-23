@@ -500,13 +500,13 @@ let known_keys = documentation_keys@known_useful_keys
       )@
       (match assoc_opt "enum" l with
          Some (`List l)  ->
-         [Atomic[Enum l]]
+         [Atomic[Enum (List.map canon_json l)]]
        | Some v -> Fmt.(failwithf "conv_type: enum did not have array payload: %a" pp_json v)
        | None -> []
       )@
       (match assoc_opt "const" l with
          Some j  ->
-         [Atomic[Enum [j]]]
+         [Atomic[Enum [canon_json j]]]
        | None -> []
       )@
       (match assoc_opt "pattern" l with

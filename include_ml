@@ -13,6 +13,7 @@
 #require "ipaddr";;
 #require "emile";;
 #require "uri";;
+#require "ptime";;
 #require "pa_ppx.testutils" ;;
 #require "pa_ppx.base" ;;
 #require "pa_ppx.runtime" ;;

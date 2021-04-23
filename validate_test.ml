@@ -91,6 +91,18 @@ let exceptions = "exceptions" >::: [
                   "schemastore/src/test/cloud-sdk-pipeline-config-schema/empty.json")
   ; success_file ("schema-overrides/cloud-sdk-pipeline-config-schema-FIXED.utj",
                   "schemastore/src/test/cloud-sdk-pipeline-config-schema/prodDeployment.json")
+  ; success_file ("schemastore/src/schemas/json/bowerrc.json",
+                  "schema-overrides/bowerrc-test2-FIXED.json")
+  ; success_file ("schemastore/src/schemas/json/bootstraprc.json",
+                  "schema-overrides/bootstraprc-test2-FIXED.json")
+  ; success_file ("schemastore/src/schemas/json/bootstraprc.json",
+                  "schema-overrides/bootstraprc-test3-FIXED.json")
+  ; success_file ("schemastore/src/schemas/json/bootstraprc.json",
+                  "schema-overrides/bootstraprc-test-FIXED.json")
+  ; success_file ("schema-overrides/cloudify-FIXED.utj",
+                  "schema-overrides/azure-aks.json")
+  ; success_file ("schema-overrides/bukkit-plugin-FIXED.utj",
+                  "schemastore/src/test/bukkit-plugin/bukkit-plugin-test.json")
 (*
   ; success_file ("schema-overrides/cloudify.json",
                   "schema-overrides/azure-windows-iis-loadbalanced-FIXED.json")
@@ -108,19 +120,23 @@ let excluded_schema = [
 ; "azure-iot-edge-deployment-template-2.0.json"
 ; "azure-iot-edge-deployment-template-1.0.json"
 ; "cloud-sdk-pipeline-config-schema.json"
+; "bukkit-plugin.json"
 ]
 
 let excluded_tests = [
-(*
-  "schemastore/src/test/cloudify/azure-windows-iis-loadbalanced.json"
+  "schemastore/src/test/bowerrc/bowerrc-test2.json"
+; "schemastore/src/test/bootstraprc/bootstraprc-test2.json"
+; "schemastore/src/test/bootstraprc/bootstraprc-test3.json"
+; "schemastore/src/test/bootstraprc/bootstraprc-test.json"
+; "schemastore/src/test/cloudify/azure-aks.json"
+; "schemastore/src/test/cloudify/azure-windows-iis-loadbalanced.json"
 ; "schemastore/src/test/cloudify/utilities-cloudinit-aws.json"
 ; "schemastore/src/test/cloudify/openstack.json"
 ; "schemastore/src/test/cloudify/openstack-blueprint.json"
-*)
 ]
 
 let testfiles = subtract all_schemastore_files excluded_schema
-let testfiles = (firstn 60 testfiles)
+let testfiles = (firstn 45 testfiles)
 let schemastore = "schemastore" >::: (
    testfiles |> List.concat_map (schema_test_pairs ~excluded_tests) |> List.map success_file
   )

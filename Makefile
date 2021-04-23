@@ -1,7 +1,7 @@
 DEBUG=-g
 OCAMLFIND=ocamlfind
 NOT_OCAMLFIND=not-ocamlfind
-BASEPACKAGES=bos,uutf,fmt,camlp5.extprint,pcre,yaml,ipaddr,cmdliner,emile,uri
+BASEPACKAGES=bos,uutf,fmt,camlp5.extprint,pcre,yaml,ipaddr,cmdliner,emile,uri,ptime
 PACKAGES=$(BASEPACKAGES),camlp5.extprint,camlp5.extend,camlp5.pprintf,pa_ppx.utils,pa_ppx.deriving_plugins.std,pa_ppx.base.link,pa_ppx.runtime,pa_ppx.testutils,sedlex
 
 IMPORT_PACKAGES = pa_ppx_migrate,pa_ppx.import

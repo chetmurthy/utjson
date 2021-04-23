@@ -48,3 +48,15 @@ let rec traverse_json j p = match (j,p) with
     Fmt.(failwithf "traverse_json: path %a was not valid for JSON@.%s@."
            (list Dump.string) p
            (Yojson.Basic.pretty_to_string j))
+
+let key_compare (k1, _) (k2, _) = Stdlib.compare k1 k2
+let canon_json (y : Yojson.Basic.t) : Yojson.Basic.t =
+  let rec yrec = function
+    `Null -> `Null
+  | `Bool b -> `Bool b
+  | `Float f -> `Float f
+  | `Int n -> `Float (float_of_int n)
+  | `String s -> `String s
+  | `List l -> `List (List.map yrec l)
+  | `Assoc l -> `Assoc (List.stable_sort key_compare (List.map (fun (k,v) -> (k,yrec v)) l))
+  in yrec y
