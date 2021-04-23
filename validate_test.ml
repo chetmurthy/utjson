@@ -100,19 +100,120 @@ let exceptions = "exceptions" >::: [
   ; success_file ("schemastore/src/schemas/json/bootstraprc.json",
                   "schema-overrides/bootstraprc-test-FIXED.json")
   ; success_file ("schema-overrides/cloudify-FIXED.utj",
-                  "schema-overrides/azure-aks.json")
+                  "schemastore/src/test/cloudify/ansible-clearwater-blueprint.json")
+  ; success_file ("schema-overrides/cloudify-FIXED.utj",
+                  "schemastore/src/test/cloudify/ansible-compute-blueprint.json")
+  ; success_file ("schema-overrides/cloudify-FIXED.utj",
+                  "schemastore/src/test/cloudify/ansible-hosts-input-blueprint.json")
+  ; success_file ("schema-overrides/cloudify-FIXED.utj",
+                  "schemastore/src/test/cloudify/ansible-local-blueprint.json")
+  ; success_file ("schema-overrides/cloudify-FIXED.utj",
+                  "schemastore/src/test/cloudify/ansible-openstack-lamp.json")
+  ; success_file ("schema-overrides/cloudify-FIXED.utj",
+                  "schemastore/src/test/cloudify/ansible-openvpn-blueprint.json")
+  ; success_file ("schema-overrides/cloudify-FIXED.utj",
+                  "schemastore/src/test/cloudify/ansible-playbook-compute-blueprint.json")
+  ; success_file ("schema-overrides/cloudify-FIXED.utj",
+                  "schemastore/src/test/cloudify/ansible-playbook-openstack-lamp.json")
+  ; success_file ("schema-overrides/cloudify-FIXED.utj",
+                  "schemastore/src/test/cloudify/ansible-relationships-blueprint.json")
+  ; success_file ("schema-overrides/cloudify-FIXED.utj",
+                  "schemastore/src/test/cloudify/azure-aks.json")
+  ; success_file ("schema-overrides/cloudify-FIXED.utj",
+                  "schemastore/src/test/cloudify/azure-app-sample-blueprint.json")
+  ; success_file ("schema-overrides/cloudify-FIXED.utj",
+                  "schemastore/src/test/cloudify/azure-fortigate-blueprint.json")
+  ; success_file ("schema-overrides/cloudify-FIXED.utj",
+                  "schemastore/src/test/cloudify/azure-grid-compute.json")
+  ; success_file ("schema-overrides/cloudify-FIXED.utj",
+                  "schemastore/src/test/cloudify/azure-linux-nodecellar.json")
+  ; success_file ("schema-overrides/cloudify-FIXED.utj",
+                  "schemastore/src/test/cloudify/azure-local-blueprint.json")
+  ; success_file ("schema-overrides/cloudify-FIXED.utj",
+                  "schemastore/src/test/cloudify/azure-local-data-disks.json")
+  ; success_file ("schema-overrides/cloudify-FIXED.utj",
+                  "schemastore/src/test/cloudify/azure-network-blueprint.json")
+  ; success_file ("schema-overrides/cloudify-FIXED.utj",
+                  "schemastore/src/test/cloudify/azure-vm.json")
+  ; success_file ("schema-overrides/cloudify-FIXED.utj",
+                  "schemastore/src/test/cloudify/azure-windows-iis-loadbalanced.json")
+  ; success_file ("schema-overrides/cloudify-FIXED.utj",
+                  "schemastore/src/test/cloudify/cloudify-test.json")
+  ; success_file ("schema-overrides/cloudify-FIXED.utj",
+                  "schemastore/src/test/cloudify/docker-ansible-container.json")
+  ; success_file ("schema-overrides/cloudify-FIXED.utj",
+                  "schemastore/src/test/cloudify/docker-ansible-container-using-docker-ansible-playbook.json")
+  ; success_file ("schema-overrides/cloudify-FIXED.utj",
+                  "schemastore/src/test/cloudify/docker-any-container.json")
+  ; success_file ("schema-overrides/cloudify-FIXED.utj",
+                  "schemastore/src/test/cloudify/docker-install-docker.json")
+  ; success_file ("schema-overrides/cloudify-FIXED.utj",
+                  "schemastore/src/test/cloudify/docker-mc-docker.json")
+  ; success_file ("schema-overrides/cloudify-FIXED.utj",
+                  "schemastore/src/test/cloudify/docker-terraform-container-using-docker-terraform-module.json")
+  ; success_file ("schema-overrides/cloudify-FIXED.utj",
+                  "schemastore/src/test/cloudify/helm-install-chart-using-interfaces.json")
+  ; success_file ("schema-overrides/cloudify-FIXED.utj",
+                  "schemastore/src/test/cloudify/helm-install-chart-with-sa-and-kubeconfig-file-content.json")
+  ; success_file ("schema-overrides/cloudify-FIXED.utj",
+                  "schemastore/src/test/cloudify/k8s-files-test-multiple-resources.json")
+  ; success_file ("schema-overrides/cloudify-FIXED.utj",
+                  "schemastore/src/test/cloudify/k8s-file-test.json")
+  ; success_file ("schema-overrides/cloudify-FIXED.utj",
+                  "schemastore/src/test/cloudify/k8s-file-test-persistent-volume.json")
+  ; success_file ("schema-overrides/cloudify-FIXED.utj",
+                  "schemastore/src/test/cloudify/k8s-storage-class.json")
+  ; success_file ("schema-overrides/cloudify-FIXED.utj",
+                  "schemastore/src/test/cloudify/k8s-test-deployment.json")
+  ; success_file ("schema-overrides/cloudify-FIXED.utj",
+                  "schemastore/src/test/cloudify/k8s-test-stateful-set.json")
+  ; success_file ("schema-overrides/cloudify-FIXED.utj",
+                  "schemastore/src/test/cloudify/openstack-blueprint.json")
+  ; success_file ("schema-overrides/cloudify-FIXED.utj",
+                  "schemastore/src/test/cloudify/openstack.json")
+  ; success_file ("schema-overrides/cloudify-FIXED.utj",
+                  "schemastore/src/test/cloudify/terraform-blueprint.json")
+  ; success_file ("schema-overrides/cloudify-FIXED.utj",
+                  "schemastore/src/test/cloudify/terraform-wordpress-blueprint.json")
+  ; success_file ("schema-overrides/cloudify-FIXED.utj",
+                  "schemastore/src/test/cloudify/utikities-ssh-key.json")
+  ; success_file ("schema-overrides/cloudify-FIXED.utj",
+                  "schema-overrides/utilities-cloudinit-aws.json")
+  ; success_file ("schema-overrides/cloudify-FIXED.utj",
+                  "schemastore/src/test/cloudify/utilities-cloudinit-simple.json")
+  ; success_file ("schema-overrides/cloudify-FIXED.utj",
+                  "schemastore/src/test/cloudify/utilities-config-simple.json")
+  ; success_file ("schema-overrides/cloudify-FIXED.utj",
+                  "schemastore/src/test/cloudify/utilities-custom-workflow-example.json")
+  ; success_file ("schema-overrides/cloudify-FIXED.utj",
+                  "schemastore/src/test/cloudify/utilities-deployment-proxy-custom-workflow.json")
+  ; success_file ("schema-overrides/cloudify-FIXED.utj",
+                  "schemastore/src/test/cloudify/utilities-deployment-proxy.json")
+  ; success_file ("schema-overrides/cloudify-FIXED.utj",
+                  "schemastore/src/test/cloudify/utilities-deployment-without-workflow.json")
+  ; success_file ("schema-overrides/cloudify-FIXED.utj",
+                  "schemastore/src/test/cloudify/utilities-file-blueprint.json")
+  ; success_file ("schema-overrides/cloudify-FIXED.utj",
+                  "schemastore/src/test/cloudify/utilities-file-openstack-blueprint.json")
+  ; success_file ("schema-overrides/cloudify-FIXED.utj",
+                  "schemastore/src/test/cloudify/utilities-ftp-upload_ftp.json")
+  ; success_file ("schema-overrides/cloudify-FIXED.utj",
+                  "schemastore/src/test/cloudify/utilities-hook-workflow-check-failure.json")
+  ; success_file ("schema-overrides/cloudify-FIXED.utj",
+                  "schemastore/src/test/cloudify/utilities-node-instance-proxy.json")
+  ; success_file ("schema-overrides/cloudify-FIXED.utj",
+                  "schemastore/src/test/cloudify/utilities-rest.json")
+  ; success_file ("schema-overrides/cloudify-FIXED.utj",
+                  "schemastore/src/test/cloudify/utilities-scalelist.json")
+  ; success_file ("schema-overrides/cloudify-FIXED.utj",
+                  "schemastore/src/test/cloudify/utilities-secrets-ead-secret-blueprint.json")
+  ; success_file ("schema-overrides/cloudify-FIXED.utj",
+                  "schemastore/src/test/cloudify/utilities-suspend.json")
+  ; success_file ("schema-overrides/cloudify-FIXED.utj",
+                  "schemastore/src/test/cloudify/utilities-terminal-cisco.json")
+
   ; success_file ("schema-overrides/bukkit-plugin-FIXED.utj",
                   "schemastore/src/test/bukkit-plugin/bukkit-plugin-test.json")
-(*
-  ; success_file ("schema-overrides/cloudify.json",
-                  "schema-overrides/azure-windows-iis-loadbalanced-FIXED.json")
-  ; success_file ("schema-overrides/cloudify.json",
-                  "schema-overrides/utilities-cloudinit-aws-FIXED.json")
-  ; success_file ("schema-overrides/cloudify.json",
-                  "schema-overrides/openstack-FIXED.json")
-  ; success_file ("schema-overrides/cloudify.json",
-                  "schema-overrides/openstack-blueprint-FIXED.json")
-*)
 ]
 
 let excluded_schema = [
@@ -121,6 +222,7 @@ let excluded_schema = [
 ; "azure-iot-edge-deployment-template-1.0.json"
 ; "cloud-sdk-pipeline-config-schema.json"
 ; "bukkit-plugin.json"
+; "cloudify.json"
 ]
 
 let excluded_tests = [
@@ -136,7 +238,7 @@ let excluded_tests = [
 ]
 
 let testfiles = subtract all_schemastore_files excluded_schema
-let testfiles = (firstn 45 testfiles)
+let testfiles = (firstn 46 testfiles)
 let schemastore = "schemastore" >::: (
    testfiles |> List.concat_map (schema_test_pairs ~excluded_tests) |> List.map success_file
   )

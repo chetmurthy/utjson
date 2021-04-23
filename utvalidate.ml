@@ -370,7 +370,7 @@ let tdl = ref []
   | ContentEncoding of string
 *)
 
-    | _ -> Fmt.(failwithf "atomic_type: unandled %a at %s" pp_atomic_utype_t t
+    | _ -> Fmt.(failwithf "atomic_type: unhandled %a at %s" pp_atomic_utype_t t
                   (String.concat "/" (List.rev path))
                )
 
