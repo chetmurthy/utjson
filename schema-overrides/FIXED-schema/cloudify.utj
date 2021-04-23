@@ -1,0 +1,3100 @@
+import "lib/predefined.utj" as Predefined;
+  module DEFINITIONS = struct
+    type rec ansiblePlaybookConfig = object && [
+        "ansible_playbook_executable_path": cloudifyStringOrGetInput && [ default "ansible-playbook"; ];
+        "playbook_source_path": cloudifyStringOrGetInput;
+        "playbook_path": cloudifyStringOrGetInput;
+        "site_yaml_path": cloudifyStringOrGetInput;
+        "additional_playbook_files": array && [ of string; ];
+        "sources": cloudifyStringOrGetInput;
+        "run_data": object;
+        "sensitive_keys": array && [ of string; ] && [ default "ansible_password"; ];
+        "options_config": object;
+        "ansible_env_vars": object && [
+            "ANSIBLE_HOST_KEY_CHECKING": boolean && [ default false; ];
+            "ANSIBLE_INVALID_TASK_ATTRIBUTE_FAILED": boolean && [ default false; ];
+];
+        "debug_level": cloudifyIntegerOrGetInput && [ default 2; ];
+        "additional_args": cloudifyStringOrGetInput;
+        "start_at_task": cloudifyStringOrGetInput;
+        "scp_extra_args": cloudifyStringOrGetInput;
+        "sftp_extra_args": cloudifyStringOrGetInput;
+        "ssh_common_args": cloudifyStringOrGetInput && [
+            default "Specify common arguments to pass to sftp/scp/ssh (e.g. ProxyCommand)";
+];
+        "ssh_extra_args": cloudifyStringOrGetInput;
+        "timeout": cloudifyStringOrGetInput && [ default 10; ];
+        "save_playbook": cloudifyBooleanOrGetInput && [ default false; ];
+        "remerge_sources": cloudifyBooleanOrGetInput && [ default "false"; ];
+        "ansible_become": cloudifyBooleanOrGetInput && [ default false; ];
+]
+    and ansiblePlaybookInputs = object && [
+        "ansible_playbook_executable_path": (string || object) && [ default {"get_property":["SELF","ansible_playbook_executable_path"]}; ];
+        "playbook_source_path": (string || object) && [ default {"get_property":["SELF","playbook_source_path"]}; ];
+        "playbook_path": string && [ default {"get_property":["SELF","playbook_path"]}; ];
+        "site_yaml_path": string && [ default {"get_property":["SELF","site_yaml_path"]}; ];
+        "save_playbook": string && [ default {"get_property":["SELF","save_playbook"]}; ];
+        "remerge_sources": string && [ default {"get_property":["SELF","remerge_sources"]}; ];
+        "sources": string && [ default {"get_property":["SELF","sources"]}; ];
+        "run_data": string && [ default {"get_property":["SELF","run_data"]}; ];
+        "sensitive_keys": string && [ default {"get_property":["SELF","sensitive_keys"]}; ];
+        "options_config": string && [ default {"get_property":["SELF","options_config"]}; ];
+        "ansible_env_vars": string && [ default {"get_property":["SELF","ansible_env_vars"]}; ];
+        "debug_level": string && [ default {"get_property":["SELF","debug_level"]}; ];
+        "additional_args": string && [ default {"get_property":["SELF","additional_args"]}; ];
+        "start_at_task": string && [ default {"get_property":["SELF","start_at_task"]}; ];
+        "scp_extra_args": string && [ default {"get_attribute":["SELF","scp_extra_args"]}; ];
+        "sftp_extra_args": string && [ default {"get_attribute":["SELF","sftp_extra_args"]}; ];
+        "ssh_common_args": string && [ default {"get_attribute":["SELF","ssh_common_args"]}; ];
+        "ssh_extra_args": string && [ default {"get_attribute":["SELF","ssh_extra_args"]}; ];
+        "timeout": string && [ default {"get_attribute":["SELF","timeout"]}; ];
+]
+    and awsClientConfig = object && [
+        "aws_access_key_id": cloudifyStringOrGetInput;
+        "aws_secret_access_key": cloudifyStringOrGetInput;
+        "region_name": cloudifyStringOrGetInput;
+]
+    and awsConnectionConfig = object && [
+        "aws_access_key_id": cloudifyStringOrGetInput;
+        "aws_secret_access_key": cloudifyStringOrGetInput;
+        "region_name": cloudifyGetStringOrAwsRegion;
+]
+    and awsRegion = string && [
+        enum "us-east-1", "us-east-2", "us-west-1", "us-west-2", "af-south-1",
+        "ap-east-1", "ap-south-1", "ap-southeast-1", "ap-northeast-2",
+        "ap-northeast-3", "ap-northeast-1", "ap-southeast-2", "ca-central-1",
+        "cn-north-1", "cn-northwest-1", "eu-central-1", "eu-west-1",
+        "eu-west-2", "eu-south-1", "eu-west-3", "eu-north-1", "me-south-1",
+        "sa-east-1", "us-gov-east-1", "us-gov-west-1";
+]
+    and awsResourceId = string && [ default ""; ]
+    and cloudifyBooleanOrGetInput = boolean || cloudifyGetIntrinsicFunction
+    and cloudifyDataTypesAgentConfig = object && [
+        "install_method": cloudifyStringOrGetInput;
+        "service_name": cloudifyStringOrGetInput;
+        "network": cloudifyStringOrGetInput;
+        "user": cloudifyStringOrGetInput;
+        "key": cloudifyStringOrGetInput;
+        "password": cloudifyStringOrGetInput;
+        "port": cloudifyIntegerOrGetInput;
+        "process_management": object;
+        "min_workers": cloudifyIntegerOrGetInput;
+        "max_workers": cloudifyIntegerOrGetInput;
+        "heartbeat": cloudifyIntegerOrGetInput;
+        "disable_requiretty": cloudifyBooleanOrGetInput;
+        "env": Predefined.json;
+        "extra": object;
+] && [ required "install_method"; ]
+    and cloudifyDatatypesAzureComputeAvailabilitySetConfig = object && [
+        "platformUpdateDomainCount": cloudifyIntegerOrGetInput;
+        "platformFaultDomainCount": cloudifyIntegerOrGetInput;
+        "sku": object;
+]
+    and cloudifyDatatypesAzureComputeManagedClusterConfig = object && [
+        "location": cloudifyStringOrGetInput;
+        "tags": object;
+        "kubernetes_version": cloudifyStringOrGetInput;
+        "dns_prefix": cloudifyStringOrGetInput;
+        "agent_pool_profiles": array && [ of (string || object); ];
+        "linux_profile": object;
+        "network_profile": object;
+        "windows_profile": object;
+        "service_principal_profile": object;
+        "addon_profiles": object;
+        "enable_rbac": cloudifyBooleanOrGetInput && [ default true; ];
+]
+    and cloudifyDatatypesAzureComputeVirtualMachineConfig = object && [
+        "hardwareProfile": cloudifyStringOrGetInput;
+        "storageProfile": cloudifyStringOrGetInput;
+        "osProfile": object;
+        "spot_instance": cloudifyDatatypesAzureComputeVirtualMachineSpotConfig;
+]
+    and cloudifyDatatypesAzureComputeVirtualMachineSpotConfig = object && [
+        "is_spot_instance": cloudifyBooleanOrGetInput && [ default false; ];
+        "priority": cloudifyStringOrGetInput && [ default "Spot"; ];
+        "eviction_policy": cloudifyStringOrGetInput && [ default "Deallocate"; ];
+        "billing_profile": object;
+]
+    and cloudifyDatatypesAzureConfig = object && [
+        "endpoints_active_directory": cloudifyStringOrGetInput && [ default "https://login.microsoftonline.com"; ];
+        "endpoints_resource_manager": cloudifyStringOrGetInput && [ default "https://management.azure.com"; ];
+        "endpoint_resource": cloudifyStringOrGetInput && [ default "https://management.core.windows.net/"; ];
+        "endpoint_verify": cloudifyBooleanOrGetInput && [ default true; ];
+        "subscription_id": cloudifyStringOrGetInput;
+        "tenant_id": cloudifyStringOrGetInput;
+        "client_id": cloudifyStringOrGetInput;
+        "client_secret": cloudifyStringOrGetInput;
+        "scale_name_separator": cloudifyStringOrGetInput && [ default "_"; ];
+        "scale_name_suffix_chars": cloudifyStringOrGetInput && [ default "1234567890"; ];
+        "certificate": cloudifyStringOrGetInput;
+        "thumbprint": cloudifyStringOrGetInput;
+        "cloud_environment": cloudifyStringOrGetInput;
+]
+    and cloudifyDatatypesAzureNetworkIPConfigurationConfig = object && [
+        "privateIPAddress": cloudifyStringOrGetInput;
+        "privateIPAllocationMethod": cloudifyStringOrGetInput;
+] && [ required "privateIPAllocationMethod"; ]
+    and cloudifyDatatypesAzureNetworkLoadBalancerConfig = object && [
+        "frontendIPConfigurations": array && [ of string; ];
+        "backendAddressPools": array && [ of string; ];
+        "loadBalancingRules": array && [ of string; ];
+        "probes": array && [ of string; ];
+        "inboundNatRules": array && [ of string; ];
+]
+    and cloudifyDatatypesAzureNetworkLoadBalancerIncomingNATRuleConfig = object && [
+        "protocol": cloudifyStringOrGetInput && [ default "Tcp"; ];
+        "frontendPort": cloudifyIntegerOrGetInput;
+        "backendPort": cloudifyIntegerOrGetInput;
+] && [ required "protocol",  "frontendPort",  "backendPort"; ]
+    and cloudifyDatatypesAzureNetworkLoadBalancerProbeConfig = object && [
+        "protocol": cloudifyStringOrGetInput && [ default "Tcp"; ];
+        "port": cloudifyIntegerOrGetInput;
+        "requestPath": cloudifyStringOrGetInput;
+        "intervalInSeconds": cloudifyIntegerOrGetInput && [ default 5; ];
+        "numberOfProbes": cloudifyIntegerOrGetInput && [ default 16; ];
+] && [ required "port"; ]
+    and cloudifyDatatypesAzureNetworkLoadBalancerRuleConfig = object && [
+        "protocol": cloudifyStringOrGetInput && [ default "Tcp"; ];
+        "frontendPort": cloudifyIntegerOrGetInput;
+        "backendPort": cloudifyIntegerOrGetInput;
+        "enableFloatingIP": cloudifyBooleanOrGetInput && [ default false; ];
+        "idleTimeoutInMinutes": cloudifyIntegerOrGetInput && [ default 5; ];
+        "loadDistribution": cloudifyStringOrGetInput && [ default "Default"; ];
+] && [ required "protocol",  "frontendPort",  "backendPort"; ]
+    and cloudifyDatatypesAzureNetworkNetworkInterfaceCardConfig = object && [
+        "networkSecurityGroups": array && [ of string; ];
+        "ipConfigurations": array && [ of string; ];
+        "dnsSettings": array && [ of string; ];
+]
+    and cloudifyDatatypesAzureNetworkNetworkSecurityGroupConfig = object && [ "securityRules": (object || array); ]
+    and cloudifyDatatypesAzureNetworkNetworkSecurityRuleConfig = object && [
+        "description": cloudifyStringOrGetInput;
+        "protocol": cloudifyStringOrGetInput;
+        "sourcePortRange": cloudifyStringOrGetInput;
+        "destinationPortRange": cloudifyStringOrGetInput;
+        "sourceAddressPrefix": cloudifyStringOrGetInput;
+        "destinationAddressPrefix": cloudifyStringOrGetInput;
+        "access": cloudifyStringOrGetInput;
+        "priority": cloudifyIntegerOrGetInput;
+        "direction": cloudifyStringOrGetInput;
+] && [
+        required "protocol",  "sourceAddressPrefix", 
+        "destinationAddressPrefix",  "access",  "priority",  "direction";
+]
+    and cloudifyDatatypesAzureNetworkPublicIPAddressConfig = object && [
+        "publicIPAllocationMethod": cloudifyStringOrGetInput;
+        "idleTimeoutInMinutes": cloudifyIntegerOrGetInput;
+        "domainNameLabel": cloudifyStringOrGetInput;
+        "reverseFqdn": cloudifyStringOrGetInput;
+] && [ required "publicIPAllocationMethod"; ]
+    and cloudifyDatatypesAzureNetworkRouteConfig = object && [
+        "addressPrefix": (string || cloudifyGetInput);
+        "nextHopType": string;
+        "nextHopIpAddress": string;
+] && [ required "nextHopType",  "addressPrefix"; ]
+    and cloudifyDatatypesAzureNetworkRouteTableConfig = object && [ "routes": cloudifyStringOrGetInput; ]
+    and cloudifyDatatypesAzureNetworkSubnetConfig = object && [
+        "addressPrefix": cloudifyStringOrGetInput;
+        "networkSecurityGroup": cloudifyIntegerOrGetInput;
+        "routeTable": cloudifyIntegerOrGetInput;
+]
+    and cloudifyDatatypesAzureNetworkVirtualNetworkConfig = object && [
+        "addressSpace": object;
+        "dhcpOptions": object;
+        "subnets": object;
+] && [ required "addressSpace"; ]
+    and cloudifyDatatypesAzureStorageDataDiskConfig = object && [
+        "container_name": cloudifyStringOrGetInput && [ default "vhds"; ];
+        "size": cloudifyIntegerOrGetInput && [ default 20; ];
+        "force_delete": cloudifyBooleanOrGetInput && [ default false; ];
+] && [ required "size"; ]
+    and cloudifyDatatypesAzureStorageFileShareConfig = object && [
+        "metadata": object;
+        "quota": cloudifyIntegerOrGetInput;
+        "fail_on_exist": cloudifyBooleanOrGetInput && [ default false; ];
+]
+    and cloudifyDatatypesAzureStorageStorageAccountConfig = object && [
+        "accountType": cloudifyStringOrGetInput;
+        "networkAcls": object;
+        "supportsHttpsTrafficOnly": object;
+        "encryption": object;
+        "keySource": object;
+]
+    and cloudifyDatatypesBlueprint = object && [
+        "external_resource": cloudifyBooleanOrGetInput && [ default false; ];
+        "id": Predefined.json;
+        "main_file_name": cloudifyStringOrGetInput && [ default "blueprint.yaml"; ];
+        "blueprint_archive": cloudifyStringOrGetInput;
+]
+    and cloudifyDatatypesDeployment = object && [
+        "external_resource": cloudifyBooleanOrGetInput && [ default false; ];
+        "id": cloudifyStringOrGetInput;
+        "inputs": object;
+        "outputs": object;
+        "all_outputs": cloudifyBooleanOrGetInput && [ default true; ];
+        "logs": object;
+]
+    and cloudifyDatatypesDeploymentProxy = object && [
+        "blueprint": cloudifyDatatypesBlueprint;
+        "deployment": cloudifyDatatypesDeployment;
+        "executions_start_args": object;
+        "reexecute": cloudifyBooleanOrGetInput && [ default false; ];
+] && [ required "blueprint",  "deployment"; ]
+    and cloudifyDatatypesFile = object && [
+        "resource_path": cloudifyStringOrGetInput;
+        "file_path": cloudifyStringOrGetInput;
+        "owner": cloudifyStringOrGetInput;
+        "mode": cloudifyIntegerOrGetInput;
+        "template_variables": object;
+        "use_sudo": cloudifyBooleanOrGetInput && [ default false; ];
+        "allow_failure": cloudifyBooleanOrGetInput && [ default false; ];
+] && [ required "resource_path",  "file_path",  "owner",  "mode"; ]
+    and cloudifyDatatypesFtpAuth = object && [
+        "user": cloudifyStringOrGetInput;
+        "password": cloudifyStringOrGetInput;
+        "ip": cloudifyStringOrGetInput;
+        "port": cloudifyIntegerOrGetInput && [ default 21; ];
+        "ignore_host": cloudifyBooleanOrGetInput && [ default false; ];
+        "tls": cloudifyBooleanOrGetInput && [ default false; ];
+]
+    and cloudifyDatatypesHelmApiOptions = object && [
+        "host": cloudifyStringOrGetInput;
+        "api_key": cloudifyStringOrGetInput;
+]
+    and cloudifyDatatypesHelmAuthenticationVariant = object && [ "gcp_service_account": cloudifyStringOrGetInput; ]
+    and cloudifyDatatypesHelmClientConfig = object && [
+        "configuration": cloudifyDatatypesHelmConfigurationVariant;
+        "authentication": cloudifyDatatypesHelmAuthenticationVariant;
+]
+    and cloudifyDatatypesHelmConfig = object && [ "executable_path": cloudifyStringOrGetInput && [ default ""; ]; ]
+    and cloudifyDatatypesHelmConfigurationVariant = object && [
+        "blueprint_file_name": cloudifyStringOrGetInput;
+        "manager_file_path": cloudifyStringOrGetInput;
+        "file_content": cloudifyStringOrGetInput;
+        "api_options": cloudifyDatatypesHelmApiOptions;
+]
+    and cloudifyDatatypesHelmReleaseConfig = object && [
+        "name": cloudifyStringOrGetInput;
+        "chart": cloudifyStringOrGetInput;
+        "values_file": cloudifyStringOrGetInput;
+        "set_values": cloudifyDatatypesHelmSetFlagsList && [ default []; ];
+        "flags": cloudifyDatatypesHelmSetFlagsList && [ default []; ];
+] && [ required "name",  "chart"; ]
+    and cloudifyDatatypesHelmRepoConfig = object && [
+        "name": cloudifyStringOrGetInput;
+        "repo_url": cloudifyStringOrGetInput;
+        "flags": cloudifyDatatypesHelmSetFlagsList && [ default []; ];
+] && [ required "name",  "repo_url"; ]
+    and cloudifyDatatypesHelmSetFlagsList = array && [
+        of object && [
+            "name": string;
+            "value": Predefined.json;
+];
+] && [ default []; ]
+    and cloudifyDatatypesKey = object && [
+        "private_key_path": cloudifyStringOrGetInput;
+        "public_key_path": cloudifyStringOrGetInput && [ default "~/.ssh/id_rsa.pub"; ];
+        "key_name": cloudifyStringOrGetInput;
+        "algorithm": cloudifyStringOrGetInput && [ default "RSA"; ];
+        "bits": cloudifyIntegerOrGetInput && [ default 2048; ];
+        "comment": cloudifyStringOrGetInput;
+        "passphrase": cloudifyStringOrGetInput;
+        "openssh_format": cloudifyBooleanOrGetInput;
+        "unvalidated": Predefined.json;
+]
+    and cloudifyDatatypesNode = object && [ "id": cloudifyStringOrGetInput; ]
+    and cloudifyDatatypesNodeInstance = object && [
+        "node": cloudifyDatatypesNode;
+        "id": cloudifyStringOrGetInput;
+]
+    and cloudifyDatatypesNodeInstanceProxy = object && [
+        "blueprint": cloudifyDatatypesBlueprint;
+        "deployment": cloudifyDatatypesDeployment;
+        "executions_start_args": object;
+        "reexecute": cloudifyBooleanOrGetInput && [ default false; ];
+        "node_instance": cloudifyDatatypesNodeInstance;
+] && [ required "blueprint",  "deployment"; ]
+    and cloudifyDatatypesTerminalAuth = object && [
+        "user": cloudifyStringOrGetInput;
+        "password": cloudifyStringOrGetInput;
+        "ip": cloudifyStringOrGetInput;
+        "key_content": cloudifyStringOrGetInput;
+        "port": cloudifyIntegerOrGetInput && [ default 22; ];
+        "store_logs": cloudifyBooleanOrGetInput && [ default false; ];
+        "promt_check": array && [ of string; ];
+        "warnings": array && [ of string; ];
+        "errors": array && [ of string; ];
+        "criticals": array && [ of string; ];
+        "exit_command": cloudifyStringOrGetInput && [ default "exit"; ];
+        "smart_device": cloudifyBooleanOrGetInput && [ default false; ];
+]
+    and cloudifyGetAttribute = object && [ "get_attribute": string || array && [ of string; ]; ]
+    and cloudifyGetInput = object && [ "get_input": string || array && [ of string; ]; ]
+    and cloudifyGetIntrinsicFunction = cloudifyGetInput || cloudifyGetSecret || cloudifyGetAttribute || cloudifyGetProperty
+    and cloudifyGetProperty = object && [ "get_property": string || array && [ of string; ]; ]
+    and cloudifyGetSecret = object && [ "get_secret": string || array && [ of string; ]; ]
+    and cloudifyGetStringOrAwsRegion = awsRegion || cloudifyGetInput
+    and cloudifyIntegerOrGetInput = Predefined.integer || cloudifyGetIntrinsicFunction
+    and cloudifyStringOrGetInput = string || cloudifyGetIntrinsicFunction
+    and dataType = object && [
+        "description": string;
+        "properties": object;
+        "derived_from": string;
+] && object && [ sealed; ]
+    and dataTypes = object && [ orelse dataType; ]
+    and dockerClientConfig = object && [
+        "docker_host": cloudifyStringOrGetInput;
+        "docker_rest_port": cloudifyIntegerOrGetInput;
+]
+    and dockerInstallationConfig = object && [
+        "install_url": cloudifyStringOrGetInput && [ default "https://get.docker.com"; ];
+        "install_script": cloudifyStringOrGetInput && [
+            default "https://raw.githubusercontent.com/cloudify-cosmo/cloudify-docker-plugin/master/cloudify_docker/resources/post-install.sh";
+];
+]
+    and dockerMachine = object && [
+        "docker_ip": cloudifyStringOrGetInput;
+        "docker_user": cloudifyStringOrGetInput;
+        "docker_key": cloudifyStringOrGetInput;
+        "container_volume": cloudifyStringOrGetInput;
+]
+    and gcpExternalResource = object && [ "use_external_resource": boolean && [ default false; ]; ]
+    and gcpResourceId = object && [ "resource_id": string; ]
+    and inputProperty = object && [
+        "description": string;
+        "type": string || string && [ enum "string", "integer", "float", "boolean", "list", "dict", "regex"; ];
+        "default": number || string || array || boolean || Predefined.integer || object;
+        "constraints": array && [ of inputPropertyConstraints];
+        "required": boolean;
+] && object && [ sealed; ]
+    and inputPropertyConstraints = object && [
+        "equal": number || string || boolean || Predefined.integer;
+        "greater_than": number || string || boolean || Predefined.integer;
+        "greater_or_equal": number || string || boolean || Predefined.integer;
+        "less_than": number || string || boolean || Predefined.integer;
+        "less_or_equal": number || string || boolean || Predefined.integer;
+] || [
+        "valid_values": array && [ of number || string || boolean || Predefined.integer; ];
+]
+    and kubernetesTypesAbstractResource = object && [
+        "apiVersion": cloudifyStringOrGetInput && [ default "v1"; ];
+        "kind": cloudifyStringOrGetInput;
+        "metadata": object;
+] && [ required "kind"; ]
+    and kubernetesTypesApiMapping = object && [
+        "create": kubernetesTypesApiMappingEntry;
+        "read": kubernetesTypesApiMappingEntry;
+        "update": kubernetesTypesApiMappingEntry;
+        "delete": kubernetesTypesApiMappingEntry;
+]
+    and kubernetesTypesApiMappingEntry = object && [
+        "api": cloudifyStringOrGetInput;
+        "method": cloudifyStringOrGetInput;
+        "payload": cloudifyStringOrGetInput;
+] && [ required "api",  "method"; ]
+    and kubernetesTypesAuthenticationVariant = object && [ "gcp_service_account": cloudifyStringOrGetInput; ]
+    and kubernetesTypesClientConfig = object && [
+        "configuration": kubernetesTypesConfigurationVariant;
+        "authentication": kubernetesTypesAuthenticationVariant;
+]
+    and kubernetesTypesClusterRoleDefinitio = object && kubernetesTypesAbstractResource
+    and kubernetesTypesConfigClassResourceDefinition = object && kubernetesTypesResourceDefinition && [ "data": object; ]
+    and kubernetesTypesConfigurationVariant = object && [
+        "blueprint_file_name": cloudifyStringOrGetInput;
+        "manager_file_path": cloudifyStringOrGetInput;
+        "file_content": cloudifyStringOrGetInput;
+        "api_options": object && [
+            "host": cloudifyStringOrGetInput;
+            "ssl_ca_cert": cloudifyStringOrGetInput;
+            "cert_file": cloudifyStringOrGetInput;
+            "key_file": cloudifyStringOrGetInput;
+            "verify_ssl": cloudifyBooleanOrGetInput;
+            "api_key": cloudifyStringOrGetInput;
+            "debug": cloudifyBooleanOrGetInput;
+];
+]
+    and kubernetesTypesFileResource = object && [
+        "resource_path": cloudifyStringOrGetInput;
+        "target_path": cloudifyStringOrGetInput;
+        "template_variables": object;
+]
+    and kubernetesTypesResourceDefinition = object && kubernetesTypesAbstractResource && [ "spec": object; ]
+    and kubernetesTypesRoleBindingDefinitio = object && kubernetesTypesAbstractResource && [
+        "roleRef": object;
+        "subjects": array && [ of cloudifyStringOrGetInput; ];
+]
+    and kubernetesTypesRoleDefinitio = object && kubernetesTypesAbstractResource && [ "rules": array && [ of cloudifyStringOrGetInput; ]; ]
+    and kubernetesTypesSecretDefinition = object && kubernetesTypesAbstractResource && [
+        "type": cloudifyStringOrGetInput;
+        "data": object;
+        "stringData": object;
+]
+    and kubernetesTypesServiceAccountDefinition = object && kubernetesTypesAbstractResource && [
+        "automountServiceAccountToken": cloudifyBooleanOrGetInput && [ default false; ];
+        "imagePullSecrets": array && [ of cloudifyStringOrGetInput; ];
+        "secrets": array && [ of cloudifyStringOrGetInput; ];
+]
+    and kubernetesTypesStorageClassResourceDefinition = object && kubernetesTypesAbstractResource && [
+        "parameters": object;
+        "provisioner": (string || object);
+]
+    and nodeTemplate = object && [
+        "type": string && (string || string && [
+            enum "cloudify.nodes.Root", "cloudify.nodes.Tier",
+            "cloudify.nodes.Compute", "cloudify.nodes.Container",
+            "cloudify.nodes.Network", "cloudify.nodes.Subnet",
+            "cloudify.nodes.Router", "cloudify.nodes.Port",
+            "cloudify.nodes.VirtualIP", "cloudify.nodes.SecurityGroup",
+            "cloudify.nodes.LoadBalancer", "cloudify.nodes.Volume",
+            "cloudify.nodes.FileSystem", "cloudify.nodes.ObjectStorage",
+            "cloudify.nodes.SoftwareComponent", "cloudify.nodes.WebServer",
+            "cloudify.nodes.ApplicationServer", "cloudify.nodes.DBMS",
+            "cloudify.nodes.MessageBugServer",
+            "cloudify.nodes.ApplicationModule", "cloudify.nodes.Component",
+            "cloudify.nodes.ServiceComponent",
+            "cloudify.nodes.SharedResource",
+            "cloudify.nodes.aws.dynamodb.Table",
+            "cloudify.nodes.aws.iam.Group",
+            "cloudify.nodes.aws.iam.AccessKey",
+            "cloudify.nodes.aws.iam.LoginProfile",
+            "cloudify.nodes.aws.iam.User", "cloudify.nodes.aws.iam.Role",
+            "cloudify.nodes.aws.iam.RolePolicy",
+            "cloudify.nodes.aws.iam.InstanceProfile",
+            "cloudify.nodes.aws.iam.Policy",
+            "cloudify.nodes.aws.lambda.Function",
+            "cloudify.nodes.aws.lambda.Invoke",
+            "cloudify.nodes.aws.lambda.Permission",
+            "cloudify.nodes.aws.rds.Instance",
+            "cloudify.nodes.aws.rds.InstanceReadReplica",
+            "cloudify.nodes.aws.rds.SubnetGroup",
+            "cloudify.nodes.aws.rds.OptionGroup",
+            "cloudify.nodes.aws.rds.Option",
+            "cloudify.nodes.aws.rds.ParameterGroup",
+            "cloudify.nodes.aws.rds.Parameter",
+            "cloudify.nodes.aws.route53.HostedZone",
+            "cloudify.nodes.aws.route53.RecordSet",
+            "cloudify.nodes.aws.SQS.Queue", "cloudify.nodes.aws.SNS.Topic",
+            "cloudify.nodes.aws.SNS.Subscription",
+            "cloudify.nodes.aws.elb.LoadBalancer",
+            "cloudify.nodes.aws.elb.Classic.LoadBalancer",
+            "cloudify.nodes.aws.elb.Classic.HealthCheck",
+            "cloudify.nodes.aws.elb.Listener",
+            "cloudify.nodes.aws.elb.Classic.Listener",
+            "cloudify.nodes.aws.elb.Rule",
+            "cloudify.nodes.aws.elb.TargetGroup",
+            "cloudify.nodes.aws.elb.Classic.Policy",
+            "cloudify.nodes.aws.elb.Classic.Policy.Stickiness",
+            "cloudify.nodes.aws.s3.BaseBucket",
+            "cloudify.nodes.aws.s3.BaseBucketObject",
+            "cloudify.nodes.aws.s3.Bucket",
+            "cloudify.nodes.aws.s3.BucketPolicy",
+            "cloudify.nodes.aws.s3.BucketLifecycleConfiguration",
+            "cloudify.nodes.aws.s3.BucketTagging",
+            "cloudify.nodes.aws.s3.BucketObject",
+            "cloudify.nodes.aws.ec2.BaseType", "cloudify.nodes.aws.ec2.Vpc",
+            "cloudify.nodes.aws.ec2.VpcPeering",
+            "cloudify.nodes.aws.ec2.VpcPeeringRequest",
+            "cloudify.nodes.aws.ec2.VpcPeeringAcceptRequest",
+            "cloudify.nodes.aws.ec2.VpcPeeringRejectRequest",
+            "cloudify.nodes.aws.ec2.Subnet",
+            "cloudify.nodes.aws.ec2.SecurityGroup",
+            "cloudify.nodes.aws.ec2.SecurityGroupRuleIngress",
+            "cloudify.nodes.aws.ec2.SecurityGroupRuleEgress",
+            "cloudify.nodes.aws.ec2.NATGateway",
+            "cloudify.nodes.aws.ec2.Interface",
+            "cloudify.nodes.aws.ec2.Instances",
+            "cloudify.nodes.aws.ec2.Keypair",
+            "cloudify.nodes.aws.ec2.ElasticIP",
+            "cloudify.nodes.aws.ec2.NetworkACL",
+            "cloudify.nodes.aws.ec2.NetworkAclEntry",
+            "cloudify.nodes.aws.ec2.DHCPOptions",
+            "cloudify.nodes.aws.ec2.VPNGateway",
+            "cloudify.nodes.aws.ec2.VPNConnection",
+            "cloudify.nodes.aws.ec2.VPNConnectionRoute",
+            "cloudify.nodes.aws.ec2.CustomerGateway",
+            "cloudify.nodes.aws.ec2.InternetGateway",
+            "cloudify.nodes.aws.ec2.RouteTable",
+            "cloudify.nodes.aws.ec2.Route", "cloudify.nodes.aws.ec2.Image",
+            "cloudify.nodes.aws.ec2.Tags", "cloudify.nodes.aws.ec2.EBSVolume",
+            "cloudify.nodes.aws.ec2.EBSAttachment",
+            "cloudify.nodes.aws.autoscaling.Group",
+            "cloudify.nodes.aws.autoscaling.LaunchConfiguration",
+            "cloudify.nodes.aws.autoscaling.Policy",
+            "cloudify.nodes.aws.autoscaling.LifecycleHook",
+            "cloudify.nodes.aws.autoscaling.NotificationConfiguration",
+            "cloudify.nodes.aws.cloudwatch.Alarm",
+            "cloudify.nodes.aws.cloudwatch.Rule",
+            "cloudify.nodes.aws.cloudwatch.Event",
+            "cloudify.nodes.aws.cloudwatch.Target",
+            "cloudify.nodes.aws.efs.FileSystem",
+            "cloudify.nodes.aws.efs.MountTarget",
+            "cloudify.nodes.aws.efs.FileSystemTags",
+            "cloudify.nodes.aws.kms.CustomerMasterKey",
+            "cloudify.nodes.aws.kms.Alias", "cloudify.nodes.aws.kms.Grant",
+            "cloudify.nodes.aws.CloudFormation.Stack",
+            "cloudify.nodes.aws.ecs.Cluster",
+            "cloudify.nodes.aws.ecs.Service",
+            "cloudify.nodes.aws.ecs.TaskDefinition",
+            "cloudify.nodes.swift.s3.Bucket",
+            "cloudify.nodes.swift.s3.BucketObject",
+            "cloudify.nodes.aws.eks.Cluster",
+            "cloudify.nodes.aws.eks.NodeGroup",
+            "cloudify.azure.nodes.storage.StorageAccount",
+            "cloudify.azure.nodes.storage.DataDisk",
+            "cloudify.azure.nodes.storage.FileShare",
+            "cloudify.azure.nodes.network.VirtualNetwork",
+            "cloudify.azure.nodes.network.NetworkSecurityGroup",
+            "cloudify.azure.nodes.network.NetworkSecurityRule",
+            "cloudify.azure.nodes.network.Subnet",
+            "cloudify.azure.nodes.network.RouteTable",
+            "cloudify.azure.nodes.network.Route",
+            "cloudify.azure.nodes.network.NetworkInterfaceCard",
+            "cloudify.azure.nodes.network.IPConfiguration",
+            "cloudify.azure.nodes.network.PublicIPAddress",
+            "cloudify.azure.nodes.compute.AvailabilitySet",
+            "cloudify.azure.nodes.compute.VirtualMachine",
+            "cloudify.azure.nodes.compute.WindowsVirtualMachine",
+            "cloudify.azure.nodes.compute.VirtualMachineExtension",
+            "cloudify.azure.nodes.network.LoadBalancer",
+            "cloudify.azure.nodes.network.LoadBalancer.BackendAddressPool",
+            "cloudify.azure.nodes.network.LoadBalancer.Probe",
+            "cloudify.azure.nodes.network.LoadBalancer.IncomingNATRule",
+            "cloudify.azure.nodes.network.LoadBalancer.Rule",
+            "cloudify.azure.Deployment",
+            "cloudify.azure.nodes.compute.ContainerService",
+            "cloudify.azure.nodes.Plan", "cloudify.azure.nodes.WebApp",
+            "cloudify.azure.nodes.PublishingUser",
+            "cloudify.azure.nodes.compute.ManagedCluster",
+            "cloudify.gcp.project", "cloudify.gcp.nodes.Instance",
+            "cloudify.gcp.nodes.InstanceGroup", "cloudify.gcp.nodes.Volume",
+            "cloudify.gcp.nodes.Snapshot", "cloudify.gcp.nodes.Network",
+            "cloudify.gcp.nodes.SubNetwork",
+            "cloudify.gcp.nodes.VPCNetworkPeering",
+            "cloudify.gcp.nodes.Route", "cloudify.gcp.nodes.FirewallRule",
+            "cloudify.gcp.nodes.SecurityGroup", "cloudify.gcp.nodes.Access",
+            "cloudify.gcp.nodes.KeyPair", "cloudify.gcp.nodes.ExternalIP",
+            "cloudify.gcp.nodes.GlobalAddress", "cloudify.gcp.nodes.StaticIP",
+            "cloudify.gcp.nodes.Address", "cloudify.gcp.nodes.Image",
+            "cloudify.gcp.nodes.HealthCheck",
+            "cloudify.gcp.nodes.BackendService",
+            "cloudify.gcp.nodes.RegionBackendService",
+            "cloudify.gcp.nodes.UrlMap", "cloudify.gcp.nodes.TargetProxy",
+            "cloudify.gcp.nodes.SslCertificate",
+            "cloudify.gcp.nodes.ForwardingRule",
+            "cloudify.gcp.nodes.GlobalForwardingRule",
+            "cloudify.gcp.nodes.DNSZone", "cloudify.gcp.nodes.DNSRecord",
+            "cloudify.gcp.nodes.DNSAAAARecord",
+            "cloudify.gcp.nodes.DNSMXRecord",
+            "cloudify.gcp.nodes.DNSNSRecord",
+            "cloudify.gcp.nodes.DNSTXTRecord",
+            "cloudify.gcp.nodes.KubernetesCluster",
+            "cloudify.gcp.nodes.KubernetesNodePool",
+            "cloudify.gcp.nodes.KubernetesClusterMonitoring",
+            "cloudify.gcp.nodes.KubernetesClusterlegacyAbac",
+            "cloudify.gcp.nodes.KubernetesClusterNetworkPolicy",
+            "cloudify.gcp.nodes.Topic", "cloudify.gcp.nodes.TopicPolicy",
+            "cloudify.gcp.nodes.TopicMessage",
+            "cloudify.gcp.nodes.Subscription",
+            "cloudify.gcp.nodes.SubscriptionPolicy",
+            "cloudify.gcp.nodes.Acknowledge",
+            "cloudify.gcp.nodes.PullRequest",
+            "cloudify.gcp.nodes.StackDriverGroup",
+            "cloudify.gcp.nodes.StackDriverTimeSeries",
+            "cloudify.gcp.nodes.StackDriverUpTimeCheckConfig",
+            "cloudify.gcp.nodes.LoggingSink",
+            "cloudify.gcp.nodes.LoggingExclusion",
+            "cloudify.gcp.nodes.Logging.BillingAccounts.sinks",
+            "cloudify.gcp.nodes.Logging.Folders.sinks",
+            "cloudify.gcp.nodes.Logging.Organizations.sinks",
+            "cloudify.gcp.nodes.Logging.Projects.sinks",
+            "cloudify.gcp.nodes.Logging.BillingAccounts.exclusions",
+            "cloudify.gcp.nodes.Logging.Folders.exclusions",
+            "cloudify.gcp.nodes.Logging.Organizatios.exclusions",
+            "cloudify.gcp.nodes.Logging.Projects.exclusions",
+            "cloudify.gcp.nodes.Logging.Projects.metrics",
+            "cloudify.kubernetes.resources.StatefulSet",
+            "cloudify.nodes.helm.Binary", "cloudify.nodes.helm.Release",
+            "cloudify.nodes.helm.Repo";
+]);
+        "properties": object;
+        "instances": object;
+        "interfaces": nodeTemplateInterfaces;
+        "relationships": nodeTemplateRelationships;
+        "capabilities": object;
+] && ([ "type": [ enum "cloudify.nodes.aws.ec2.Vpc"; ]; ] => [ "properties": nodeTypeAWSEC2VPC; ] && [ "type": [ enum "cloudify.nodes.aws.ec2.InternetGateway"; ]; ] => [ "properties": nodeTypeAWSInternetGateway; ] && [ "type": [ enum "cloudify.nodes.aws.ec2.Subnet"; ]; ] => [ "properties": nodeTypeAWSEC2Subnet; ] && [ "type": [ enum "cloudify.nodes.aws.ec2.RouteTable"; ]; ] => [ "properties": nodeTypeAWSEC2RouteTable; ] && [ "type": [ enum "cloudify.nodes.aws.ec2.Route"; ]; ] => [ "properties": nodeTypeAWSEC2Route; ] && [ "type": [ enum "cloudify.nodes.aws.ec2.ElasticIP"; ]; ] => [ "properties": nodeTypeAWSEC2ElasticIP; ] && [ "type": [ enum "cloudify.nodes.aws.ec2.NATGateway"; ]; ] => [ "properties": nodeTypeAWSEC2NATGateway; ] && [ "type": [ enum "cloudify.nodes.aws.ec2.SecurityGroup"; ]; ] => [ "properties": nodeTypeAWSEC2SecurityGroup; ] && [ "type": [ enum "cloudify.nodes.aws.ec2.SecurityGroupRuleIngress"; ]; ] => [ "properties": nodeTypeAWSEC2SecurityGroupRuleIngress; ] && [ "type": [ enum "cloudify.nodes.aws.ec2.Interface"; ]; ] => [ "properties": nodeTypeAWSEC2Interface; ] && [ "type": [ enum "cloudify.nodes.aws.ec2.Image"; ]; ] => [ "properties": nodeTypeAWSEC2Image; ] && [ "type": [ enum "cloudify.nodes.aws.ec2.Instances"; ]; ] => [ "properties": nodeTypeAWSEC2Instances; ] && [ "type": [ enum "cloudify.nodes.aws.ec2.EBSVolume"; ]; ] => [ "properties": nodeTypeAWSEC2EBSVolume; ] && [ "type": [ enum "cloudify.nodes.aws.ec2.EBSAttachment"; ]; ] => [ "properties": nodeTypeAWSEC2EBSAttachment; ] && [ "type": [ enum "cloudify.nodes.docker.images"; ]; ] => [
+        "properties": nodeTypeDockerImagesProperties;
+        "interfaces": nodeTypeDockerImagesInterfaces;
+] && [ "type": [ enum "cloudify.nodes.docker.containers"; ]; ] => [
+        "properties": nodeTypeDockerContainersProperties;
+        "interfaces": nodeTypeDockerContainersInterfaces;
+] && [ "type": [ enum "cloudify.nodes.docker.host"; ]; ] => [
+        "properties": nodeTypeDockerHostProperties;
+        "interfaces": nodeTypeDockerHostInterfaces;
+] && [ "type": [ enum "cloudify.nodes.docker.host_details"; ]; ] => [
+        "properties": nodeTypeDockerHostDetailsProperties;
+        "interfaces": nodeTypeDockerHostDetailsInterfaces;
+] && [ "type": [ enum "cloudify.nodes.docker.image"; ]; ] => [
+        "properties": nodeTypeDockerImageProperties;
+        "interfaces": nodeTypeDockerImageInterfaces;
+] && [ "type": [ enum "cloudify.nodes.docker.container"; ]; ] => [
+        "properties": nodeTypeDockerContainerProperties;
+        "interfaces": nodeTypeDockerContainerInterfaces;
+] && [ "type": [ enum "cloudify.nodes.docker.container_files"; ]; ] => [
+        "properties": nodeTypeDockerContainerFilesProperties;
+        "interfaces": nodeTypeDockerContainerFilesInterfaces;
+] && [ "type": [ enum "cloudify.nodes.docker.ansible_playbook"; ]; ] => [
+        "properties": nodeTypeDockerAnsiblePlaybookProperties;
+        "interfaces": nodeTypeDockerAnsiblePlaybookInterfaces;
+] && [ "type": [ enum "cloudify.nodes.docker.terraform_module"; ]; ] => [
+        "properties": nodeTypeDockerTerraformModuleProperties;
+        "interfaces": nodeTypeDockerTerraformModuleInterfaces;
+] && [ "type": [ enum "cloudify.kubernetes.nodes.Master"; ]; ] => [ "properties": nodeTypeKubernetesNodesMasterProperties; ] && [ "type": [ enum "cloudify.kubernetes.resources.ResourceBase"; ]; ] => [ "properties": nodeTypeKubernetesResourcesResourceBase; ] && [ "type": [ enum "cloudify.kubernetes.resources.ResourceWithValidateStatus"; ];
+] => [ "properties": nodeTypeKubernetesResourcesResourceWithValidateStatus; ] && [ "type": [ enum "cloudify.kubernetes.resources.BlueprintDefinedResource"; ];
+] => [
+        "properties": nodeTypeKubernetesResourcesBlueprintDefinedResource;
+        "interfaces": nodeTypeKubernetesResourcesBlueprintDefinedResourceInterfaces;
+] && [ "type": [ enum "cloudify.kubernetes.resources.ClusterRoleBinding"; ]; ] => [
+        "properties": nodeTypeKubernetesResourcesClusterRoleBindingProperties;
+        "interfaces": nodeTypeKubernetesResourcesBlueprintDefinedResourceInterfaces;
+] && [ "type": [ enum "cloudify.kubernetes.resources.RoleBinding"; ]; ] => [
+        "properties": nodeTypeKubernetesResourcesRoleBinding;
+        "interfaces": nodeTypeKubernetesResourcesBlueprintDefinedResourceInterfaces;
+] && [ "type": [ enum "cloudify.kubernetes.resources.Role"; ]; ] => [
+        "properties": nodeTypeKubernetesResourcesRoleProperties;
+        "interfaces": nodeTypeKubernetesResourcesBlueprintDefinedResourceInterfaces;
+] && [ "type": [ enum "cloudify.kubernetes.resources.ClusterRole"; ]; ] => [
+        "properties": nodeTypeKubernetesResourcesClusterRoleProperties;
+        "interfaces": nodeTypeKubernetesResourcesBlueprintDefinedResourceInterfaces;
+] && [ "type": [ enum "cloudify.kubernetes.resources.Secret"; ]; ] => [
+        "properties": nodeTypeKubernetesResourcesSecretProperties;
+        "interfaces": nodeTypeKubernetesResourcesBlueprintDefinedResourceInterfaces;
+] && [ "type": [ enum "cloudify.kubernetes.resources.ServiceAccount"; ]; ] => [
+        "properties": nodeTypeKubernetesResourcesServiceAccountProperties;
+        "interfaces": nodeTypeKubernetesResourcesBlueprintDefinedResourceInterfaces;
+] && [ "type": [ enum "cloudify.kubernetes.resources.Deployment"; ]; ] => [
+        "properties": nodeTypeKubernetesResourcesDeploymentProperties;
+        "interfaces": nodeTypeKubernetesResourcesBlueprintDefinedResourceInterfaces;
+] && [ "type": [ enum "cloudify.kubernetes.resources.Node"; ]; ] => [
+        "properties": nodeTypeKubernetesResourcesNodeProperties;
+        "interfaces": nodeTypeKubernetesResourcesBlueprintDefinedResourceInterfaces;
+] && [ "type": [ enum "cloudify.kubernetes.resources.Namespace"; ]; ] => [
+        "properties": nodeTypeKubernetesResourcesNamespaceProperties;
+        "interfaces": nodeTypeKubernetesResourcesBlueprintDefinedResourceInterfaces;
+] && [ "type": [ enum "cloudify.kubernetes.resources.Pod"; ]; ] => [
+        "properties": nodeTypeKubernetesResourcesPodProperties;
+        "interfaces": nodeTypeKubernetesResourcesBlueprintDefinedResourceInterfaces;
+] && [ "type": [ enum "cloudify.kubernetes.resources.ReplicaSet"; ]; ] => [
+        "properties": nodeTypeKubernetesResourcesReplicaSetProperties;
+        "interfaces": nodeTypeKubernetesResourcesBlueprintDefinedResourceInterfaces;
+] && [ "type": [ enum "cloudify.kubernetes.resources.ReplicationController"; ];
+] => [
+        "properties": nodeTypeKubernetesResourcesReplicationControllerProperties;
+        "interfaces": nodeTypeKubernetesResourcesBlueprintDefinedResourceInterfaces;
+] && [ "type": [ enum "cloudify.kubernetes.resources.DaemonSet"; ]; ] => [
+        "properties": nodeTypeKubernetesResourcesDaemonSetProperties;
+        "interfaces": nodeTypeKubernetesResourcesBlueprintDefinedResourceInterfaces;
+] && [ "type": [ enum "cloudify.kubernetes.resources.CustomResourceDefinition"; ];
+] => [
+        "properties": nodeTypeKubernetesResourcesCustomResourceDefinitionProperties;
+        "interfaces": nodeTypeKubernetesResourcesBlueprintDefinedResourceInterfaces;
+] && [ "type": [ enum "cloudify.kubernetes.resources.Service"; ]; ] => [
+        "properties": nodeTypeKubernetesResourcesServiceProperties;
+        "interfaces": nodeTypeKubernetesResourcesBlueprintDefinedResourceInterfaces;
+] && [ "type": [ enum "cloudify.kubernetes.resources.PersistentVolume"; ]; ] => [
+        "properties": nodeTypeKubernetesResourcesPersistentVolumeProperties;
+        "interfaces": nodeTypeKubernetesResourcesBlueprintDefinedResourceInterfaces;
+] && [ "type": [ enum "cloudify.kubernetes.resources.ConfigMap"; ]; ] => [
+        "properties": nodeTypeKubernetesResourcesConfigMapProperties;
+        "interfaces": nodeTypeKubernetesResourcesBlueprintDefinedResourceInterfaces;
+] && [ "type": [ enum "cloudify.kubernetes.resources.StorageClass"; ]; ] => [
+        "properties": nodeTypeKubernetesResourcesStorageClassProperties;
+        "interfaces": nodeTypeKubernetesResourcesBlueprintDefinedResourceInterfaces;
+] && [ "type": [ enum "cloudify.kubernetes.resources.StatefulSet"; ]; ] => [
+        "properties": nodeTypeKubernetesResourcesStatefulSetProperties;
+        "interfaces": nodeTypeKubernetesResourcesBlueprintDefinedResourceInterfaces;
+] && [ "type": [ enum "cloudify.kubernetes.resources.PodSecurityPolicy"; ]; ] => [
+        "properties": nodeTypeKubernetesResourcesPodSecurityPolicyProperties;
+        "interfaces": nodeTypeKubernetesResourcesBlueprintDefinedResourceInterfaces;
+] && [ "type": [ enum "cloudify.kubernetes.resources.NetworkPolicy"; ]; ] => [
+        "properties": nodeTypeKubernetesResourcesNetworkPolicyroperties;
+        "interfaces": nodeTypeKubernetesResourcesBlueprintDefinedResourceInterfaces;
+] && [ "type": [ enum "cloudify.kubernetes.resources.Ingress"; ]; ] => [
+        "properties": nodeTypeKubernetesResourcesIngressProperties;
+        "interfaces": nodeTypeKubernetesResourcesBlueprintDefinedResourceInterfaces;
+] && [ "type": [ enum "cloudify.kubernetes.resources.PersistentVolumeClaim"; ];
+] => [
+        "properties": nodeTypeKubernetesResourcesPersistentVolumeClaimProperties;
+        "interfaces": nodeTypeKubernetesResourcesBlueprintDefinedResourceInterfaces;
+] && [
+        "type": [ enum "cloudify.kubernetes.resources.CustomBlueprintDefinedResource"; ];
+] => [
+        "properties": nodeTypeKubernetesResourcesCustomBlueprintDefinedResourceProperties;
+        "interfaces": nodeTypeKubernetesResourcesCustomBlueprintDefinedResourceInterfaces;
+] && [
+        "type": [ enum "cloudify.kubernetes.resources.CustomBlueprintDefinedResource"; ];
+] => [
+        "properties": nodeTypeKubernetesResourcesCustomBlueprintDefinedResourceProperties;
+        "interfaces": nodeTypeKubernetesResourcesCustomBlueprintDefinedResourceInterfaces;
+] && [ "type": [ enum "cloudify.kubernetes.resources.FileDefinedResource"; ]; ] => [
+        "properties": nodeTypeKubernetesResourcesFileDefinedResourceProperties;
+        "interfaces": nodeTypeKubernetesResourcesFileDefinedResourceInterfaces;
+] && [
+        "type": [ enum "cloudify.kubernetes.resources.MultipleFileDefinedResources"; ];
+] => [
+        "properties": nodeTypeKubernetesResourcesMultipleFileDefinedResourcesProperties;
+        "interfaces": nodeTypeKubernetesResourcesMultipleFileDefinedResourcesInterfaces;
+] && [ "type": [ enum "cloudify.nodes.terraform"; ]; ] => [
+        "properties": nodeTypeTerraformProperties;
+        "interfaces": nodeTypeTerraformInterfaces;
+] && [ "type": [ enum "cloudify.nodes.terraform.Module"; ]; ] => [
+        "properties": nodeTypeTerraformModuleProperties;
+        "interfaces": nodeTypeTerraformModuleInterfaces;
+] && [ "type": [ enum "cloudify.nodes.terraform.Module"; ]; ] => [
+        "properties": nodeTypeTerraformModuleProperties;
+        "interfaces": nodeTypeTerraformModuleInterfaces;
+] && [ "type": [ enum "cloudify.nodes.ansible.Executor"; ]; ] => [
+        "properties": nodeTypeAnsibleExecutorProperties;
+        "interfaces": nodeTypeAnsibleExecutorInterfaces;
+] && [ "type": [ enum "cloudify.nodes.openstack.NetworkBase"; ]; ] => [ "properties": nodeTypeOpenstackNetworkBaseProperties; ] && [ "type": [ enum "cloudify.nodes.openstack.Network"; ]; ] => [
+        "properties": nodeTypeOpenstackNetworkProperties;
+        "interfaces": nodeTypeOpenstackNetworkInterfaces;
+] && [ "type": [ enum "cloudify.nodes.openstack.Subnet"; ]; ] => [
+        "properties": nodeTypeOpenstackSubnetProperties;
+        "interfaces": nodeTypeOpenstackSubnetInterfaces;
+] && [ "type": [ enum "cloudify.nodes.openstack.Port"; ]; ] => [
+        "properties": nodeTypeOpenstackPortProperties;
+        "interfaces": nodeTypeOpenstackPortInterfaces;
+] && [ "type": [ enum "cloudify.nodes.openstack.Router"; ]; ] => [
+        "properties": nodeTypeOpenstackRouterProperties;
+        "interfaces": nodeTypeOpenstackRouterInterfaces;
+] && [ "type": [ enum "cloudify.nodes.openstack.FloatingIP"; ]; ] => [
+        "properties": nodeTypeOpenstackFloatingIPProperties;
+        "interfaces": nodeTypeOpenstackFloatingIPInterfaces;
+] && [ "type": [ enum "cloudify.nodes.openstack.SecurityGroup"; ]; ] => [
+        "properties": nodeTypeOpenstackSecurityGroupProperties;
+        "interfaces": nodeTypeOpenstackSecurityGroupInterfaces;
+] && [ "type": [ enum "cloudify.nodes.openstack.SecurityGroupRule"; ]; ] => [
+        "properties": nodeTypeOpenstackSecurityGroupRuleProperties;
+        "interfaces": nodeTypeOpenstackSecurityGroupRuleInterfaces;
+] && [ "type": [ enum "cloudify.nodes.openstack.RBACPolicy"; ]; ] => [ "properties": nodeTypeOpenstackRBACPolicyProperties; ] && [ "type": [ enum "cloudify.nodes.openstack.Server"; ]; ] => [ "properties": nodeTypeOpenstackServerProperties; ] && [ "type": [ enum "cloudify.nodes.openstack.WindowsServer"; ]; ] => [ "properties": nodeTypeOpenstackWindowsServerProperties; ] && [ "type": [ enum "cloudify.nodes.openstack.KeyPair"; ]; ] => [
+        "properties": nodeTypeOpenstackKeyPairProperties;
+        "interfaces": nodeTypeOpenstackKeyPairInterfaces;
+] && [ "type": [ enum "cloudify.nodes.openstack.HostAggregate"; ]; ] => [
+        "properties": nodeTypeOpenstackHostAggregateProperties;
+        "interfaces": nodeTypeOpenstackHostAggregateInterfaces;
+] && [ "type": [ enum "cloudify.nodes.openstack.Image"; ]; ] => [
+        "properties": nodeTypeOpenstackImageProperties;
+        "interfaces": nodeTypeOpenstackImageInterfaces;
+] && [ "type": [ enum "cloudify.nodes.openstack.Flavor"; ]; ] => [
+        "properties": nodeTypeOpenstackFlavorProperties;
+        "interfaces": nodeTypeOpenstackFlavorInterfaces;
+] && [ "type": [ enum "cloudify.nodes.openstack.User"; ]; ] => [
+        "properties": nodeTypeOpenstackUserProperties;
+        "interfaces": nodeTypeOpenstackUserInterfaces;
+] && [ "type": [ enum "cloudify.nodes.openstack.Group"; ]; ] => [
+        "properties": nodeTypeOpenstackGroupProperties;
+        "interfaces": nodeTypeOpenstackGroupInterfaces;
+] && [ "type": [ enum "cloudify.nodes.openstack.Role"; ]; ] => [
+        "properties": nodeTypeOpenstackRoleProperties;
+        "interfaces": nodeTypeOpenstackRoleInterfaces;
+] && [ "type": [ enum "cloudify.nodes.openstack.Project"; ]; ] => [
+        "properties": nodeTypeOpenstackProjectProperties;
+        "interfaces": nodeTypeOpenstackProjectInterfaces;
+] && [ "type": [ enum "cloudify.nodes.openstack.Volume"; ]; ] => [
+        "properties": nodeTypeOpenstackVolumeProperties;
+        "interfaces": nodeTypeOpenstackVolumeInterfaces;
+] && [ "type": [ enum "cloudify.nodes.openstack.VolumeType"; ]; ] => [
+        "properties": nodeTypeOpenstackVolumeTypeProperties;
+        "interfaces": nodeTypeOpenstackVolumeTypeInterfaces;
+] && [ "type": [ enum "cloudify.nodes.openstack.Zone"; ]; ] => [
+        "properties": nodeTypeOpenstackZoneProperties;
+        "interfaces": nodeTypeOpenstackZoneInterfaces;
+] && [ "type": [ enum "cloudify.nodes.openstack.RecordSet"; ]; ] => [
+        "properties": nodeTypeOpenstackRecordSetProperties;
+        "interfaces": nodeTypeOpenstackRecordSetInterfaces;
+] && [ "type": [ enum "cloudify.nodes.DeploymentProxy"; ]; ] => [
+        "properties": nodeTypeCloudifyNodesDeploymentProxyProperties;
+        "interfaces": nodeTypeCloudifyNodesDeploymentProxyInterfaces;
+] && [ "type": [ enum "cloudify.nodes.NodeInstanceProxy"; ]; ] => [ "properties": nodeTypeCloudifyNodesNodeInstanceProxyProperties; ] && [ "type": [ enum "cloudify.nodes.CloudInit.CloudConfig"; ]; ] => [
+        "properties": nodeTypeCloudifyNodesCloudInitCloudConfigProperties;
+        "interfaces": nodeTypeCloudifyNodesCloudInitCloudConfigInterfaces;
+] && [ "type": [ enum "cloudify.keys.nodes.RSAKey"; ]; ] => [
+        "properties": nodeTypeCloudifyNodesRSAKeyProperties;
+        "interfaces": nodeTypeCloudifyNodesRSAKeyInterfaces;
+] && [ "type": [ enum "cloudify.terminal.raw"; ]; ] => [
+        "properties": nodeTypeCloudifyTerminalRawProperties;
+        "interfaces": nodeTypeCloudifyTerminalRawInterfaces;
+] && [ "type": [ enum "cloudify.nodes.File"; ]; ] => [
+        "properties": nodeTypeCloudifyNodesFileProperties;
+        "interfaces": nodeTypeCloudifyNodesFileInterfaces;
+] && [ "type": [ enum "cloudify.nodes.ftp"; ]; ] => [
+        "properties": nodeTypeCloudifyNodesFTPProperties;
+        "interfaces": nodeTypeCloudifyNodesFTPInterfaces;
+] && [ "type": [ enum "cloudify.rest.Requests"; ]; ] => [
+        "properties": nodeTypeCloudifyRestRequestsProperties;
+        "interfaces": nodeTypeCloudifyRestRequestsInterfaces;
+] && [ "type": [ enum "cloudify.rest.BunchRequests"; ]; ] => [
+        "properties": nodeTypeCloudifyRestBunchRequestsProperties;
+        "interfaces": nodeTypeCloudifyRestBunchRequestsInterfaces;
+] && [ "type": [ enum "cloudify.nodes.secrets.Writer"; ]; ] => [
+        "properties": nodeTypeCloudifyNodesSecretsWriterProperties;
+        "interfaces": nodeTypeCloudifyNodesSecretsWriterInterfaces;
+] && [ "type": [ enum "cloudify.nodes.secrets.Reader"; ]; ] => [
+        "properties": nodeTypeCloudifyNodesSecretsReaderProperties;
+        "interfaces": nodeTypeCloudifyNodesSecretsReaderInterfaces;
+] && [ "type": [ enum "cloudify.azure.nodes.ResourceGroup"; ]; ] => [
+        "properties": nodeTypeCloudifyAzureNodesResourceGroupProperties;
+        "interfaces": nodeTypeCloudifyAzureNodesResourceGroupInterfaces;
+] && [ "type": [ enum "cloudify.azure.nodes.storage.StorageAccount"; ]; ] => [
+        "properties": nodeTypeCloudifyAzureNodesStorageStorageAccountProperties;
+        "interfaces": nodeTypeCloudifyAzureNodesStorageStorageAccountInterfaces;
+] && [ "type": [ enum "cloudify.azure.nodes.storage.DataDisk"; ]; ] => [
+        "properties": nodeTypeCloudifyAzureNodesStorageDataDiskProperties;
+        "interfaces": nodeTypeCloudifyAzureNodesStorageDataDisktInterfaces;
+] && [ "type": [ enum "cloudify.azure.nodes.storage.FileShare"; ]; ] => [
+        "properties": nodeTypeCloudifyAzureNodesStorageFileShareProperties;
+        "interfaces": nodeTypeCloudifyAzureNodesStorageFileShareInterfaces;
+] && [ "type": [ enum "cloudify.azure.nodes.network.VirtualNetwork"; ]; ] => [
+        "properties": nodeTypeCloudifyAzureNodesNetworkVirtualNetworkProperties;
+        "interfaces": nodeTypeCloudifyAzureNodesNetworkVirtualNetworkInterfaces;
+] && [ "type": [ enum "cloudify.azure.nodes.network.NetworkSecurityGroup"; ]; ] => [
+        "properties": nodeTypeCloudifyAzureNodesNetworkNetworkSecurityGroupProperties;
+        "interfaces": nodeTypeCloudifyAzureNodesNetworkNetworkSecurityGroupInterfaces;
+] && [ "type": [ enum "cloudify.azure.nodes.network.NetworkSecurityRule"; ]; ] => [
+        "properties": nodeTypeCloudifyAzureNodesNetworkNetworkSecurityRuleProperties;
+        "interfaces": nodeTypeCloudifyAzureNodesNetworkNetworkSecurityRuleInterfaces;
+] && [ "type": [ enum "cloudify.azure.nodes.network.Subnet"; ]; ] => [
+        "properties": nodeTypeCloudifyAzureNodesNetworkSubnetProperties;
+        "interfaces": nodeTypeCloudifyAzureNodesNetworkSubnetInterfaces;
+] && [ "type": [ enum "cloudify.azure.nodes.network.RouteTable"; ]; ] => [
+        "properties": nodeTypeCloudifyAzureNodesNetworkRouteTableProperties;
+        "interfaces": nodeTypeCloudifyAzureNodesNetworkRouteTableInterfaces;
+] && [ "type": [ enum "cloudify.azure.nodes.network.Route"; ]; ] => [
+        "properties": nodeTypeCloudifyAzureNodesNetworkRouteProperties;
+        "interfaces": nodeTypeCloudifyAzureNodesNetworkRouteInterfaces;
+] && [ "type": [ enum "cloudify.azure.nodes.network.NetworkInterfaceCard"; ]; ] => [
+        "properties": nodeTypeCloudifyAzureNodesNetworkNetworkInterfaceCardProperties;
+        "interfaces": nodeTypeCloudifyAzureNodesNetworkNetworkInterfaceCardInterfaces;
+] && [ "type": [ enum "cloudify.azure.nodes.network.IPConfiguration"; ]; ] => [ "properties": nodeTypeCloudifyAzureNodesNetworkIPConfigurationProperties;
+] && [ "type": [ enum "cloudify.azure.nodes.network.PublicIPAddress"; ]; ] => [
+        "properties": nodeTypeCloudifyAzureNodesNetworkPublicIPAddressProperties;
+        "interfaces": nodeTypeCloudifyAzureNodesNetworkPublicIPAddressInterfaces;
+] && [ "type": [ enum "cloudify.azure.nodes.compute.AvailabilitySet"; ]; ] => [
+        "properties": nodeTypeCloudifyAzureNodesComputeAvailabilitySetProperties;
+        "interfaces": nodeTypeCloudifyAzureNodesComputeAvailabilitySetInterfaces;
+] && [ "type": [ enum "cloudify.azure.nodes.compute.VirtualMachine"; ]; ] => [
+        "properties": nodeTypeCloudifyAzureNodesComputeVirtualMachineProperties;
+        "interfaces": nodeTypeCloudifyAzureNodesComputeVirtualMachineInterfaces;
+] && [ "type": [ enum "cloudify.azure.nodes.compute.WindowsVirtualMachine"; ]; ] => [
+        "properties": nodeTypeCloudifyAzureNodesComputeWindowsVirtualMachineProperties;
+        "interfaces": nodeTypeCloudifyAzureNodesComputeWindowsVirtualMachineInterfaces;
+] && [ "type": [ enum "cloudify.azure.nodes.compute.VirtualMachineExtension"; ];
+] => [
+        "properties": nodeTypeCloudifyAzureNodesComputeVirtualMachineExtensionProperties;
+        "interfaces": nodeTypeCloudifyAzureNodesComputeVirtualMachineExtensionInterfaces;
+] && [ "type": [ enum "cloudify.azure.nodes.network.LoadBalancer"; ]; ] => [
+        "properties": nodeTypeCloudifyAzureNodesNetworkLoadBalancerProperties;
+        "interfaces": nodeTypeCloudifyAzureNodesNetworkLoadBalancerInterfaces;
+] && [
+        "type": [ enum "cloudify.azure.nodes.network.LoadBalancer.BackendAddressPool"; ];
+] => [
+        "properties": nodeTypeCloudifyAzureNodesNetworkLoadBalancerBackendAddressPoolProperties;
+        "interfaces": nodeTypeCloudifyAzureNodesNetworkLoadBalancerBackendAddressPoolInterfaces;
+] && [ "type": [ enum "cloudify.azure.nodes.network.LoadBalancer.Probe"; ]; ] => [
+        "properties": nodeTypeCloudifyAzureNodesNetworkLoadBalancerProbeProperties;
+        "interfaces": nodeTypeCloudifyAzureNodesNetworkLoadBalancerProbeInterfaces;
+] && [
+        "type": [ enum "cloudify.azure.nodes.network.LoadBalancer.IncomingNATRule"; ];
+] => [
+        "properties": nodeTypeCloudifyAzureNodesNetworkLoadBalancerIncomingNATRuleProperties;
+        "interfaces": nodeTypeCloudifyAzureNodesNetworkLoadBalancerIncomingNATRuleInterfaces;
+] && [ "type": [ enum "cloudify.azure.nodes.network.LoadBalancer.Rule"; ]; ] => [
+        "properties": nodeTypeCloudifyAzureNodesNetworkLoadBalancerRuleProperties;
+        "interfaces": nodeTypeCloudifyAzureNodesNetworkLoadBalancerRuleInterfaces;
+] && [ "type": [ enum "cloudify.azure.Deployment"; ]; ] => [
+        "properties": nodeTypeCloudifyAzureDeploymentProperties;
+        "interfaces": nodeTypeCloudifyAzureDeploymentInterfaces;
+] && [ "type": [ enum "cloudify.azure.nodes.compute.ContainerService"; ]; ] => [
+        "properties": nodeTypeCloudifyAzureNodesComputeContainerServiceProperties;
+        "interfaces": nodeTypeCloudifyAzureNodesComputeContainerServiceInterfaces;
+] && [ "type": [ enum "cloudify.azure.nodes.Plan"; ]; ] => [
+        "properties": nodeTypeCloudifyAzureNodesPlanProperties;
+        "interfaces": nodeTypeCloudifyAzureNodesPlanInterfaces;
+] && [ "type": [ enum "cloudify.azure.nodes.WebApp"; ]; ] => [
+        "properties": nodeTypeCloudifyAzureNodesWebAppProperties;
+        "interfaces": nodeTypeCloudifyAzureNodesWebAppInterfaces;
+] && [ "type": [ enum "cloudify.azure.nodes.PublishingUser"; ]; ] => [
+        "properties": nodeTypeCloudifyAzureNodesPublishingUserProperties;
+        "interfaces": nodeTypeCloudifyAzureNodesPublishingUserInterfaces;
+] && [ "type": [ enum "cloudify.azure.nodes.compute.ManagedCluster"; ]; ] => [
+        "properties": nodeTypeCloudifyAzureNodesComputeManagedClusterProperties;
+        "interfaces": nodeTypeCloudifyAzureNodesComputeManagedClusterInterfaces;
+] && [ "type": [ enum "cloudify.gcp.project"; ]; ] => [
+        "properties": nodeTypeCloudifyGCPProjectProperties;
+        "interfaces": nodeTypeCloudifyGCPProjectInterfaces;
+] && [ "type": [ enum "cloudify.gcp.nodes.Instance"; ]; ] => [
+        "properties": nodeTypeCloudifyGCPNodesInstanceProperties;
+        "interfaces": nodeTypeCloudifyGCPNodesInstanceInterfaces;
+] && [ "type": [ enum "cloudify.nodes.helm.Binary"; ]; ] => [ "properties": nodeTypeHelmBinaryProperties; ] && [ "type": [ enum "cloudify.nodes.helm.Release"; ]; ] => [
+        "properties": nodeTypeHelmReleaseProperties;
+        "interfaces": nodeTypeHelmReleaseInterfaces;
+] && [ "type": [ enum "cloudify.nodes.helm.Repo"; ]; ] => [
+        "properties": nodeTypeHelmRepoProperties;
+        "interfaces": nodeTypeHelmRepoInterfaces;
+]) && (object && [ sealed; ]) && [ required "type"; ]
+    and nodeTemplateInterface = object && [
+        "configure": nodeTemplateInterfaceAction;
+        "delete": nodeTemplateInterfaceAction;
+] && [ orelse nodeTemplateInterfaceAction; ]
+    and nodeTemplateInterfaceAction = string || object && [
+        "implementation": string;
+        "inputs": object;
+        "executor": string && [ enum "central_deployment_agent", "host_agent"; ];
+        "max_retries": number;
+        "retry_interval": number;
+        "timeone": number && [ default 0; ];
+        "timeout_recoverable": boolean && [ default true; ];
+] && object && [ sealed; ]
+    and nodeTemplateInterfaces = object && [ orelse nodeTemplateInterface; ]
+    and nodeTemplateRelationship = object && [
+        "type": string;
+        "target": string;
+        "connection_type": string && [ enum "all_to_all", "all_to_one"; ];
+        "source_interfaces": object;
+        "target_interfaces": object;
+] && (object && [ sealed; ]) && [ required "type"; ]
+    and nodeTemplateRelationships = array && [ of nodeTemplateRelationship; ]
+    and nodeTemplates = object && [ orelse nodeTemplate; ]
+    and nodeType = object && [
+        "derived_from": string;
+        "interfaces": object;
+        "properties": object;
+]
+    and nodeTypeAWSEC2Base = object && [
+        "use_external_resource": boolean && [ default false; ];
+        "client_config": awsConnectionConfig;
+        "resource_id": awsResourceId;
+        "Tags": tags;
+]
+    and nodeTypeAWSEC2EBSAttachment = object && [
+        "use_external_resource": boolean && [ default false; ];
+        "client_config": awsConnectionConfig;
+        "resource_id": awsResourceId;
+        "resource_config": object && [
+            "kwargs": object && [
+                "Device": cloudifyStringOrGetInput;
+                "InstanceId": cloudifyStringOrGetInput;
+                "VolumeId": cloudifyStringOrGetInput;
+                "DryRun": cloudifyBooleanOrGetInput;
+] && [ required "Device",  "InstanceId",  "VolumeId"; ];
+];
+]
+    and nodeTypeAWSEC2EBSVolume = object && nodeTypeAWSEC2Base && [
+        "resource_config": object && [
+            "AvailabilityZone": cloudifyStringOrGetInput;
+            "Size": cloudifyIntegerOrGetInput;
+            "kwargs": object && [
+                "Encrypted": cloudifyBooleanOrGetInput;
+                "Iops": cloudifyIntegerOrGetInput;
+                "KmsKeyId": cloudifyStringOrGetInput;
+                "OutpostArn": cloudifyStringOrGetInput;
+                "Size": cloudifyIntegerOrGetInput;
+                "SnapshotId": cloudifyStringOrGetInput;
+                "VolumeType": cloudifyStringOrGetInput && [ default "gp2"; ];
+                "DryRun": cloudifyBooleanOrGetInput;
+                "TagSpecifications": array && [
+                    of object && [
+                        "ResourceType": cloudifyStringOrGetInput;
+                        "Tags": array && [
+                            of object && [
+                                "Key": cloudifyStringOrGetInput;
+                                "Value": cloudifyStringOrGetInput;
+];
+];
+];
+];
+];
+] && [ required "AvailabilityZone"; ];
+        "use_available_zones": boolean;
+]
+    and nodeTypeAWSEC2ElasticIP = object && [ "client_config": awsClientConfig; ]
+    and nodeTypeAWSEC2Image = object && nodeTypeAWSEC2Base && [
+        "resource_config": object && [
+            "kwargs": object && [
+                "Filters": array && [
+                    of object && [
+                        "Name": string;
+                        "Values": array && [ of (string || object); ];
+];
+];
+];
+];
+]
+    and nodeTypeAWSEC2Instances = object && nodeTypeAWSEC2Base && [
+        "resource_config": object && [
+            "MinCount": cloudifyIntegerOrGetInput && [ default "1"; ];
+            "MaxCount": cloudifyIntegerOrGetInput && [ default "1"; ];
+            "ImageId": cloudifyStringOrGetInput;
+            "InstanceType": cloudifyStringOrGetInput && [ default "m1.small"; ];
+            "LaunchTemplate": object && [
+                "LaunchTemplateId": cloudifyStringOrGetInput;
+                "LaunchTemplateName": cloudifyStringOrGetInput;
+                "Version": cloudifyStringOrGetInput;
+];
+            "kwargs": object && [
+                "BlockDeviceMappings": array && [of object];
+                "Ipv6AddressCount": cloudifyIntegerOrGetInput;
+                "KernelId": cloudifyStringOrGetInput;
+                "KeyName": cloudifyStringOrGetInput;
+                "SecondaryPrivateIpAddressCount": cloudifyIntegerOrGetInput;
+                "SubnetId": cloudifyStringOrGetInput;
+                "SecurityGroupIds": array && [ of cloudifyStringOrGetInput; ];
+];
+] && [ required "MaxCount",  "MinCount"; ];
+        "agent_config": object && [ "install_method": string; ];
+        "use_ipv6_ip": boolean;
+]
+    and nodeTypeAWSEC2Interface = object && nodeTypeAWSEC2Base && [
+        "resource_config": object && [
+            "kwargs": object && [
+                "Description": cloudifyStringOrGetInput;
+                "Groups": array && [ of cloudifyStringOrGetInput; ];
+                "Ipv6AddressCount": cloudifyIntegerOrGetInput;
+                "PrivateIpAddress": cloudifyStringOrGetInput;
+                "SecondaryPrivateIpAddressCount": cloudifyIntegerOrGetInput;
+                "InterfaceType": cloudifyStringOrGetInput;
+                "SubnetId": cloudifyStringOrGetInput;
+] && [ required "SubnetId"; ];
+];
+]
+    and nodeTypeAWSEC2NATGateway = object && [
+        "client_config": awsClientConfig;
+        "Tags": tags;
+]
+    and nodeTypeAWSEC2Route = object && [
+        "resource_config": object && [ "kwargs": object && [ "DestinationCidrBlock": cloudifyStringOrGetInput; ]; ];
+        "client_config": awsClientConfig;
+]
+    and nodeTypeAWSEC2RouteTable = object && [
+        "client_config": awsClientConfig;
+        "Tags": tags;
+]
+    and nodeTypeAWSEC2SecurityGroup = object && nodeTypeAWSEC2Base && [
+        "resource_config": object && [
+            "GroupName": cloudifyStringOrGetInput;
+            "Description": cloudifyStringOrGetInput;
+            "VpcId": cloudifyStringOrGetInput;
+            "kwargs": object;
+] && [ required "Description",  "GroupName"; ];
+]
+    and nodeTypeAWSEC2SecurityGroupRuleIngress = object && nodeTypeAWSEC2Base && [
+        "resource_config": object && [
+            "IpPermissions": array && [
+                of object && [
+                    "IpProtocol": string;
+                    "FromPort": Predefined.integer;
+                    "ToPort": Predefined.integer;
+                    "IpRanges": array && [ "CidrIp": string; ];
+];
+];
+            "kwargs": object;
+];
+]
+    and nodeTypeAWSEC2Subnet = object && [
+        "resource_config": object && [
+            "CidrBlock": cloudifyStringOrGetInput;
+            "AvailabilityZone": cloudifyStringOrGetInput;
+            "kwargs": object && [ "Ipv6CidrBlock": cloudifyStringOrGetInput; ];
+];
+        "client_config": awsClientConfig;
+        "Tags": tags;
+]
+    and nodeTypeAWSEC2VPC = object && [
+        "resource_config": object && [
+            "CidrBlock": cloudifyStringOrGetInput;
+            "kwargs": object && [ "AmazonProvidedIpv6CidrBlock": cloudifyBooleanOrGetInput; ];
+];
+        "client_config": awsClientConfig;
+        "Tags": tags;
+]
+    and nodeTypeAWSInternetGateway = object && [ "client_config": awsClientConfig; ]
+    and nodeTypeAnsibleExecutorInterfaces = object && [
+        "cloudify.interfaces.lifecycle": object && [
+            "start": object && [
+                "implementation": string && [ enum "ansible.cloudify_ansible.tasks.run"; ];
+                "inputs": ansiblePlaybookInputs;
+];
+            "delete": object && [
+                "implementation": string && [ enum "ansible.cloudify_ansible.tasks.cleanup"; ];
+];
+];
+]
+    and nodeTypeAnsibleExecutorProperties = object && ansiblePlaybookConfig
+    and nodeTypeCloudifyAzureDeploymentInterfaces = object && [
+        "cloudify.interfaces.lifecycle": object && [
+            "create": string && [ enum "azure.cloudify_azure.resources.deployment.create"; ];
+            "delete": string && [ enum "azure.cloudify_azure.resources.deployment.delete"; ];
+];
+]
+    and nodeTypeCloudifyAzureDeploymentProperties = object && [
+        "name": cloudifyStringOrGetInput;
+        "location": cloudifyStringOrGetInput;
+        "template_file": cloudifyStringOrGetInput;
+        "template": cloudifyStringOrGetInput || object;
+        "params": object;
+        "azure_config": cloudifyDatatypesAzureConfig;
+        "client_config": cloudifyDatatypesAzureConfig;
+        "use_external_resource": cloudifyBooleanOrGetInput && [ default false; ];
+] && [ required "name",  "location"; ]
+    and nodeTypeCloudifyAzureNodesComputeAvailabilitySetInterfaces = object && [
+        "cloudify.interfaces.lifecycle": object && [
+            "create": string && [ enum "azure.cloudify_azure.resources.compute.availabilityset.create"; ];
+            "delete": string && [ enum "azure.cloudify_azure.resources.compute.availabilityset.delete"; ];
+];
+]
+    and nodeTypeCloudifyAzureNodesComputeAvailabilitySetProperties = object && [
+        "api_version": cloudifyStringOrGetInput && [ default "2016-03-30"; ];
+        "name": cloudifyStringOrGetInput;
+        "resource_group_name": cloudifyStringOrGetInput;
+        "location": cloudifyStringOrGetInput;
+        "tags": object;
+        "resource_config": cloudifyDatatypesAzureComputeAvailabilitySetConfig;
+        "use_external_resource": cloudifyBooleanOrGetInput && [ default false; ];
+        "retry_after": cloudifyIntegerOrGetInput;
+        "azure_config": cloudifyDatatypesAzureConfig;
+        "client_config": cloudifyDatatypesAzureConfig;
+]
+    and nodeTypeCloudifyAzureNodesComputeContainerServiceInterfaces = object && [
+        "cloudify.interfaces.lifecycle": object && [
+            "create": object && [
+                "implementation": string && [ enum "azure.cloudify_azure.resources.compute.container_service.create"; ];
+                "inputs": [
+                    "name": cloudifyStringOrGetInput;
+                    "resource_group": cloudifyStringOrGetInput;
+                    "container_service_config": cloudifyStringOrGetInput;
+                    "azure_config": cloudifyDatatypesAzureConfig;
+                    "client_config": cloudifyDatatypesAzureConfig;
+];
+];
+            "delete": string && [
+                "implementation": string && [ enum "azure.cloudify_azure.resources.compute.container_service.delete"; ];
+];
+];
+]
+    and nodeTypeCloudifyAzureNodesComputeContainerServiceProperties = object && [
+        "name": cloudifyStringOrGetInput;
+        "resource_group": cloudifyStringOrGetInput;
+        "container_service_config": cloudifyStringOrGetInput;
+        "azure_config": cloudifyDatatypesAzureConfig;
+        "client_config": cloudifyDatatypesAzureConfig;
+] && [ required "name",  "resource_group"; ]
+    and nodeTypeCloudifyAzureNodesComputeManagedClusterInterfaces = object && [
+        "cloudify.interfaces.lifecycle": object && [
+            "create": object && [
+                "implementation": string && [ enum "azure.cloudify_azure.resources.compute.managed_cluster.create"; ];
+                "inputs": object && [
+                    "resource_group": string && [ default {"get_property":["SELF","resource_group"]}; ];
+                    "cluster_name": string && [ default {"get_property":["SELF","cluster_name"]}; ];
+                    "resource_config": cloudifyDatatypesAzureComputeManagedClusterConfig && [ default {"get_property":["SELF","resource_config"]}; ];
+                    "azure_config": cloudifyDatatypesAzureConfig && [ default {"get_property":["SELF","azure_config"]}; ];
+                    "client_config": cloudifyDatatypesAzureConfig && [ default {"get_property":["SELF","client_config"]}; ];
+];
+];
+            "delete": object && [
+                "implementation": string && [ enum "azure.cloudify_azure.resources.compute.managed_cluster.delete"; ];
+];
+];
+]
+    and nodeTypeCloudifyAzureNodesComputeManagedClusterProperties = object && [
+        "resource_group": cloudifyStringOrGetInput;
+        "cluster_name": cloudifyStringOrGetInput;
+        "resource_config": cloudifyDatatypesAzureComputeManagedClusterConfig;
+        "store_kube_config_in_runtime": cloudifyBooleanOrGetInput && [ default true; ];
+        "azure_config": cloudifyDatatypesAzureConfig;
+        "client_config": cloudifyDatatypesAzureConfig;
+] && [
+        required "resource_group",  "cluster_name",  "resource_config", 
+        "store_kube_config_in_runtime";
+]
+    and nodeTypeCloudifyAzureNodesComputeVirtualMachineExtensionInterfaces = object && [
+        "cloudify.interfaces.lifecycle": object && [
+            "create:": object && [
+                "implementation": string && [ enum "azure.cloudify_azure.resources.compute.virtualmachineextension.create";
+];
+                "inputs": object && [ "resource_config": object; ];
+];
+            "delete": string && [ enum "azure.cloudify_azure.resources.compute.virtualmachineextension.delete";
+];
+];
+]
+    and nodeTypeCloudifyAzureNodesComputeVirtualMachineExtensionProperties = object && [
+        "api_version": cloudifyStringOrGetInput && [ default "2016-03-30"; ];
+        "name": cloudifyStringOrGetInput;
+        "resource_group_name": cloudifyStringOrGetInput;
+        "virtual_machine_name": cloudifyStringOrGetInput;
+        "location": cloudifyStringOrGetInput;
+        "tags": object;
+        "use_external_resource": cloudifyBooleanOrGetInput && [ default false; ];
+        "retry_after": cloudifyIntegerOrGetInput;
+        "azure_config": cloudifyDatatypesAzureConfig;
+        "client_config": cloudifyDatatypesAzureConfig;
+]
+    and nodeTypeCloudifyAzureNodesComputeVirtualMachineInterfaces = object && [
+        "cloudify.interfaces.lifecycle": object && [
+            "configure": object && [
+                "implementation": string && [ enum "azure.cloudify_azure.resources.compute.virtualmachine.configure"; ];
+                "inputs": object && [
+                    "command_to_execute": cloudifyStringOrGetInput;
+                    "file_uris": array && [ of string; ];
+];
+];
+];
+]
+    and nodeTypeCloudifyAzureNodesComputeVirtualMachineProperties = object && [
+        "api_version": cloudifyStringOrGetInput && [ default "2016-03-30"; ];
+        "name": cloudifyStringOrGetInput;
+        "resource_group_name": cloudifyStringOrGetInput;
+        "use_public_ip": cloudifyBooleanOrGetInput;
+        "location": cloudifyStringOrGetInput;
+        "tags": object;
+        "plan": object;
+        "resource_config": cloudifyDatatypesAzureComputeVirtualMachineConfig;
+        "use_external_resource": cloudifyBooleanOrGetInput && [ default false; ];
+        "retry_after": cloudifyIntegerOrGetInput;
+        "azure_config": cloudifyDatatypesAzureConfig;
+        "client_config": cloudifyDatatypesAzureConfig;
+        "ip": cloudifyStringOrGetInput;
+        "os_family": cloudifyStringOrGetInput && [ default "linux"; ];
+        "agent_config": object && cloudifyDataTypesAgentConfig;
+        "storage_endpoint": cloudifyStringOrGetInput && [ default "core.windows.net"; ];
+] && [ required "resource_config"; ]
+    and nodeTypeCloudifyAzureNodesComputeWindowsVirtualMachineInterfaces = object && [
+        "cloudify.interfaces.lifecycle": object && [
+            "configure": object && [
+                "implementation": string && [ enum "azure.cloudify_azure.resources.compute.virtualmachine.configure"; ];
+                "inputs": object && [
+                    "command_to_execute": cloudifyStringOrGetInput;
+                    "file_uris": array && [ of string; ];
+];
+];
+];
+]
+    and nodeTypeCloudifyAzureNodesComputeWindowsVirtualMachineProperties = object && nodeTypeCloudifyAzureNodesComputeWindowsVirtualMachineProperties && [
+        "os_family": cloudifyStringOrGetInput && [ default "windows"; ];
+        "agent_config": object;
+]
+    and nodeTypeCloudifyAzureNodesNetworkIPConfigurationProperties = object && [
+        "api_version": cloudifyStringOrGetInput && [ default "2016-09-01"; ];
+        "name": cloudifyStringOrGetInput;
+        "resource_group_name": cloudifyStringOrGetInput;
+        "location": cloudifyStringOrGetInput;
+        "tags": object;
+        "resource_config": cloudifyDatatypesAzureNetworkIPConfigurationConfig;
+        "use_external_resource": cloudifyBooleanOrGetInput && [ default false; ];
+        "retry_after": cloudifyIntegerOrGetInput;
+        "azure_config": cloudifyDatatypesAzureConfig;
+        "client_config": cloudifyDatatypesAzureConfig;
+] && [ required "resource_config"; ]
+    and nodeTypeCloudifyAzureNodesNetworkLoadBalancerBackendAddressPoolInterfaces = object && [
+        "cloudify.interfaces.lifecycle": object && [
+            "create": string && [
+                enum "azure.cloudify_azure.resources.network.loadbalancer.create_backend_pool";
+];
+            "delete": string && [
+                enum "azure.cloudify_azure.resources.network.loadbalancer.delete_backend_pool";
+];
+];
+]
+    and nodeTypeCloudifyAzureNodesNetworkLoadBalancerBackendAddressPoolProperties = object && [
+        "api_version": cloudifyStringOrGetInput && [ default "2016-09-01"; ];
+        "name": cloudifyStringOrGetInput;
+        "resource_group_name": cloudifyStringOrGetInput;
+        "load_balancer_name": cloudifyStringOrGetInput;
+        "location": cloudifyStringOrGetInput;
+        "tags": Predefined.json;
+        "use_external_resource": cloudifyBooleanOrGetInput && [ default false; ];
+        "retry_after": cloudifyIntegerOrGetInput;
+        "azure_config": cloudifyDatatypesAzureConfig;
+        "client_config": cloudifyDatatypesAzureConfig;
+]
+    and nodeTypeCloudifyAzureNodesNetworkLoadBalancerIncomingNATRuleInterfaces = object && [
+        "cloudify.interfaces.lifecycle": object && [
+            "create": string && [
+                enum "azure.cloudify_azure.resources.network.loadbalancer.create_incoming_nat_rule";
+];
+            "delete": string && [
+                enum "azure.cloudify_azure.resources.network.loadbalancer.delete_incoming_nat_rule";
+];
+];
+]
+    and nodeTypeCloudifyAzureNodesNetworkLoadBalancerIncomingNATRuleProperties = object && [
+        "api_version": cloudifyStringOrGetInput && [ default "2016-09-01"; ];
+        "name": cloudifyStringOrGetInput;
+        "resource_group_name": cloudifyStringOrGetInput;
+        "load_balancer_name": cloudifyStringOrGetInput;
+        "location": cloudifyStringOrGetInput;
+        "tags": object;
+        "resource_config": cloudifyDatatypesAzureNetworkLoadBalancerIncomingNATRuleConfig;
+        "use_external_resource": cloudifyBooleanOrGetInput && [ default false; ];
+        "retry_after": cloudifyIntegerOrGetInput;
+        "azure_config": cloudifyDatatypesAzureConfig;
+        "client_config": cloudifyDatatypesAzureConfig;
+]
+    and nodeTypeCloudifyAzureNodesNetworkLoadBalancerInterfaces = object && [
+        "cloudify.interfaces.lifecycle": object && [
+            "create": string && [ enum "azure.cloudify_azure.resources.network.loadbalancer.create"; ];
+            "configure": string && [ enum "azure.cloudify_azure.resources.network.loadbalancer.configure"; ];
+            "delete": string && [ enum "azure.cloudify_azure.resources.network.loadbalancer.delete"; ];
+];
+]
+    and nodeTypeCloudifyAzureNodesNetworkLoadBalancerProbeInterfaces = object && [
+        "cloudify.interfaces.lifecycle": object && [
+            "create": string && [ enum "azure.cloudify_azure.resources.network.loadbalancer.create_probe"; ];
+            "delete": object && [ enum "azure.cloudify_azure.resources.network.loadbalancer.delete_probe"; ];
+];
+]
+    and nodeTypeCloudifyAzureNodesNetworkLoadBalancerProbeProperties = object && [
+        "api_version": cloudifyStringOrGetInput && [ default "2016-09-01"; ];
+        "name": cloudifyStringOrGetInput;
+        "resource_group_name": cloudifyStringOrGetInput;
+        "load_balancer_name": cloudifyStringOrGetInput;
+        "location": cloudifyStringOrGetInput;
+        "tags": object;
+        "resource_config": cloudifyDatatypesAzureNetworkLoadBalancerProbeConfig;
+        "use_external_resource": cloudifyBooleanOrGetInput && [ default false; ];
+        "retry_after": cloudifyIntegerOrGetInput;
+        "azure_config": cloudifyDatatypesAzureConfig;
+        "client_config": cloudifyDatatypesAzureConfig;
+]
+    and nodeTypeCloudifyAzureNodesNetworkLoadBalancerProperties = object && [
+        "api_version": cloudifyStringOrGetInput && [ default "2016-09-01"; ];
+        "name": cloudifyStringOrGetInput;
+        "resource_group_name": cloudifyStringOrGetInput;
+        "location": cloudifyStringOrGetInput;
+        "tags": object;
+        "resource_config": cloudifyDatatypesAzureNetworkLoadBalancerConfig;
+        "use_external_resource": cloudifyBooleanOrGetInput && [ default false; ];
+        "retry_after": cloudifyIntegerOrGetInput;
+        "azure_config": cloudifyDatatypesAzureConfig;
+        "client_config": cloudifyDatatypesAzureConfig;
+]
+    and nodeTypeCloudifyAzureNodesNetworkLoadBalancerRuleInterfaces = object && [
+        "cloudify.interfaces.lifecycle": object && [
+            "create": string && [ enum "azure.cloudify_azure.resources.network.loadbalancer.create_rule"; ];
+            "delete": string && [ enum "azure.cloudify_azure.resources.network.loadbalancer.delete_rule"; ];
+];
+]
+    and nodeTypeCloudifyAzureNodesNetworkLoadBalancerRuleProperties = object && [
+        "api_version": cloudifyStringOrGetInput && [ default "2016-09-01"; ];
+        "name": cloudifyStringOrGetInput;
+        "resource_group_name": cloudifyStringOrGetInput;
+        "load_balancer_name": cloudifyStringOrGetInput;
+        "location": cloudifyStringOrGetInput;
+        "tags": object;
+        "resource_config": cloudifyDatatypesAzureNetworkLoadBalancerRuleConfig;
+        "use_external_resource": cloudifyBooleanOrGetInput && [ default false; ];
+        "retry_after": cloudifyIntegerOrGetInput;
+        "azure_config": cloudifyDatatypesAzureConfig;
+        "client_config": cloudifyDatatypesAzureConfig;
+]
+    and nodeTypeCloudifyAzureNodesNetworkNetworkInterfaceCardInterfaces = object && [
+        "cloudify.interfaces.lifecycle": object && [
+            "create": string && [ enum "azure.cloudify_azure.resources.network.networkinterfacecard.create"; ];
+            "configure": string && [ enum "azure.cloudify_azure.resources.network.networkinterfacecard.configure";
+];
+            "start": string && [ enum "azure.cloudify_azure.resources.network.networkinterfacecard.start"; ];
+            "delete": string && [ enum "azure.cloudify_azure.resources.network.networkinterfacecard.delete"; ];
+];
+]
+    and nodeTypeCloudifyAzureNodesNetworkNetworkInterfaceCardProperties = object && [
+        "api_version": cloudifyStringOrGetInput && [ default "2016-09-01"; ];
+        "name": cloudifyStringOrGetInput;
+        "resource_group_name": cloudifyStringOrGetInput;
+        "location": cloudifyStringOrGetInput;
+        "tags": object;
+        "primary": [ default false; ];
+        "resource_config": cloudifyDatatypesAzureNetworkNetworkInterfaceCardConfig;
+        "use_external_resource": cloudifyBooleanOrGetInput && [ default false; ];
+        "retry_after": cloudifyIntegerOrGetInput;
+        "azure_config": cloudifyDatatypesAzureConfig;
+        "client_config": cloudifyDatatypesAzureConfig;
+]
+    and nodeTypeCloudifyAzureNodesNetworkNetworkSecurityGroupInterfaces = object && [
+        "cloudify.interfaces.lifecycle": object && [
+            "create": string && [ enum "azure.cloudify_azure.resources.network.networksecuritygroup.create"; ];
+            "delete": string && [ enum "azure.cloudify_azure.resources.network.networksecuritygroup.delete"; ];
+];
+]
+    and nodeTypeCloudifyAzureNodesNetworkNetworkSecurityGroupProperties = object && [
+        "api_version": cloudifyStringOrGetInput && [ default "2016-09-01"; ];
+        "name": cloudifyStringOrGetInput;
+        "resource_group_name": cloudifyStringOrGetInput;
+        "location": cloudifyStringOrGetInput;
+        "tags": object;
+        "resource_config": cloudifyDatatypesAzureNetworkNetworkSecurityGroupConfig;
+        "use_external_resource": cloudifyBooleanOrGetInput && [ default false; ];
+        "retry_after": cloudifyIntegerOrGetInput;
+        "azure_config": cloudifyDatatypesAzureConfig;
+        "client_config": cloudifyDatatypesAzureConfig;
+]
+    and nodeTypeCloudifyAzureNodesNetworkNetworkSecurityRuleInterfaces = object && [
+        "cloudify.interfaces.lifecycle": object && [
+            "create": string && [ enum "azure.cloudify_azure.resources.network.networksecurityrule.create"; ];
+            "delete": string && [ enum "azure.cloudify_azure.resources.network.networksecurityrule.delete"; ];
+];
+]
+    and nodeTypeCloudifyAzureNodesNetworkNetworkSecurityRuleProperties = object && [
+        "api_version": cloudifyStringOrGetInput && [ default "2016-09-01"; ];
+        "name": cloudifyStringOrGetInput;
+        "resource_group_name": cloudifyStringOrGetInput;
+        "network_security_group_name": cloudifyStringOrGetInput;
+        "location": cloudifyStringOrGetInput;
+        "tags": object;
+        "resource_config": cloudifyDatatypesAzureNetworkNetworkSecurityRuleConfig;
+        "use_external_resource": cloudifyBooleanOrGetInput && [ default false; ];
+        "retry_after": cloudifyIntegerOrGetInput;
+        "azure_config": cloudifyDatatypesAzureConfig;
+        "client_config": cloudifyDatatypesAzureConfig;
+]
+    and nodeTypeCloudifyAzureNodesNetworkPublicIPAddressInterfaces = object && [
+        "cloudify.interfaces.lifecycle": object && [
+            "create": string && [ enum "azure.cloudify_azure.resources.network.publicipaddress.create"; ];
+            "start": string && [ enum "azure.cloudify_azure.resources.network.publicipaddress.start"; ];
+            "delete": string && [ enum "azure.cloudify_azure.resources.network.publicipaddress.delete"; ];
+];
+]
+    and nodeTypeCloudifyAzureNodesNetworkPublicIPAddressProperties = object && [
+        "api_version": cloudifyStringOrGetInput && [ default "2016-09-01"; ];
+        "name": cloudifyStringOrGetInput;
+        "resource_group_name": cloudifyStringOrGetInput;
+        "location": cloudifyStringOrGetInput;
+        "tags": object;
+        "resource_config": cloudifyDatatypesAzureNetworkPublicIPAddressConfig;
+        "use_external_resource": cloudifyBooleanOrGetInput && [ default false; ];
+        "retry_after": cloudifyIntegerOrGetInput;
+        "azure_config": cloudifyDatatypesAzureConfig;
+        "client_config": cloudifyDatatypesAzureConfig;
+]
+    and nodeTypeCloudifyAzureNodesNetworkRouteInterfaces = object && [
+        "cloudify.interfaces.lifecycle": object && [
+            "create": string && [ enum "azure.cloudify_azure.resources.network.route.create"; ];
+            "delete": string && [ enum "azure.cloudify_azure.resources.network.route.delete"; ];
+];
+]
+    and nodeTypeCloudifyAzureNodesNetworkRouteProperties = object && [
+        "api_version": cloudifyStringOrGetInput && [ default "2016-09-01"; ];
+        "name": cloudifyStringOrGetInput;
+        "resource_group_name": cloudifyStringOrGetInput;
+        "route_table_name": cloudifyStringOrGetInput;
+        "location": cloudifyStringOrGetInput;
+        "tags": object;
+        "resource_config": cloudifyDatatypesAzureNetworkRouteConfig;
+        "use_external_resource": cloudifyBooleanOrGetInput && [ default false; ];
+        "retry_after": cloudifyIntegerOrGetInput;
+        "azure_config": cloudifyDatatypesAzureConfig;
+        "client_config": cloudifyDatatypesAzureConfig;
+]
+    and nodeTypeCloudifyAzureNodesNetworkRouteTableInterfaces = object && [
+        "cloudify.interfaces.lifecycle": object && [
+            "create": string && [ enum "azure.cloudify_azure.resources.network.routetable.create"; ];
+            "delete": string && [ enum "azure.cloudify_azure.resources.network.routetable.delete"; ];
+];
+]
+    and nodeTypeCloudifyAzureNodesNetworkRouteTableProperties = object && [
+        "api_version": cloudifyStringOrGetInput && [ default "2016-09-01"; ];
+        "name": cloudifyStringOrGetInput;
+        "resource_group_name": cloudifyStringOrGetInput;
+        "location:": cloudifyStringOrGetInput;
+        "tags": object;
+        "resource_config": cloudifyDatatypesAzureNetworkRouteTableConfig;
+        "use_external_resource": cloudifyBooleanOrGetInput && [ default false; ];
+        "retry_after": cloudifyIntegerOrGetInput;
+        "azure_config": cloudifyDatatypesAzureConfig;
+        "client_config": cloudifyDatatypesAzureConfig;
+]
+    and nodeTypeCloudifyAzureNodesNetworkSubnetInterfaces = object && [
+        "cloudify.interfaces.lifecycle": [
+            "create": string && [ enum "azure.cloudify_azure.resources.network.subnet.create"; ];
+            "delete": string && [ enum "azure.cloudify_azure.resources.network.subnet.delete"; ];
+];
+]
+    and nodeTypeCloudifyAzureNodesNetworkSubnetProperties = object && [
+        "api_version": cloudifyStringOrGetInput && [ default "2016-09-01"; ];
+        "name": cloudifyStringOrGetInput;
+        "resource_group_name": cloudifyStringOrGetInput;
+        "virtual_network_name": cloudifyStringOrGetInput;
+        "location": cloudifyStringOrGetInput;
+        "tags": Predefined.json;
+        "resource_config": cloudifyDatatypesAzureNetworkSubnetConfig;
+        "use_external_resource": cloudifyBooleanOrGetInput && [ default false; ];
+        "retry_after": cloudifyIntegerOrGetInput;
+        "azure_config": cloudifyDatatypesAzureConfig;
+        "client_config": cloudifyDatatypesAzureConfig;
+]
+    and nodeTypeCloudifyAzureNodesNetworkVirtualNetworkInterfaces = object && [
+        "cloudify.interfaces.lifecycle": object && [
+            "create": string && [ enum "azure.cloudify_azure.resources.network.virtualnetwork.create"; ];
+            "delete": string && [ enum "azure.cloudify_azure.resources.network.virtualnetwork.delete"; ];
+];
+]
+    and nodeTypeCloudifyAzureNodesNetworkVirtualNetworkProperties = object && [
+        "api_version": cloudifyStringOrGetInput && [ default "2016-09-01"; ];
+        "name": cloudifyStringOrGetInput;
+        "resource_group_name": cloudifyStringOrGetInput;
+        "location": cloudifyStringOrGetInput;
+        "tags": object;
+        "resource_config": cloudifyDatatypesAzureNetworkVirtualNetworkConfig;
+        "use_external_resource": cloudifyBooleanOrGetInput && [ default "false"; ];
+        "retry_after": cloudifyIntegerOrGetInput;
+        "azure_config": cloudifyDatatypesAzureConfig;
+        "client_config": cloudifyDatatypesAzureConfig;
+]
+    and nodeTypeCloudifyAzureNodesPlanInterfaces = object && [
+        "cloudify.interfaces.lifecycle": object && [
+            "create": object && [
+                "implementation": string && [ enum "azure.cloudify_azure.resources.app_service.plan.create"; ];
+                "inputs": object && [
+                    "name": cloudifyStringOrGetInput;
+                    "resource_group": cloudifyStringOrGetInput;
+                    "sku": cloudifyStringOrGetInput;
+                    "azure_config": cloudifyDatatypesAzureConfig;
+                    "client_config": cloudifyDatatypesAzureConfig;
+];
+];
+            "delete": object && [
+                "implementation": string && [ enum "azure.cloudify_azure.resources.app_service.plan.delete"; ];
+];
+];
+]
+    and nodeTypeCloudifyAzureNodesPlanProperties = object && [
+        "name": cloudifyStringOrGetInput;
+        "resource_group": cloudifyStringOrGetInput;
+        "sku": cloudifyStringOrGetInput;
+        "azure_config": cloudifyDatatypesAzureConfig;
+        "client_config": cloudifyDatatypesAzureConfig;
+        "use_external_resource": boolean && [ default false; ];
+] && [ required "name",  "resource_group"; ]
+    and nodeTypeCloudifyAzureNodesPublishingUserInterfaces = object && [
+        "cloudify.interfaces.lifecycle": object && [
+            "create": object && [
+                "implementation": string && [ enum "azure.cloudify_azure.resources.app_service.publishing_user.set_user";
+];
+                "inputs": object && [
+                    "user_details": object;
+                    "azure_config": cloudifyDatatypesAzureConfig;
+                    "client_config": cloudifyDatatypesAzureConfig;
+];
+];
+];
+]
+    and nodeTypeCloudifyAzureNodesPublishingUserProperties = object && [
+        "user_details": object;
+        "azure_config": cloudifyDatatypesAzureConfig;
+        "client_config": cloudifyDatatypesAzureConfig;
+] && [ required "user_details"; ]
+    and nodeTypeCloudifyAzureNodesResourceGroupInterfaces = object && [
+        "cloudify.interfaces.lifecycle": object && [
+            "create": string && [ enum "azure.cloudify_azure.resources.resourcegroup.create"; ];
+            "delete": string && [ enum "azure.cloudify_azure.resources.resourcegroup.delete"; ];
+];
+]
+    and nodeTypeCloudifyAzureNodesResourceGroupProperties = object && [
+        "api_version": cloudifyStringOrGetInput && [ default "2017-05-10"; ];
+        "name": cloudifyStringOrGetInput;
+        "location": cloudifyStringOrGetInput;
+        "tags": object;
+        "use_external_resource": cloudifyBooleanOrGetInput && [ default "false"; ];
+        "retry_after": cloudifyIntegerOrGetInput;
+        "azure_config": cloudifyDatatypesAzureConfig;
+        "client_config": cloudifyDatatypesAzureConfig;
+]
+    and nodeTypeCloudifyAzureNodesStorageDataDiskProperties = object && [
+        "name": cloudifyStringOrGetInput;
+        "location": cloudifyStringOrGetInput;
+        "use_external_resource": cloudifyBooleanOrGetInput && [ default false; ];
+        "retry_after": cloudifyIntegerOrGetInput;
+        "resource_config": cloudifyDatatypesAzureStorageDataDiskConfig;
+        "azure_config": cloudifyDatatypesAzureConfig;
+        "client_config": cloudifyDatatypesAzureConfig;
+]
+    and nodeTypeCloudifyAzureNodesStorageDataDisktInterfaces = object && [
+        "cloudify.interfaces.lifecycle": object && [
+            "create": string && [ enum "azure.cloudify_azure.resources.storage.disk.create_data_disk"; ];
+            "delete": string && [ enum "azure.cloudify_azure.resources.storage.disk.delete_data_disk"; ];
+];
+]
+    and nodeTypeCloudifyAzureNodesStorageFileShareInterfaces = object && [
+        "cloudify.interfaces.lifecycle": [
+            "create": string && [ enum "azure.cloudify_azure.resources.storage.file.create_file_share"; ];
+];
+]
+    and nodeTypeCloudifyAzureNodesStorageFileShareProperties = object && [
+        "name": cloudifyStringOrGetInput;
+        "location": cloudifyStringOrGetInput;
+        "use_external_resource": cloudifyBooleanOrGetInput && [ default false; ];
+        "retry_after": cloudifyIntegerOrGetInput;
+        "resource_config": cloudifyDatatypesAzureStorageFileShareConfig;
+        "azure_config": cloudifyDatatypesAzureConfig;
+        "client_config": cloudifyDatatypesAzureConfig;
+]
+    and nodeTypeCloudifyAzureNodesStorageStorageAccountInterfaces = object && [
+        "cloudify.interfaces.lifecycle": object && [
+            "create": string && [ enum "azure.cloudify_azure.resources.storage.storageaccount.create"; ];
+            "delete": string && [ enum "azure.cloudify_azure.resources.storage.storageaccount.delete"; ];
+];
+]
+    and nodeTypeCloudifyAzureNodesStorageStorageAccountProperties = object && [
+        "api_version": cloudifyStringOrGetInput && [ default "2015-06-15"; ];
+        "name": cloudifyStringOrGetInput;
+        "resource_group_name": cloudifyStringOrGetInput;
+        "location": cloudifyStringOrGetInput;
+        "tags": object;
+        "sku": cloudifyStringOrGetInput;
+        "resource_config": cloudifyDatatypesAzureStorageStorageAccountConfig;
+        "use_external_resource": cloudifyBooleanOrGetInput && [ default "false"; ];
+        "retry_after": cloudifyIntegerOrGetInput;
+        "azure_config": cloudifyDatatypesAzureConfig;
+        "client_config": cloudifyDatatypesAzureConfig;
+] && [ required "resource_config"; ]
+    and nodeTypeCloudifyAzureNodesWebAppInterfaces = object && [
+        "cloudify.interfaces.lifecycle": object && [
+            "create": object && [
+                "implementation": string && [ enum "azure.cloudify_azure.resources.app_service.webapp.create"; ];
+                "inputs": [
+                    "name": cloudifyStringOrGetInput;
+                    "resource_group": cloudifyStringOrGetInput;
+                    "app_config": cloudifyStringOrGetInput;
+                    "azure_config": cloudifyDatatypesAzureConfig;
+                    "client_config": cloudifyDatatypesAzureConfig;
+];
+];
+            "delete": object && [
+                "implementation": string && [ enum "azure.cloudify_azure.resources.app_service.webapp.delete"; ];
+];
+];
+]
+    and nodeTypeCloudifyAzureNodesWebAppProperties = object && [
+        "name": cloudifyStringOrGetInput;
+        "resource_group": cloudifyStringOrGetInput;
+        "app_config": cloudifyStringOrGetInput;
+        "azure_config": cloudifyDatatypesAzureConfig;
+        "client_config": cloudifyDatatypesAzureConfig;
+] && [ required "name",  "resource_group"; ]
+    and nodeTypeCloudifyGCPNodesInstanceInterfaces = object && [
+        "cloudify.interfaces.lifecycle": object && [
+            "configure": object && [
+                "implementation": string && [ enum "gcp_plugin.cloudify_gcp.compute.instance.create"; ];
+                "inputs": object && [
+                    "startup_script": string && [ default {"get_property":["SELF","startup_script"]}; ];
+                    "external_ip": boolean && [ default {"get_property":["SELF","external_ip"]}; ];
+                    "instance_type": string && [ default {"get_property":["SELF","instance_type"]}; ];
+                    "image_id": string && [ default {"get_property":["SELF","image_id"]}; ];
+                    "name": string && [ default {"get_property":["SELF","name"]}; ];
+                    "zone": string && [ default {"get_property":["SELF","zone"]}; ];
+                    "scopes": array && [ of string; ] && [ default {"get_property":["SELF","scopes"]}; ];
+                    "tags": string && [ default {"get_property":["SELF","tags"]}; ];
+                    "can_ip_forward": boolean && [ default {"get_property":["SELF","can_ip_forward"]}; ];
+                    "additional_settings": object && [ default {"get_property":["SELF","additional_settings"]}; ];
+];
+];
+            "start": object && [
+                "implementation": string && [ enum "gcp_plugin.cloudify_gcp.compute.instance.start"; ];
+                "inputs": object && [ "name": string && [ default {"get_attribute":["SELF","name"]}; ]; ];
+];
+            "delete": object && [
+                "implementation": string && [ enum "gcp_plugin.cloudify_gcp.compute.instance.delete"; ];
+                "inputs": object && [
+                    "name": string && [ default {"get_attribute":["SELF","name"]}; ];
+                    "zone": string && [ default {"get_attribute":["SELF","zone"]}; ];
+];
+];
+];
+]
+    and nodeTypeCloudifyGCPNodesInstanceProperties = object && gcpExternalResource && gcpResourceId && [
+        "gcp_config": object;
+        "use_public_ip": boolean && [ default false; ];
+        "image_id": string;
+        "instance_type": string && [ default "n1-standard-1"; ];
+        "name": string;
+        "zone": string;
+        "tags": string;
+        "block_project_ssh_keys": boolean && [ default false; ];
+        "can_ip_forward": boolean && [ default false; ];
+        "scopes": array && [ of string; ];
+        "startup_script": string;
+        "external_ip": boolean && [ default false; ];
+        "additional_settings": object;
+]
+    and nodeTypeCloudifyGCPProjectInterfaces = object && [
+        "cloudify.interfaces.lifecycle": object && [
+            "create": object && [
+                "implementation": string && [ enum "gcp_plugin.cloudify_gcp.admin.projects.create"; ];
+                "delete": object && [
+                    "implementation": string && [ enum "gcp_plugin.cloudify_gcp.admin.projects.delete"; ];
+];
+];
+];
+]
+    and nodeTypeCloudifyGCPProjectProperties = object && gcpExternalResource && gcpResourceId && [
+        "gcp_config": object;
+        "name": string;
+]
+    and nodeTypeCloudifyNodesCloudInitCloudConfigInterfaces = object && [
+        "cloudify.interfaces.lifecycle": object && [
+            "create": object && [
+                "implementation": string && [ enum "cloudinit.cloudify_cloudinit.tasks.update"; ];
+];
+            "configure": object && [
+                "implementation": string && [ enum "cloudinit.cloudify_cloudinit.tasks.update"; ];
+];
+            "start": object && [
+                "implementation": string && [ enum "cloudinit.cloudify_cloudinit.tasks.update"; ];
+];
+            "stop": object && [
+                "implementation": string && [ enum "cloudinit.cloudify_cloudinit.tasks.update"; ];
+];
+            "delete": object && [
+                "implementation": string && [ enum "cloudinit.cloudify_cloudinit.tasks.delete"; ];
+];
+];
+]
+    and nodeTypeCloudifyNodesCloudInitCloudConfigProperties = object && [
+        "header": cloudifyStringOrGetInput && [ default "#cloud-config"; ];
+        "encode_base64": cloudifyBooleanOrGetInput && [ default "false"; ];
+        "resource_config": object;
+]
+    and nodeTypeCloudifyNodesDeploymentProxyInterfaces = object && [
+        "cloudify.interfaces.lifecycle": object && [
+            "create": object && [
+                "implementation": string && [ enum "cfy_util.cloudify_deployment_proxy.tasks.upload_blueprint"; ];
+];
+            "configure": object && [
+                "implementation": object && [ enum "cfy_util.cloudify_deployment_proxy.tasks.create_deployment"; ];
+];
+            "start": object && [
+                "implementation": string && [ enum "cfy_util.cloudify_deployment_proxy.tasks.execute_start"; ];
+                "inputs": object && [
+                    "workflow_id": string && [ default "install"; ];
+                    "timeout": Predefined.integer && [ default 1800; ];
+                    "interval": Predefined.integer && [ default 10; ];
+];
+];
+            "stop": object && [
+                "implementation": string && [ enum "cfy_util.cloudify_deployment_proxy.tasks.execute_start"; ];
+                "inputs": object && [
+                    "workflow_id": string && [ default "uninstall"; ];
+                    "resource_config": cloudifyDatatypesDeploymentProxy;
+];
+];
+            "delete": object && [
+                "implementation": string && [ enum "cfy_util.cloudify_deployment_proxy.tasks.delete_deployment"; ];
+];
+];
+]
+    and nodeTypeCloudifyNodesDeploymentProxyProperties = object && [
+        "resource_config": cloudifyDatatypesDeploymentProxy;
+        "client": object && [
+            "host": string && [ default "127.0.0.1"; ];
+            "username": string && [ default "admin"; ];
+            "password": string && [ default "admin"; ];
+            "tenant": string && [ default "default_tenant"; ];
+];
+        "plugins": object;
+        "secrets": object;
+]
+    and nodeTypeCloudifyNodesFTPInterfaces = object && [
+        "cloudify.interfaces.lifecycle": object && [
+            "create": object && [
+                "implementation": string && [ enum "cfy_ftp.cloudify_ftp.tasks.create"; ];
+                "inputs": object && [
+                    "resource_config": cloudifyDatatypesFtpAuth;
+                    "raw_files": object;
+                    "files": object;
+];
+];
+            "delete": object && [
+                "implementation": string && [ enum "cfy_ftp.cloudify_ftp.tasks.delete"; ];
+                "inputs": [ "resource_config": cloudifyDatatypesFtpAuth; ];
+];
+];
+]
+    and nodeTypeCloudifyNodesFTPProperties = object && [
+        "resource_config": cloudifyDatatypesFtpAuth;
+        "raw_files": object;
+        "files": object;
+] && [ required "resource_config"; ]
+    and nodeTypeCloudifyNodesFileInterfaces = object && [
+        "cloudify.interfaces.lifecycle": object && [
+            "create": object && [
+                "implementation": string && [ enum "cfy_files.cloudify_files.tasks.create"; ];
+];
+            "delete": object && [
+                "implementation": string && [ enum "cfy_files.cloudify_files.tasks.delete"; ];
+];
+];
+]
+    and nodeTypeCloudifyNodesFileProperties = object && [ "resource_config": cloudifyDatatypesFile; ] && [ required "resource_config"; ]
+    and nodeTypeCloudifyNodesNodeInstanceProxyProperties = object && nodeTypeCloudifyNodesDeploymentProxyProperties && [ "resource_config": cloudifyDatatypesNodeInstanceProxy; ]
+    and nodeTypeCloudifyNodesRSAKeyInterfaces = object && [
+        "cloudify.interfaces.lifecycle": object && [
+            "create": object && [
+                "implementation": string && [ enum "keys.cloudify_ssh_key.operations.create"; ];
+                "inputs": [
+                    "store_public_key_material": boolean && [ default true; ];
+                    "store_private_key_material": boolean && [ default false; ];
+];
+];
+            "delete": object && [
+                "implementation": string && [ enum "keys.cloudify_ssh_key.operations.delete"; ];
+];
+];
+]
+    and nodeTypeCloudifyNodesRSAKeyProperties = object && [
+        "use_secret_store": cloudifyBooleanOrGetInput && [ default true; ];
+        "use_secrets_if_exist": cloudifyBooleanOrGetInput && [ default false; ];
+        "key_name": cloudifyStringOrGetInput;
+        "resource_config": cloudifyDatatypesKey;
+]
+    and nodeTypeCloudifyNodesSecretsReaderInterfaces = object && [
+        "cloudify.interfaces.lifecycle": object && [
+            "create": object && [ "implementation": string && [ enum "secrets.cloudify_secrets.tasks.read"; ];
+];
+];
+        "cloudify.interfaces.operations": object && [
+            "update": object && [ "implementation": string && [ enum "secrets.cloudify_secrets.tasks.read"; ];
+];
+];
+]
+    and nodeTypeCloudifyNodesSecretsReaderProperties = object && [
+        "keys": array && [ of string; ];
+        "variant": cloudifyStringOrGetInput;
+        "separator": cloudifyStringOrGetInput;
+]
+    and nodeTypeCloudifyNodesSecretsWriterInterfaces = object && [
+        "cloudify.interfaces.lifecycle": object && [
+            "create": object && [
+                "implementation": string && [ enum "secrets.cloudify_secrets.tasks.create"; ];
+];
+            "delete": object && [
+                "implementation": string && [ enum "secrets.cloudify_secrets.tasks.delete"; ];
+];
+];
+        "cloudify.interfaces.operations": object && [
+            "update": object && [
+                "implementation": string && [ enum "secrets.cloudify_secrets.tasks.update"; ];
+];
+];
+]
+    and nodeTypeCloudifyNodesSecretsWriterProperties = object && [
+        "entries": object;
+        "do_not_delete": cloudifyBooleanOrGetInput && [ default false; ];
+        "variant": cloudifyStringOrGetInput;
+        "separator": cloudifyStringOrGetInput;
+]
+    and nodeTypeCloudifyRestBunchRequestsInterfaces = object && [
+        "cloudify.interfaces.lifecycle": object && [
+            "create": object && [
+                "implementation": string && [ enum "rest.cloudify_rest.tasks.bunch_execute"; ];
+                "inputs": object && [
+                    "auth": object;
+                    "templates": object;
+];
+];
+            "configure": object && [
+                "implementation": string && [ enum "rest.cloudify_rest.tasks.bunch_execute"; ];
+                "inputs": object && [
+                    "auth": object;
+                    "templates": object;
+];
+];
+            "start": object && [
+                "implementation": string && [ enum "rest.cloudify_rest.tasks.bunch_execute"; ];
+                "inputs": object && [
+                    "auth": object;
+                    "templates": object;
+];
+];
+            "stop": object && [
+                "implementation": string && [ enum "rest.cloudify_rest.tasks.bunch_execute"; ];
+                "inputs": object && [
+                    "auth": object;
+                    "templates": object;
+];
+];
+            "delete": object && [
+                "implementation": string && [ enum "rest.cloudify_rest.tasks.bunch_execute"; ];
+                "inputs": object && [
+                    "auth": object;
+                    "templates": object;
+];
+];
+];
+]
+    and nodeTypeCloudifyRestBunchRequestsProperties = object && [
+        "hosts": array && [ of string; ];
+        "host": array && [ of string; ];
+        "port": cloudifyIntegerOrGetInput && [ default -1; ];
+        "ssl": cloudifyBooleanOrGetInput && [ default false; ];
+        "verify": cloudifyBooleanOrGetInput && [ default true; ];
+        "cert": cloudifyStringOrGetInput && [ default null; ];
+        "timeout": cloudifyIntegerOrGetInput && [ default null; ];
+        "proxies": object;
+        "params": object;
+]
+    and nodeTypeCloudifyRestRequestsInterfaces = object && [
+        "cloudify.interfaces.lifecycle": object && [
+            "create": object && [
+                "implementation": string && [ enum "rest.cloudify_rest.tasks.execute"; ];
+                "inputs": restTemplateInputs;
+];
+            "configure": object && [
+                "implementation": string && [ enum "rest.cloudify_rest.tasks.execute"; ];
+                "inputs": restTemplateInputs;
+];
+            "start": object && [
+                "implementation": string && [ enum "rest.cloudify_rest.tasks.execute"; ];
+                "inputs": restTemplateInputs;
+];
+            "stop": object && [
+                "implementation": string && [ enum "rest.cloudify_rest.tasks.execute"; ];
+                "inputs": restTemplateInputs;
+];
+            "delete": object && [
+                "implementation": string && [ enum "rest.cloudify_rest.tasks.execute"; ];
+                "inputs": restTemplateInputs;
+];
+];
+]
+    and nodeTypeCloudifyRestRequestsProperties = object && [
+        "hosts": array && [ of string || cloudifyGetInput; ];
+        "host": array && [ of string; ];
+        "port": cloudifyIntegerOrGetInput && [ default -1; ];
+        "ssl": cloudifyBooleanOrGetInput && [ default false; ];
+        "verify": cloudifyBooleanOrGetInput && [ default true; ];
+        "cert": cloudifyStringOrGetInput && [ default null; ];
+        "timeout": cloudifyIntegerOrGetInput && [ default null; ];
+        "proxies": object;
+        "params": object;
+]
+    and nodeTypeCloudifyTerminalRawInterfaces = object && [
+        "cloudify.interfaces.lifecycle": object && [
+            "create": object && [
+                "implementation": string && [ enum "terminal.cloudify_terminal.tasks.run"; ];
+                "inputs": object;
+];
+            "configure": object && [
+                "implementation": string && [ enum "terminal.cloudify_terminal.tasks.run"; ];
+                "inputs": object;
+];
+            "start": object && [
+                "implementation": string && [ enum "terminal.cloudify_terminal.tasks.run"; ];
+                "inputs": object;
+];
+            "stop": object && [
+                "implementation": string && [ enum "terminal.cloudify_terminal.tasks.run"; ];
+                "inputs": object;
+];
+            "delete": object && [
+                "implementation": string && [ enum "terminal.cloudify_terminal.tasks.run"; ];
+                "inputs": object;
+];
+];
+]
+    and nodeTypeCloudifyTerminalRawProperties = object && [ "terminal_auth": cloudifyDatatypesTerminalAuth; ]
+    and nodeTypeDockerAnsiblePlaybookInterfaces = object && [
+        "cloudify.interfaces.lifecycle": object && [
+            "precreate": object && [
+                "implementation": string && [ enum "docker.cloudify_docker.ansible.set_playbook_config"; ];
+                "inputs": object && [
+                    "ansible_playbook_executable_path": string;
+                    "playbook_source_path": string;
+                    "playbook_path": string;
+                    "site_yaml_path": string;
+                    "save_playbook": boolean;
+                    "remerge_sources": boolean;
+                    "sources": object;
+                    "run_data": object;
+                    "sensitive_keys": array && [ of string; ];
+                    "options_config": object;
+                    "ansible_env_vars": object;
+                    "debug_level": Predefined.integer;
+                    "additional_args": string;
+];
+];
+            "create": object && [
+                "implementation": string && [ enum "docker.cloudify_docker.ansible.create_ansible_playbook"; ];
+];
+            "delete": object && [
+                "implementation": string && [ enum "docker.cloudify_docker.ansible.remove_ansible_playbook"; ];
+];
+];
+]
+    and nodeTypeDockerAnsiblePlaybookProperties = object && [
+        "ansible_playbook_executable_path": string && [ default "ansible-playbook"; ];
+        "playbook_source_path": string;
+        "playbook_path": string;
+        "site_yaml_path": string;
+        "additional_playbook_files": array && [ of string; ];
+        "sources": object;
+        "run_data": object;
+        "sensitive_keys": array && [ of string; ];
+        "options_config": object;
+        "ansible_env_vars": object && [
+            "ANSIBLE_HOST_KEY_CHECKING": string && [ enum "True", "False"; ] && [ default "False"; ];
+            "ANSIBLE_INVALID_TASK_ATTRIBUTE_FAILED": string && [ enum "True", "False"; ] && [ default "False"; ];
+];
+        "debug_level": Predefined.integer && [ default 2; ];
+        "additional_args": string;
+        "save_playbook": boolean && [ default false; ];
+        "remerge_sources": boolean && [ default false; ];
+        "ansible_become": boolean && [ default false; ];
+        "docker_machine": dockerMachine;
+]
+    and nodeTypeDockerContainerFilesInterfaces = object && [
+        "cloudify.interfaces.lifecycle": object && [
+            "create": object && [
+                "implementation": string && [ enum "docker.cloudify_docker.tasks.prepare_container_files"; ];
+];
+            "delete": object && [
+                "implementation": string && [ enum "docker.cloudify_docker.tasks.remove_container_files"; ];
+];
+];
+]
+    and nodeTypeDockerContainerFilesProperties = object && [
+        "resource_config": [
+            "docker_machine": object && [
+                "docker_machine": dockerMachine;
+                "source": string;
+                "destination": string;
+                "extra_files": string;
+                "ansible_sources": object;
+                "terraform_sources": object;
+];
+            "source": string;
+            "destination": string;
+            "extra_files": array && [ of string; ];
+            "ansible_sources": object;
+            "terraform_sources": object;
+];
+] && [ required "resource_config"; ]
+    and nodeTypeDockerContainerInterfaces = object && [
+        "cloudify.interfaces.lifecycle": object && [
+            "create": object && [
+                "implementation": string && [ enum "docker.cloudify_docker.tasks.create_container"; ];
+];
+            "stop": object && [
+                "implementation": string && [ enum "docker.cloudify_docker.tasks.remove_container", "docker.cloudify_docker.tasks.stop_container"; ];
+                "inputs": object && [ "stop_command": string || object; ];
+];
+            "delete": object && [
+                "implementation": string && [ enum "docker.cloudify_docker.tasks.remove_container"; ];
+];
+];
+]
+    and nodeTypeDockerContainerProperties = object && [
+        "client_config": dockerClientConfig;
+        "resource_config": object && [
+            "image_tag": cloudifyStringOrGetInput;
+            "container_args": object;
+];
+] && [ required "resource_config"; ]
+    and nodeTypeDockerContainersInterfaces = object && [
+        "cloudify.interfaces.lifecycle": object && [
+            "create": object && [
+                "implementation": string && [ enum "docker.cloudify_docker.tasks.list_containers"; ];
+];
+];
+]
+    and nodeTypeDockerContainersProperties = object && [ "client_config": dockerClientConfig; ]
+    and nodeTypeDockerHostDetailsInterfaces = object && [
+        "cloudify.interfaces.lifecycle": object && [
+            "create": object && [
+                "implementation": string && [ enum "docker.cloudify_docker.tasks.list_host_details"; ];
+];
+];
+]
+    and nodeTypeDockerHostDetailsProperties = object && [ "client_config": dockerClientConfig; ]
+    and nodeTypeDockerHostInterfaces = object && [
+        "cloudify.interfaces.lifecycle": object && [
+            "create": object && [
+                "implementation": string && [ enum "docker.cloudify_docker.tasks.install_docker"; ];
+];
+            "delete": object && [
+                "implementation": string && [ enum "docker.cloudify_docker.tasks.uninstall_docker"; ];
+];
+];
+]
+    and nodeTypeDockerHostProperties = object && [
+        "docker_machine": dockerMachine;
+        "resource_config": dockerInstallationConfig;
+]
+    and nodeTypeDockerImageInterfaces = object && [
+        "cloudify.interfaces.lifecycle": object && [
+            "create": object && [
+                "implementation": string && [ enum "docker.cloudify_docker.tasks.build_image"; ];
+];
+            "delete": object && [
+                "implementation": string && [ enum "docker.cloudify_docker.tasks.remove_image"; ];
+];
+];
+]
+    and nodeTypeDockerImageProperties = object && [
+        "client_config": dockerClientConfig;
+        "resource_config": object && [
+            "image_content": cloudifyStringOrGetInput;
+            "tag": cloudifyStringOrGetInput;
+];
+] && [ required "resource_config"; ]
+    and nodeTypeDockerImagesInterfaces = object && [
+        "cloudify.interfaces.lifecycle": object && [
+            "create": object && [
+                "implementation": string && [ enum "docker.cloudify_docker.tasks.list_images"; ];
+];
+];
+]
+    and nodeTypeDockerImagesProperties = object && [ "client_config": dockerClientConfig; ]
+    and nodeTypeDockerTerraformModuleInterfaces = object && [
+        "cloudify.interfaces.lifecycle": object && [
+            "create": object && [
+                "implementation": string && [ enum "docker.cloudify_docker.terraform.prepare_terraform_files"; ];
+];
+            "delete": object && [
+                "implementation": string && [ enum "docker.cloudify_docker.terraform.remove_terraform_files"; ];
+];
+];
+]
+    and nodeTypeDockerTerraformModuleProperties = object && [
+        "docker_machine": dockerMachine;
+        "terraform_plugins": (array && [ of string; ] || cloudifyGetInput);
+        "resource_config": object && [
+            "source": (string || cloudifyGetInput);
+            "backend": object && [
+                "name": string;
+                "options": object;
+];
+            "variables": object;
+            "environment_variables": object;
+] && [ required "source"; ];
+] && [ required "terraform_plugins",  "resource_config"; ]
+    and nodeTypeHelmBinaryProperties = object && [
+        "helm_config": cloudifyDatatypesHelmConfig;
+        "use_existing_resource": cloudifyBooleanOrGetInput && [ default false; ];
+        "installation_source": cloudifyStringOrGetInput && [ default "https://get.helm.sh/helm-v3.3.1-linux-amd64.tar.gz"; ];
+]
+    and nodeTypeHelmReleaseInterfaces = object && [
+        "cloudify.interfaces.lifecycle": object && [
+            "start": object && [
+                "implementation": string && [ enum "helm.cloudify_helm.tasks.install_release"; ];
+                "inputs": object && [ "flags": cloudifyDatatypesHelmSetFlagsList; ];
+];
+            "delete": object && [
+                "implementation": string && [ enum "helm.cloudify_helm.tasks.uninstall_release"; ];
+                "inputs": object && [ "flags": cloudifyDatatypesHelmSetFlagsList; ];
+];
+];
+]
+    and nodeTypeHelmReleaseProperties = object && [
+        "helm_config": cloudifyDatatypesHelmConfig;
+        "use_external_resource": cloudifyBooleanOrGetInput && [ default false; ];
+        "client_config": cloudifyDatatypesHelmClientConfig;
+        "resource_config": cloudifyDatatypesHelmReleaseConfig;
+] && [ required "client_config",  "resource_config"; ]
+    and nodeTypeHelmRepoInterfaces = object && [
+        "cloudify.interfaces.lifecycle": object && [
+            "start": object && [
+                "implementation": string && [ enum "helm.cloudify_helm.tasks.add_repo"; ];
+                "inputs": object && [ "flags": cloudifyDatatypesHelmSetFlagsList; ];
+];
+            "delete": object && [
+                "implementation": string && [ enum "helm.cloudify_helm.tasks.remove_repo"; ];
+                "inputs": object && [ "flags": cloudifyDatatypesHelmSetFlagsList; ];
+];
+];
+]
+    and nodeTypeHelmRepoProperties = object && [
+        "helm_config": cloudifyDatatypesHelmConfig;
+        "use_external_resource": cloudifyBooleanOrGetInput && [ default false; ];
+        "resource_config": cloudifyDatatypesHelmRepoConfig;
+] && [ required "resource_config"; ]
+    and nodeTypeKubernetesNodesMasterProperties = object && [
+        "configuration": kubernetesTypesConfigurationVariant;
+        "authentication": kubernetesTypesAuthenticationVariant;
+]
+    and nodeTypeKubernetesResourcesBlueprintDefinedResource = object && nodeTypeKubernetesResourcesResourceWithValidateStatus && object && [
+        "use_external_resource": cloudifyBooleanOrGetInput;
+        "definition": kubernetesTypesResourceDefinition;
+        "options": object;
+]
+    and nodeTypeKubernetesResourcesBlueprintDefinedResourceInterfaces = object && [
+        "cloudify.interfaces.lifecycle": object && [
+            "create": object && [
+                "implementation": cloudifyStringOrGetInput && [ enum "kubernetes.cloudify_kubernetes.tasks.resource_create"; ];
+];
+            "poststart": object && [
+                "implementation": cloudifyStringOrGetInput && [ enum "kubernetes.cloudify_kubernetes.tasks.resource_read"; ];
+];
+            "update": object && [
+                "implementation": cloudifyStringOrGetInput && [ enum "kubernetes.cloudify_kubernetes.tasks.resource_update"; ];
+];
+            "delete": object && [
+                "implementation": cloudifyStringOrGetInput && [ enum "kubernetes.cloudify_kubernetes.tasks.resource_delete"; ];
+];
+];
+]
+    and nodeTypeKubernetesResourcesClusterRoleBindingProperties = object && nodeTypeKubernetesResourcesBlueprintDefinedResource && [ "definition": kubernetesTypesRoleBindingDefinitio; ]
+    and nodeTypeKubernetesResourcesClusterRoleProperties = object && nodeTypeKubernetesResourcesRoleProperties && [ "definition": kubernetesTypesClusterRoleDefinitio; ]
+    and nodeTypeKubernetesResourcesConfigMapProperties = object && nodeTypeKubernetesResourcesBlueprintDefinedResource && [ "definition": kubernetesTypesConfigClassResourceDefinition; ]
+    and nodeTypeKubernetesResourcesCustomBlueprintDefinedResourceInterfaces = object && nodeTypeKubernetesResourcesBlueprintDefinedResourceInterfaces && [
+        "cloudify.interfaces.lifecycle": object && [
+            "create": object && [
+                "implementation": cloudifyStringOrGetInput && [ enum "kubernetes.cloudify_kubernetes.tasks.custom_resource_create"; ];
+];
+            "delete": object && [
+                "implementation": cloudifyStringOrGetInput && [ enum "kubernetes.cloudify_kubernetes.tasks.custom_resource_delete"; ];
+];
+];
+]
+    and nodeTypeKubernetesResourcesCustomBlueprintDefinedResourceProperties = object && nodeTypeKubernetesResourcesBlueprintDefinedResource && [ "api_mapping": kubernetesTypesApiMapping; ]
+    and nodeTypeKubernetesResourcesCustomResourceDefinitionProperties = object && nodeTypeKubernetesResourcesBlueprintDefinedResource
+    and nodeTypeKubernetesResourcesDaemonSetProperties = object && nodeTypeKubernetesResourcesBlueprintDefinedResource
+    and nodeTypeKubernetesResourcesDeploymentProperties = object && nodeTypeKubernetesResourcesBlueprintDefinedResource && [ "validate_resource_status": cloudifyBooleanOrGetInput && [ default true; ]; ]
+    and nodeTypeKubernetesResourcesFileDefinedResourceInterfaces = object && [
+        "cloudify.interfaces.lifecycle": object && [
+            "create": object && [
+                "implementation": cloudifyStringOrGetInput && [ enum "kubernetes.cloudify_kubernetes.tasks.file_resource_create"; ];
+];
+            "poststart": object && [
+                "implementation": cloudifyStringOrGetInput && [ enum "kubernetes.cloudify_kubernetes.tasks.file_resource_read"; ];
+];
+            "delete": object && [
+                "implementation": cloudifyStringOrGetInput && [ enum "kubernetes.cloudify_kubernetes.tasks.file_resource_delete"; ];
+];
+];
+]
+    and nodeTypeKubernetesResourcesFileDefinedResourceProperties = object && nodeTypeKubernetesResourcesResourceWithValidateStatus && [
+        "file": kubernetesTypesFileResource;
+        "allow_node_redefinition": cloudifyBooleanOrGetInput && [ default false; ];
+]
+    and nodeTypeKubernetesResourcesIngressProperties = object && nodeTypeKubernetesResourcesBlueprintDefinedResource && [ "definition": object; ]
+    and nodeTypeKubernetesResourcesMultipleFileDefinedResourcesInterfaces = object && [
+        "cloudify.interfaces.lifecycle": object && [
+            "create": object && [
+                "implementation": string && [ enum "kubernetes.cloudify_kubernetes.tasks.multiple_file_resource_create"; ];
+];
+            "poststart": object && [
+                "implementation": string && [ enum "kubernetes.cloudify_kubernetes.tasks.multiple_file_resource_delete"; ];
+];
+            "delete": object && [
+                "implementation": string && [ enum "kubernetes.cloudify_kubernetes.tasks.custom_resource_delete"; ];
+];
+];
+]
+    and nodeTypeKubernetesResourcesMultipleFileDefinedResourcesProperties = object && nodeTypeKubernetesResourcesResourceWithValidateStatus && [
+        "files": cloudifyStringOrGetInput;
+        "allow_node_redefinition": cloudifyBooleanOrGetInput && [ default false; ];
+]
+    and nodeTypeKubernetesResourcesNamespaceProperties = object && nodeTypeKubernetesResourcesBlueprintDefinedResource && [ "use_external_resource": cloudifyBooleanOrGetInput && [ default true; ]; ]
+    and nodeTypeKubernetesResourcesNetworkPolicyroperties = object && nodeTypeKubernetesResourcesBlueprintDefinedResource && [ "definition": object; ]
+    and nodeTypeKubernetesResourcesNodeProperties = object && nodeTypeKubernetesResourcesBlueprintDefinedResource && [ "use_external_resource": cloudifyBooleanOrGetInput && [ default true; ]; ]
+    and nodeTypeKubernetesResourcesPersistentVolumeClaimProperties = object && nodeTypeKubernetesResourcesBlueprintDefinedResource && [ "definition": object; ]
+    and nodeTypeKubernetesResourcesPersistentVolumeProperties = object && nodeTypeKubernetesResourcesBlueprintDefinedResource && [ "validate_resource_status": cloudifyBooleanOrGetInput && [ default true; ]; ]
+    and nodeTypeKubernetesResourcesPodProperties = object && nodeTypeKubernetesResourcesBlueprintDefinedResource && [ "use_external_resource": cloudifyBooleanOrGetInput && [ default true; ]; ]
+    and nodeTypeKubernetesResourcesPodSecurityPolicyProperties = object && nodeTypeKubernetesResourcesBlueprintDefinedResource && [ "definition": object; ]
+    and nodeTypeKubernetesResourcesReplicaSetProperties = object && nodeTypeKubernetesResourcesBlueprintDefinedResource && [ "use_external_resource": cloudifyBooleanOrGetInput && [ default true; ]; ]
+    and nodeTypeKubernetesResourcesReplicationControllerProperties = object && nodeTypeKubernetesResourcesBlueprintDefinedResource && [ "use_external_resource": cloudifyBooleanOrGetInput && [ default true; ]; ]
+    and nodeTypeKubernetesResourcesResourceBase = object && [
+        "client_config": kubernetesTypesClientConfig;
+        "allow_node_redefinition": cloudifyBooleanOrGetInput && [ default false; ];
+]
+    and nodeTypeKubernetesResourcesResourceWithValidateStatus = object && nodeTypeKubernetesResourcesResourceBase && object && [ "validate_resource_status": cloudifyBooleanOrGetInput; ]
+    and nodeTypeKubernetesResourcesRoleBinding = object && nodeTypeKubernetesResourcesBlueprintDefinedResource && [ "definition": kubernetesTypesRoleBindingDefinitio; ]
+    and nodeTypeKubernetesResourcesRoleProperties = object && nodeTypeKubernetesResourcesBlueprintDefinedResource && [ "definition": kubernetesTypesRoleDefinitio; ]
+    and nodeTypeKubernetesResourcesSecretProperties = object && nodeTypeKubernetesResourcesBlueprintDefinedResource && [ "definitions": kubernetesTypesSecretDefinition; ]
+    and nodeTypeKubernetesResourcesServiceAccountProperties = object && nodeTypeKubernetesResourcesBlueprintDefinedResource && [ "definitions": kubernetesTypesServiceAccountDefinition; ]
+    and nodeTypeKubernetesResourcesServiceProperties = object && nodeTypeKubernetesResourcesBlueprintDefinedResource && [ "validate_resource_status": cloudifyBooleanOrGetInput && [ default true; ]; ]
+    and nodeTypeKubernetesResourcesStatefulSetProperties = object && nodeTypeKubernetesResourcesBlueprintDefinedResource && [ "definition": object; ]
+    and nodeTypeKubernetesResourcesStorageClassProperties = object && nodeTypeKubernetesResourcesBlueprintDefinedResource && [ "definition": kubernetesTypesStorageClassResourceDefinition; ]
+    and nodeTypeOpenstackFlavorInterfaces = object && [
+        "cloudify.interfaces.lifecycle": object && [
+            "create": object && [
+                "implementation": string && [ enum "openstack.openstack_plugin.resources.compute.flavor.create"; ];
+];
+            "delete": object && [
+                "implementation": string && [ enum "openstack.openstack_plugin.resources.compute.flavor.delete"; ];
+];
+];
+        "cloudify.interfaces.operations": object && [
+            "update": object && [
+                "implementation": string && [ enum "openstack.openstack_plugin.resources.compute.flavor.update"; ];
+                "inputs": object && [ "args": object; ];
+];
+            "list": object && [
+                "implementation": string && [ enum "openstack.openstack_plugin.resources.compute.flavor.list_flavors"; ];
+                "inputs": object && [
+                    "query": object;
+                    "details": boolean && [ default true; ];
+];
+];
+];
+]
+    and nodeTypeOpenstackFlavorProperties = object && openstackExternalResource && openstackCreateIfMissing && openstackClientConfig && [
+        "resource_config": openstackTypesFlavor;
+        "extra_specs": object;
+        "tenants": array && [ of string; ];
+] && [ required "resource_config"; ]
+    and nodeTypeOpenstackFloatingIPInterfaces = object && [
+        "cloudify.interfaces.lifecycle": object && [
+            "create": object && [
+                "implementation": string && [ enum "openstack.openstack_plugin.resources.network.floating_ip.create"; ];
+];
+            "delete": object && [
+                "implementation": string && [ enum "openstack.openstack_plugin.resources.network.floating_ip.delete"; ];
+];
+];
+        "cloudify.interfaces.validation": object && [
+            "creation": object && [
+                "implementation": string && [
+                    enum "openstack.openstack_plugin.resources.network.floating_ip.creation_validation";
+];
+];
+];
+        "cloudify.interfaces.operations": object && [
+            "update": object && [
+                "implementation": string && [ enum "openstack.openstack_plugin.resources.network.floating_ip.update"; ];
+                "inputs": object && [ "args": object; ];
+];
+            "list": object && [
+                "implementation": string && [
+                    enum "openstack.openstack_plugin.resources.network.floating_ip.list_floating_ips";
+];
+                "inputs": object && [ "query": object; ];
+];
+];
+]
+    and nodeTypeOpenstackFloatingIPProperties = object && openstackExternalResource && openstackCreateIfMissing && openstackClientConfig && [
+        "allow_reallocation": cloudifyBooleanOrGetInput && [ default false; ];
+        "resource_config": openstackTypesFloatingIP;
+]
+    and nodeTypeOpenstackGroupInterfaces = object && [
+        "cloudify.interfaces.lifecycle": object && [
+            "create": object && [
+                "implementation": string && [ enum "openstack.openstack_plugin.resources.identity.group.create"; ];
+];
+            "delete": object && [
+                "implementation": string && [ enum "openstack.openstack_plugin.resources.identity.group.delete"; ];
+];
+];
+        "cloudify.interfaces.operations": object && [
+            "update": object && [
+                "implementation": string && [ enum "openstack.openstack_plugin.resources.identity.group.update"; ];
+                "inputs": object && [ "args": object; ];
+];
+            "list": object && [
+                "implementation": string && [ enum "openstack.openstack_plugin.resources.identity.group.list_groups"; ];
+                "inputs": object && [ "query": object; ];
+];
+];
+]
+    and nodeTypeOpenstackGroupProperties = object && openstackExternalResource && openstackCreateIfMissing && openstackClientConfig && [ "resource_config": openstackTypesGroup; ] && [ required "resource_config"; ]
+    and nodeTypeOpenstackHostAggregateInterfaces = object && [
+        "cloudify.interfaces.lifecycle": object && [
+            "create": object && [
+                "implementation": string && [ enum "openstack.openstack_plugin.resources.compute.host_aggregate.create"; ];
+];
+            "configure": object && [
+                "implementation": string && [ enum "openstack.openstack_plugin.resources.compute.host_aggregate.configure";
+];
+];
+            "delete": object && [
+                "implementation": string && [ enum "openstack.openstack_plugin.resources.compute.host_aggregate.delete"; ];
+];
+];
+        "cloudify.interfaces.operations": object && [
+            "update": object && [
+                "implementation": object && [ enum "openstack.openstack_plugin.resources.compute.host_aggregate.update"; ];
+                "inputs": object && [ "args": object; ];
+];
+            "list": object && [
+                "implementation": string && [
+                    enum "openstack.openstack_plugin.resources.compute.host_aggregate.list_aggregates";
+];
+];
+            "add_hosts": object && [
+                "implementation": string && [ enum "openstack.openstack_plugin.resources.compute.host_aggregate.add_hosts";
+];
+                "inputs": object && [ "hosts": array && [ of string; ]; ];
+];
+            "remove_hosts": object && [
+                "implementation": string && [
+                    enum "openstack.openstack_plugin.resources.compute.host_aggregate.remove_hosts";
+];
+                "inputs": object && [ "hosts": array && [ of string; ]; ];
+];
+];
+]
+    and nodeTypeOpenstackHostAggregateProperties = object && openstackExternalResource && openstackCreateIfMissing && openstackClientConfig && [
+        "metadata": object;
+        "hosts": array && [ of string; ];
+        "resource_config": openstackTypesHostAggregate;
+] && [ required "resource_config"; ]
+    and nodeTypeOpenstackImageInterfaces = object && [
+        "cloudify.interfaces.lifecycle": object && [
+            "create": object && [
+                "implementation": string && [ enum "openstack.openstack_plugin.resources.compute.image.create"; ];
+];
+            "start": object && [
+                "implementation": string && [ enum "openstack.openstack_plugin.resources.compute.image.start"; ];
+];
+            "delete": object && [
+                "implementation": string && [ enum "openstack.openstack_plugin.resources.compute.image.delete"; ];
+];
+];
+        "cloudify.interfaces.validation": object && [
+            "creation": object && [
+                "implementation": string && [
+                    enum "openstack.openstack_plugin.resources.compute.image.creation_validation";
+];
+];
+];
+        "cloudify.interfaces.operations": object && [
+            "update": object && [
+                "implementation": string && [ enum "openstack.openstack_plugin.resources.compute.image.update"; ];
+                "inputs": object && [ "args": object; ];
+];
+            "list": object && [
+                "implementation": string && [ enum "openstack.openstack_plugin.resources.compute.image.list_images"; ];
+                "inputs": object && [ "query": object; ];
+];
+];
+]
+    and nodeTypeOpenstackImageProperties = object && openstackExternalResource && openstackCreateIfMissing && openstackClientConfig && [
+        "image_url": cloudifyStringOrGetInput;
+        "resource_config": openstackTypesImage;
+] && [ required "resource_config"; ]
+    and nodeTypeOpenstackKeyPairInterfaces = object && [
+        "cloudify.interfaces.lifecycle": object && [
+            "create": object && [
+                "implementation": string && [ enum "openstack.openstack_plugin.resources.compute.keypair.create"; ];
+];
+            "delete": object && [
+                "implementation": string && [ enum "openstack.openstack_plugin.resources.compute.keypair.delete"; ];
+];
+];
+        "cloudify.interfaces.validation": object && [
+            "creation": object && [
+                "implementation": string && [
+                    enum "openstack.openstack_plugin.resources.compute.keypair.creation_validation";
+];
+];
+];
+        "cloudify.interfaces.operations": object && [
+            "list": object && [
+                "implementation": string && [ enum "openstack.openstack_plugin.resources.compute.keypair.list_keypairs"; ];
+];
+];
+]
+    and nodeTypeOpenstackKeyPairProperties = object && openstackExternalResource && openstackCreateIfMissing && openstackClientConfig && [ "resource_config": openstackTypesKeyPair; ] && [ required "resource_config"; ]
+    and nodeTypeOpenstackNetworkBaseProperties = object && openstackExternalResource && openstackCreateIfMissing && openstackClientConfig
+    and nodeTypeOpenstackNetworkInterfaces = object && [
+        "cloudify.interfaces.lifecycle": object && [
+            "create": object && [
+                "implementation": string && [ enum "openstack.openstack_plugin.resources.network.network.create"; ];
+];
+            "delete": object && [
+                "implementation": string && [ enum "openstack.openstack_plugin.resources.network.network.delete"; ];
+];
+];
+        "cloudify.interfaces.validation": object && [
+            "creation": object && [
+                "implementation": string && [
+                    enum "openstack.openstack_plugin.resources.network.network.creation_validation";
+];
+];
+];
+        "cloudify.interfaces.operations": object && [
+            "update": object && [
+                "implementation": string && [ enum "openstack.openstack_plugin.resources.network.network.update"; ];
+                "inputs": object && [ "args": object; ];
+];
+            "list": object && [
+                "implementation": string && [ enum "openstack.openstack_plugin.resources.network.network.list_networks"; ];
+                "inputs": object && [ "query": object; ];
+];
+];
+]
+    and nodeTypeOpenstackNetworkProperties = object && nodeTypeOpenstackNetworkBaseProperties && [ "resource_config": openstackTypesNetwork; ] && [ required "resource_config"; ]
+    and nodeTypeOpenstackPortInterfaces = object && [
+        "cloudify.interfaces.lifecycle": object && [
+            "create": object && [
+                "implementation": string && [ enum "openstack.openstack_plugin.resources.network.port.create"; ];
+];
+            "delete": object && [
+                "implementation": string && [ enum "openstack.openstack_plugin.resources.network.port.delete"; ];
+];
+];
+        "cloudify.interfaces.validation": object && [
+            "creation": object && [
+                "implementation": string && [ enum "openstack.openstack_plugin.resources.network.port.creation_validation";
+];
+];
+];
+        "cloudify.interfaces.operations": object && [
+            "update": object && [
+                "implementation": string && [ enum "openstack.openstack_plugin.resources.network.port.update"; ];
+                "inputs": object && [ "args": object; ];
+];
+            "list": object && [
+                "implementation": string && [ enum "openstack.openstack_plugin.resources.network.port.list_ports"; ];
+                "inputs": object && [ "query": object; ];
+];
+];
+]
+    and nodeTypeOpenstackPortProperties = object && openstackExternalResource && openstackCreateIfMissing && openstackClientConfig && [
+        "fixed_ip": cloudifyStringOrGetInput;
+        "resource_config": openstackTypesPort;
+] && [ required "resource_config"; ]
+    and nodeTypeOpenstackProjectInterfaces = object && [
+        "cloudify.interfaces.lifecycle": object && [
+            "create": object && [
+                "implementation": string && [ enum "openstack.openstack_plugin.resources.identity.project.create"; ];
+];
+            "start": object && [
+                "implementation": string && [ enum "openstack.openstack_plugin.resources.identity.project.start"; ];
+                "inputs": object && [ "quota_dict": object; ];
+];
+            "delete": object && [
+                "implementation": string && [ enum "openstack.openstack_plugin.resources.identity.project.delete"; ];
+];
+];
+        "cloudify.interfaces.operations": object && [
+            "update_project": object && [
+                "implementation": string && [ enum "openstack.openstack_plugin.resources.identity.project.update"; ];
+                "inputs": object && [ "args": object; ];
+];
+            "get_quota": object && [
+                "implementation": string && [
+                    enum "openstack.openstack_plugin.resources.identity.project.get_project_quota";
+];
+];
+            "update_quota": object && [
+                "implementation": string && [
+                    enum "openstack.openstack_plugin.resources.identity.project.update_project_quota";
+];
+                "inputs": object && [ "quota": object; ];
+];
+            "list": object && [
+                "implementation": string && [ enum "openstack.openstack_plugin.resources.identity.project.list_projects";
+];
+                "inputs": object && [ "query": object; ];
+];
+];
+        "cloudify.interfaces.validation": object && [
+            "creation": string && [
+                enum "openstack.openstack_plugin.resources.identity.project.creation_validation";
+];
+];
+]
+    and nodeTypeOpenstackProjectProperties = object && openstackExternalResource && openstackCreateIfMissing && openstackClientConfig && [
+        "groups": array && [ of string; ];
+        "users": array && [ of string; ];
+        "quota": object;
+        "resource_config": openstackTypesProject;
+] && [ required "resource_config"; ]
+    and nodeTypeOpenstackRBACPolicyProperties = object && openstackDataTypeId && [
+        "target_tenant": cloudifyStringOrGetInput;
+        "object_type": cloudifyStringOrGetInput;
+        "object_id": cloudifyStringOrGetInput;
+        "action": cloudifyStringOrGetInput;
+]
+    and nodeTypeOpenstackRecordSetInterfaces = object && [
+        "cloudify.interfaces.lifecycle": object && [
+            "create": object && [
+                "implementation": string && [ enum "openstack.openstack_plugin.resources.dns_service.record_set.create"; ];
+];
+            "delete": object && [
+                "implementation": string && [ enum "openstack.openstack_plugin.resources.dns_service.record_set.delete"; ];
+];
+];
+]
+    and nodeTypeOpenstackRecordSetProperties = object && openstackClientConfig && [ "resource_config": openstackRecordSetType; ]
+    and nodeTypeOpenstackRoleInterfaces = object && [
+        "cloudify.interfaces.lifecycle": object && [
+            "create": object && [
+                "implementation": string && [ enum "openstack.openstack_plugin.resources.identity.role.create"; ];
+];
+            "delete": object && [
+                "implementation": string && [ enum "openstack.openstack_plugin.resources.identity.role.delete"; ];
+];
+];
+        "cloudify.interfaces.operations": object && [
+            "update": object && [
+                "implementation": string && [ enum "openstack.openstack_plugin.resources.identity.role.update"; ];
+                "inputs": object && [ "args": object; ];
+];
+            "list": object && [
+                "implementation": string && [ enum "openstack.openstack_plugin.resources.identity.role.list_roles"; ];
+                "inputs": object && [ "query": object; ];
+];
+];
+]
+    and nodeTypeOpenstackRoleProperties = object && openstackExternalResource && openstackCreateIfMissing && openstackClientConfig && [ "resource_config": openstackTypesRole; ] && [ required "resource_config"; ]
+    and nodeTypeOpenstackRouterInterfaces = object && [
+        "cloudify.interfaces.lifecycle": object && [
+            "create": object && [
+                "implementation": string && [ enum "openstack.openstack_plugin.resources.network.router.create"; ];
+];
+            "start": object && [
+                "implementation": string && [ enum "openstack.openstack_plugin.resources.network.router.start"; ];
+                "inputs": object && [ "routes": object; ];
+];
+            "stop": object && [
+                "implementation": string && [ enum "openstack.openstack_plugin.resources.network.router.stop"; ];
+];
+            "delete": object && [
+                "implementation": string && [ enum "openstack.openstack_plugin.resources.network.router.delete"; ];
+];
+];
+        "cloudify.interfaces.validation": object && [
+            "creation": object && [
+                "implementation": string && [
+                    enum "openstack.openstack_plugin.resources.network.router.creation_validation";
+];
+];
+];
+        "cloudify.interfaces.operations": object && [
+            "update": object && [
+                "implementation": string && [ enum "openstack.openstack_plugin.resources.network.router.update"; ];
+                "inputs": object && [ "args": object; ];
+];
+            "list": object && [
+                "implementation": string && [ enum "openstack.openstack_plugin.resources.network.router.list_routers"; ];
+                "inputs": object && [ "query": object; ];
+];
+];
+]
+    and nodeTypeOpenstackRouterProperties = object && openstackExternalResource && openstackCreateIfMissing && openstackClientConfig && [
+        "resource_config": openstackTypesRouter;
+        "external_network": cloudifyStringOrGetInput;
+]
+    and nodeTypeOpenstackSecurityGroupInterfaces = object && [
+        "cloudify.interfaces.lifecycle": object && [
+            "create": object && [
+                "implementation": string && [ enum "openstack.openstack_plugin.resources.network.security_group.create"; ];
+];
+            "configure": object && [
+                "implementation": string && [ enum "openstack.openstack_plugin.resources.network.security_group.configure";
+];
+                "inputs": object && [
+                    "security_group_rules": (array || object) && [ default {"get_property":["SELF","security_group_rules"]}; ];
+];
+];
+            "delete": object && [
+                "implementation": string && [ enum "openstack.openstack_plugin.resources.network.security_group.delete"; ];
+];
+];
+        "cloudify.interfaces.validation": object && [
+            "creation": object && [
+                "implementation": string && [
+                    enum "openstack.openstack_plugin.resources.network.security_group.creation_validation";
+];
+];
+];
+        "cloudify.interfaces.operations": object && [
+            "update": object && [
+                "implementation": string && [ enum "openstack.openstack_plugin.resources.network.security_group.update"; ];
+                "inputs": object && [ "args": object; ];
+];
+            "list": object && [
+                "implementation": string && [
+                    enum "openstack.openstack_plugin.resources.network.security_group.list_security_groups";
+];
+                "inputs": object && [ "query": object; ];
+];
+];
+]
+    and nodeTypeOpenstackSecurityGroupProperties = object && openstackExternalResource && openstackCreateIfMissing && openstackClientConfig && [
+        "disable_default_egress_rules": cloudifyBooleanOrGetInput;
+        "security_group_rules": array && [ of (string || object); ];
+        "resource_config": openstackTypesSecurityGroup;
+] && [ required "resource_config"; ]
+    and nodeTypeOpenstackSecurityGroupRuleInterfaces = object && nodeTypeOpenstackSecurityGroupInterfaces && [
+        "cloudify.interfaces.lifecycle": object && [
+            "create": object && [
+                "implementation": string && [
+                    enum "openstack.openstack_plugin.resources.network.security_group_rule.create";
+];
+];
+            "delete": object && [
+                "implementation": string && [
+                    enum "openstack.openstack_plugin.resources.network.security_group_rule.delete";
+];
+];
+];
+        "cloudify.interfaces.validation": object && [
+            "creation": object && [
+                "implementation": string && [
+                    enum "openstack.openstack_plugin.resources.network.security_group_rule.creation_validation";
+];
+];
+];
+        "cloudify.interfaces.operations": object && [
+            "list": object && [
+                "implementation": string && [
+                    enum "openstack.openstack_plugin.resources.network.security_group_rule.list_security_group_rules";
+];
+                "inputs": object && [ "query": object; ];
+];
+];
+]
+    and nodeTypeOpenstackSecurityGroupRuleProperties = object && nodeTypeOpenstackSecurityGroupProperties && openstackExternalResource && openstackCreateIfMissing && openstackClientConfig && [ "resource_config": openstackTypesSecurityGroupRule; ] && [ required "resource_config"; ]
+    and nodeTypeOpenstackServerProperties = object && openstackDataTypeKwargs && openstackDataTypeName && openstackDataTypeId && openstackDataTypeDescription && [
+        "image_id": cloudifyStringOrGetInput;
+        "flavor_id": cloudifyStringOrGetInput;
+        "availability_zone": cloudifyStringOrGetInput;
+        "user_data": cloudifyStringOrGetInput;
+        "metadata": object;
+        "security_groups": array && [ of string; ];
+        "networks": array && [ of string; ];
+        "key_name": cloudifyStringOrGetInput;
+]
+    and nodeTypeOpenstackSubnetInterfaces = object && [
+        "cloudify.interfaces.lifecycle": object && [
+            "create": object && [
+                "implementation": string && [ enum "openstack.openstack_plugin.resources.network.subnet.create"; ];
+];
+            "delete": object && [
+                "implementation": string && [ enum "openstack.openstack_plugin.resources.network.subnet.delete"; ];
+];
+];
+        "cloudify.interfaces.validation": object && [
+            "creation": object && [
+                "implementation": string && [
+                    enum "openstack.openstack_plugin.resources.network.subnet.creation_validation";
+];
+                "inputs": object && [ "args": object; ];
+];
+];
+        "cloudify.interfaces.operations": object && [
+            "update": object && [
+                "implementation": string && [ enum "openstack.openstack_plugin.resources.network.subnet.update"; ];
+                "inputs": object && [ "args": object; ];
+];
+            "list": object && [
+                "implementation": string && [ enum "openstack.openstack_plugin.resources.network.subnet.list_subnets"; ];
+                "inputs": object && [ "query": object; ];
+];
+];
+]
+    and nodeTypeOpenstackSubnetProperties = object && nodeTypeOpenstackNetworkBaseProperties && [ "resource_config": openstackTypesSubnet; ] && [ required "resource_config"; ]
+    and nodeTypeOpenstackUserInterfaces = object && [
+        "cloudify.interfaces.lifecycle": object && [
+            "create": object && [
+                "implementation": string && [ enum "openstack.openstack_plugin.resources.identity.user.create"; ];
+];
+            "delete": object && [
+                "implementation": string && [ enum "openstack.openstack_plugin.resources.identity.user.delete"; ];
+];
+];
+        "cloudify.interfaces.operations": object && [
+            "update": object && [
+                "implementation": string && [ enum "openstack.openstack_plugin.resources.identity.user.update"; ];
+                "inputs": object && [ "args": object; ];
+];
+            "list": object && [
+                "implementation": string && [ enum "openstack.openstack_plugin.resources.identity.user.list_users"; ];
+                "inputs": object && [ "query": object; ];
+];
+];
+]
+    and nodeTypeOpenstackUserProperties = object && openstackExternalResource && openstackCreateIfMissing && openstackClientConfig && [ "resource_config": openstackTypesUser; ] && [ required "resource_config"; ]
+    and nodeTypeOpenstackVolumeInterfaces = object && [
+        "cloudify.interfaces.lifecycle": object && [
+            "create": object && [
+                "implementation": string && [ enum "openstack.openstack_plugin.resources.volume.volume.create"; ];
+                "inputs": object && [ "args": object; ];
+];
+            "start": object && [
+                "implementation": string && [ enum "openstack.openstack_plugin.resources.volume.volume.start"; ];
+                "inputs": object;
+];
+            "delete": object && [
+                "implementation": string && [ enum "openstack.openstack_plugin.resources.volume.volume.delete"; ];
+];
+];
+        "cloudify.interfaces.snapshot": object && [
+            "create": object && [
+                "implementation": string && [ enum "openstack.openstack_plugin.resources.volume.volume.snapshot_create"; ];
+                "inputs": object;
+];
+            "apply": object && [
+                "implementation": string && [ enum "openstack.openstack_plugin.resources.volume.volume.snapshot_apply"; ];
+                "inputs": object;
+];
+            "delete": object && [
+                "implementation": string && [ enum "openstack.openstack_plugin.resources.volume.volume.snapshot_delete"; ];
+                "inputs": object;
+];
+];
+        "cloudify.interfaces.validation": object && [
+            "creation": object && [
+                "implementation": string && [
+                    enum "openstack.openstack_plugin.resources.volume.volume.creation_validation";
+];
+];
+];
+        "cloudify.interfaces.operations": object && [
+            "list": object && [
+                "implementation": string && [ enum "openstack.openstack_plugin.resources.volume.volume.list_volumes"; ];
+                "inputs": object && [ "query": object; ];
+];
+];
+]
+    and nodeTypeOpenstackVolumeProperties = object && openstackExternalResource && openstackCreateIfMissing && openstackClientConfig && [
+        "device_name": cloudifyStringOrGetInput && [ default "auto"; ];
+        "resource_config": openstackTypesVolume;
+] && [ required "resource_config"; ]
+    and nodeTypeOpenstackVolumeTypeInterfaces = object && [
+        "cloudify.interfaces.lifecycle": object && [
+            "create": object && [
+                "implementation": string && [ enum "openstack.openstack_plugin.resources.volume.volume_type.create"; ];
+];
+            "delete": object && [
+                "implementation": string && [ enum "openstack.openstack_plugin.resources.volume.volume_type.delete"; ];
+];
+];
+]
+    and nodeTypeOpenstackVolumeTypeProperties = object && openstackExternalResource && openstackCreateIfMissing && openstackClientConfig && [ "resource_config": openstackTypesVolumeType; ] && [ required "resource_config"; ]
+    and nodeTypeOpenstackWindowsServerProperties = object && nodeTypeOpenstackServerProperties && [
+        "os_family": cloudifyStringOrGetInput && [ default "windows"; ];
+        "agent_config": cloudifyDataTypesAgentConfig && [ default {"port":5985}; ];
+]
+    and nodeTypeOpenstackZoneInterfaces = object && [
+        "cloudify.interfaces.lifecycle": object && [
+            "create": object && [
+                "implementation": string && [ enum "openstack.openstack_plugin.resources.dns_service.zone.create"; ];
+];
+            "delete": object && [
+                "implementation": string && [ enum "openstack.openstack_plugin.resources.dns_service.zone.delete"; ];
+];
+];
+]
+    and nodeTypeOpenstackZoneProperties = object && openstackClientConfig && [ "resource_config": openstackTypesZoneType; ]
+    and nodeTypeTerraformDirectoryConfig = object && [
+        "executable_path": cloudifyStringOrGetInput && [ default "/usr/bin/terraform"; ];
+        "storage_path": cloudifyStringOrGetInput;
+        "plugins_dir": cloudifyStringOrGetInput;
+]
+    and nodeTypeTerraformInstallConfig = object && [
+        "use_existing_resource": cloudifyBooleanOrGetInput && [ default true; ];
+        "installation_source": cloudifyStringOrGetInput;
+        "plugins": array && [ of string; ];
+] && [ required "use_existing_resource"; ]
+    and nodeTypeTerraformInterfaces = object && [
+        "cloudify.interfaces.lifecycle": object && [
+            "create": object && [ "implementation": string && [ enum "tf.cloudify_tf.tasks.install"; ]; ];
+            "delete": object && [ "implementation": string && [ enum "tf.cloudify_tf.tasks.uninstall"; ]; ];
+];
+]
+    and nodeTypeTerraformModuleInterfaces = object && [
+        "cloudify.interfaces.lifecycle": object && [
+            "start": object && [ "implementation": string && [ enum "tf.cloudify_tf.tasks.apply"; ]; ];
+            "delete": object && [ "implementation": string && [ enum "tf.cloudify_tf.tasks.destroy"; ]; ];
+];
+        "terraform": object && [
+            "reload": object && [
+                "implementation": string && [ enum "tf.cloudify_tf.tasks.reload_template"; ];
+                "inputs": object && [
+                    "source": string;
+                    "destroy_previous": boolean && [ default false; ];
+];
+];
+            "refresh": object && [ "implementation": string && [ enum "tf.cloudify_tf.tasks.state_pull"; ]; ];
+];
+]
+    and nodeTypeTerraformModuleProperties = object && [ "resource_config": terraformTypesRootModule; ] && [ required "resource_config"; ]
+    and nodeTypeTerraformProperties = object && terraformConfig && [ "resource_config": nodeTypeTerraformInstallConfig; ] && [ required "resource_config"; ]
+    and nodeTypes = object && [ orelse nodeType; ]
+    and openstackClientConfig = object && [ "client_config": openstackTypeClientConfig; ]
+    and openstackCreateIfMissing = object && [ "create_if_missing": cloudifyIntegerOrGetInput && [ default false; ]; ]
+    and openstackDataTypeDescription = object && [ "description": cloudifyStringOrGetInput; ]
+    and openstackDataTypeId = object && [ "id": cloudifyStringOrGetInput; ]
+    and openstackDataTypeKwargs = object && [ "kwargs:": object; ]
+    and openstackDataTypeName = object && [ "name": cloudifyStringOrGetInput; ]
+    and openstackExternalResource = object && [ "use_external_resource": cloudifyBooleanOrGetInput && [ default false; ]; ]
+    and openstackRecordSetType = object && openstackDataTypeKwargs && openstackDataTypeName && openstackDataTypeDescription && [
+        "ttl": cloudifyIntegerOrGetInput;
+        "zone_id": cloudifyStringOrGetInput;
+        "type": cloudifyStringOrGetInput;
+        "records": array && [ of string; ];
+] && [ required "zone_id",  "records"; ]
+    and openstackTypeClientConfig = object && [
+        "auth_url": cloudifyStringOrGetInput;
+        "username": cloudifyStringOrGetInput;
+        "password": cloudifyStringOrGetInput;
+        "project_name": cloudifyStringOrGetInput;
+        "tenant_name": cloudifyStringOrGetInput;
+        "region_name": cloudifyStringOrGetInput;
+        "user_domain_id": cloudifyStringOrGetInput;
+        "project_domain_id": cloudifyStringOrGetInput;
+        "user_domain_name": cloudifyStringOrGetInput;
+        "project_domain_name": cloudifyStringOrGetInput;
+        "logging": openstackTypesLogging;
+        "insecure": cloudifyIntegerOrGetInput && [ default false; ];
+        "ca_cert": cloudifyStringOrGetInput;
+        "kwargs": object;
+]
+    and openstackTypesFlavor = object && openstackDataTypeKwargs && openstackDataTypeName && openstackDataTypeId && [
+        "ram": cloudifyIntegerOrGetInput;
+        "disk": cloudifyIntegerOrGetInput;
+        "vcpus": cloudifyIntegerOrGetInput;
+]
+    and openstackTypesFloatingIP = object && openstackDataTypeKwargs && openstackDataTypeName && openstackDataTypeId && [
+        "floating_network_id": cloudifyStringOrGetInput;
+        "floating_network_name": cloudifyStringOrGetInput;
+        "fixed_ip_address": cloudifyStringOrGetInput;
+        "floating_ip_address": cloudifyStringOrGetInput;
+        "port_id": cloudifyStringOrGetInput;
+        "subnet_id": cloudifyStringOrGetInput;
+        "dns_domain": cloudifyStringOrGetInput;
+        "dns_name": cloudifyStringOrGetInput;
+]
+    and openstackTypesGroup = object && openstackDataTypeKwargs && openstackDataTypeName && openstackDataTypeId && openstackDataTypeDescription && [ "domain_id": cloudifyStringOrGetInput; ]
+    and openstackTypesHostAggregate = object && openstackDataTypeName && openstackDataTypeId && [ "availability_zone": cloudifyStringOrGetInput; ]
+    and openstackTypesImage = object && openstackDataTypeKwargs && openstackDataTypeName && openstackDataTypeId && [
+        "container_format": cloudifyStringOrGetInput;
+        "disk_format": cloudifyStringOrGetInput;
+        "tags": array && [ of string; ];
+]
+    and openstackTypesKeyPair = object && openstackDataTypeKwargs && openstackDataTypeName && openstackDataTypeId && [ "public_key": cloudifyStringOrGetInput; ]
+    and openstackTypesLogging = [ "openstack": cloudifyStringOrGetInput; ]
+    and openstackTypesNetwork = object && openstackDataTypeKwargs && openstackDataTypeName && openstackDataTypeId && [ "admin_state_up": cloudifyBooleanOrGetInput && [ default true; ]; ]
+    and openstackTypesPort = object && openstackDataTypeKwargs && openstackDataTypeName && openstackDataTypeId && [
+        "allowed_address_pairs": array && [ of string; ];
+        "device_id": cloudifyStringOrGetInput;
+        "device_owner": cloudifyStringOrGetInput;
+        "fixed_ips": array && [ of (string || object); ];
+        "network_id": cloudifyStringOrGetInput;
+        "security_groups": array && [ of string; ];
+]
+    and openstackTypesProject = object && openstackDataTypeKwargs && openstackDataTypeName && openstackDataTypeId && openstackDataTypeDescription && [
+        "is_domain": cloudifyBooleanOrGetInput;
+        "domain_id": cloudifyStringOrGetInput;
+        "parent_id": cloudifyStringOrGetInput;
+        "tags": object && [ of string; ];
+]
+    and openstackTypesRole = object && openstackDataTypeKwargs && openstackDataTypeName && openstackDataTypeId && openstackDataTypeDescription && [ "domain_id": cloudifyStringOrGetInput; ]
+    and openstackTypesRouter = object && openstackDataTypeKwargs && openstackDataTypeName && openstackDataTypeId
+    and openstackTypesSecurityGroup = object && openstackDataTypeKwargs && openstackDataTypeName && openstackDataTypeId && openstackDataTypeDescription
+    and openstackTypesSecurityGroupRule = object && openstackDataTypeKwargs && openstackDataTypeId && [
+        "remote_group_id": cloudifyStringOrGetInput;
+        "protocol": cloudifyStringOrGetInput;
+        "direction": cloudifyStringOrGetInput;
+        "port_range_min": cloudifyIntegerOrGetInput;
+        "port_range_max": cloudifyIntegerOrGetInput;
+        "security_group_id": cloudifyStringOrGetInput;
+        "remote_ip_prefix": cloudifyStringOrGetInput;
+]
+    and openstackTypesSubnet = object && openstackDataTypeKwargs && openstackDataTypeName && openstackDataTypeId && [
+        "enable_dhcp": cloudifyBooleanOrGetInput;
+        "network_id": cloudifyStringOrGetInput;
+        "dns_nameservers": (array && [ of string; ] || cloudifyGetInput);
+        "allocation_pools": (array && [ of (string || object); ] || cloudifyGetInput);
+        "host_routes": array && [ of string; ];
+        "ip_version": cloudifyIntegerOrGetInput;
+        "gateway_ip": cloudifyStringOrGetInput;
+        "cidr": cloudifyStringOrGetInput;
+        "prefixlen": cloudifyIntegerOrGetInput;
+        "ipv6_address_mode": cloudifyStringOrGetInput;
+        "ipv6_ra_mode": cloudifyStringOrGetInput;
+]
+    and openstackTypesUser = object && openstackDataTypeKwargs && openstackDataTypeName && openstackDataTypeId && [
+        "default_project_id": cloudifyStringOrGetInput;
+        "domain_id": cloudifyStringOrGetInput;
+        "enabled": cloudifyBooleanOrGetInput;
+        "password": cloudifyStringOrGetInput;
+        "email": cloudifyStringOrGetInput;
+]
+    and openstackTypesVolume = object && openstackDataTypeKwargs && openstackDataTypeName && openstackDataTypeId && openstackDataTypeDescription && [
+        "project_id": cloudifyStringOrGetInput;
+        "size": cloudifyIntegerOrGetInput;
+        "availability_zone": cloudifyStringOrGetInput;
+        "imageRef": cloudifyStringOrGetInput;
+        "snapshot_id": cloudifyStringOrGetInput;
+        "volume_type": cloudifyStringOrGetInput;
+]
+    and openstackTypesVolumeType = object && openstackDataTypeKwargs && openstackDataTypeName && openstackDataTypeId && openstackDataTypeDescription && [
+        "project_id": cloudifyStringOrGetInput;
+        "extra_specs": object;
+]
+    and openstackTypesZoneType = object && openstackDataTypeKwargs && openstackDataTypeName && openstackDataTypeDescription && [
+        "ttl": cloudifyIntegerOrGetInput;
+        "email": cloudifyStringOrGetInput;
+        "type": cloudifyStringOrGetInput;
+        "masters": cloudifyStringOrGetInput;
+        "attributes": object;
+]
+    and restTemplateInputs = object && [
+        "params": object;
+        "template_file": cloudifyStringOrGetInput;
+        "save_path": cloudifyBooleanOrGetInput && [ default false; ];
+        "prerender": cloudifyBooleanOrGetInput && [ default false; ];
+        "remove_calls": cloudifyBooleanOrGetInput && [ default false; ];
+        "force_rerun": cloudifyBooleanOrGetInput && [ default false; ];
+        "retry_count": cloudifyIntegerOrGetInput && [ default 1; ];
+        "retry_sleep": cloudifyIntegerOrGetInput && [ default 15; ];
+]
+    and tags = array && [
+        of object && [
+            "Key": cloudifyStringOrGetInput;
+            "Value": cloudifyStringOrGetInput;
+];
+]
+    and terraformConfig = nodeTypeTerraformDirectoryConfig
+    and terraformTypesBackend = object && [
+        "name": cloudifyStringOrGetInput;
+        "options": object;
+]
+    and terraformTypesRootModule = object && [
+        "source": cloudifyStringOrGetInput;
+        "backend": terraformTypesBackend;
+        "variables": object;
+        "environment_variables": object;
+] && [ required "source"; ];
+    end;
+  open DEFINITIONS;
+  type nonrec t = object && [
+      "tosca_definitions_version": string && [
+          enum "cloudify_dsl_1_0", "cloudify_dsl_1_1", "cloudify_dsl_1_2",
+          "cloudify_dsl_1_3";
+] && [ default "cloudify_dsl_1_3"; ];
+      "imports": array && [
+          of (string || string && [
+              enum "http://www.getcloudify.org/spec/cloudify/4.5/types.yaml",
+              "plugin:cloudify-ansible-plugin", "plugin:cloudify-aws-plugin",
+              "plugin:cloudify-azure-plugin",
+              "plugin:cloudify-cloudstack-plugin",
+              "plugin:cloudify-diamond-plugin",
+              "plugin:cloudify-fabric-plugin", "plugin:cloudify-gcp-plugin",
+              "plugin:cloudify-host-pool-plugin",
+              "plugin:cloudify-kubernetes-plugin",
+              "plugin:cloudify-openstack-plugin",
+              "plugin:cloudify-utilities-plugin",
+              "plugin:cloudify-vsphere-plugin",
+              "plugin:cloudify-terraform-plugin",
+              "plugin:cloudify-helm-plugin";
+]) && [ default "http://www.getcloudify.org/spec/cloudify/4.5/types.yaml"; ];
+];
+      "data_types": dataTypes;
+      "inputs": object && [
+          "aws_access_key_id": inputProperty;
+          "aws_secret_access_key": inputProperty;
+          "aws_region_name": inputProperty;
+          "aws_account_id": inputProperty;
+          "aws_region_zone1": inputProperty;
+          "aws_region_zone2": inputProperty;
+          "aws_cloudwatch_log_arn": inputProperty;
+] && [ orelse inputProperty; ];
+      "dsl_definitions": object;
+      "node_type": nodeTypes;
+      "node_templates": nodeTemplates;
+];

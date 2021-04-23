@@ -139,9 +139,9 @@ let check_format s fmts =
     s |> Ipaddr.V6.of_string |> Rresult.R.is_ok
   | "email" ->
     s |> Emile.of_string |> Rresult.R.is_ok
-  | "uri" -> begin match Uri.(s |> of_string |> scheme) with
-        Some _ -> true
-      | None -> false
+  | "uri" -> begin match Uri.(s |> of_string) with
+        _ -> true
+      | exception _ -> false
     end
   | "date-time" -> s |> Ptime.of_rfc3339 |> Rresult.R.is_ok
 
@@ -167,7 +167,10 @@ let lifted_forall f l =
 
 let tdl = ref []
 
-  let rec utype path (j : Yojson.Basic.t) (ctxt : Ctxt.t) t = match t with
+let rec utype1 path (j : Yojson.Basic.t) (ctxt : Ctxt.t) t =
+  utype path (j : Yojson.Basic.t) (ctxt : Ctxt.t) t
+
+and utype path (j : Yojson.Basic.t) (ctxt : Ctxt.t) t = match t with
       UtTrue -> Ok ctxt
     | UtFalse -> Error [path, t]
     | Simple bt -> if base_type j bt then Ok ctxt else Error [path ,t]
@@ -179,7 +182,7 @@ let tdl = ref []
           Error _ -> utype path j ctxt ut2
         | Ok _ as rv -> rv
       end
-    | Xor (ut1,ut2) -> begin match (utype path j ctxt ut1, utype path j ctxt ut2) with
+    | Xor (ut1,ut2) -> begin match (utype1 path j ctxt ut1, utype1 path j ctxt ut2) with
           (Ok ctxt, Error _) -> Ok ctxt
         | (Error _, Ok ctxt) -> Ok ctxt
         | (Error e1, Error e2) -> Error (e1@e2)

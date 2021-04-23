@@ -29,6 +29,7 @@ test0:: all
 	./typing_test
 	./extract_test
 	./simplify_test
+	make -f Schema-Makefile all
 	./validate_test
 
 test:: all
@@ -38,7 +39,6 @@ test:: all
 	./extract_test
 	./simplify_test
 	./validate_test
-	rm -rf utj-generated
 	make -f Schema-Makefile all
 	./schemastore_test || true
 
@@ -94,7 +94,7 @@ utlexing.cmo: utlexing.ml
 	$(OCAMLFIND) ocamlc $(DEBUG) $(OCAMLCFLAGS) -package $(PACKAGES) -syntax camlp5o -c $<
 
 clean:
-	rm -rf *test *.cm* *.o _build *.log *.cache utjtool
+	rm -rf *test *.cm* *.o _build *.log *.cache utjtool utj-generated
 
 
 depend::

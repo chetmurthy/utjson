@@ -26,7 +26,7 @@ let is_capitalized s =
     let s = Str.(substitute_first (regexp (quote "#/defs/")) (fun _ -> "") s) in
     let s = Str.(substitute_first (regexp (quote "#/refs/")) (fun _ -> "") s) in
     let s = Str.(substitute_first (regexp (quote "#/definitions/")) (fun _ -> "") s) in
-    let s = Str.(global_substitute (regexp "[#:/.$-]") (fun _ -> "_") s) in
+    let s = Str.(global_substitute (regexp "[@#:/.$-]") (fun _ -> "_") s) in
     if is_capitalized s then
       "_"^s
     else s

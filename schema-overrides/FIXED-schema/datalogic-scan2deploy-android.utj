@@ -1,0 +1,79 @@
+import "lib/predefined.utj" as Predefined;
+  type nonrec t = object && [
+      "layout": object && [
+          "description": string && [ size [0,350]; ] && [ default "none"; ];
+          "enroll": boolean && [ default false; ];
+];
+      "padlock": object && [
+          "valid-until": string && [ default "20991231235959"; ];
+          "key": string && [ default ""; ];
+          "state": string && [ enum "locked", "unlocked"; ] && [ default "undefined"; ];
+          "hide-from-launcher": boolean && [ default false; ];
+];
+      "global": object && [
+          "target-path": string;
+          "install-path": string;
+          "update-path": string;
+          "purge-target-path": boolean && [ default true; ];
+          "auto-scan": boolean && [ default false; ];
+          "download-preinstalled": boolean && [ default false; ];
+          "script": string && [ default ""; ] || array && [ of string; ] && [ default [""]; ];
+          "action": string && [ enum "none", "close", "enterprise-reset", "factory-reset", "reset"; ] && [ default "none"; ];
+          "backup-to-enterprise": boolean && [ default false; ];
+];
+      "settings": object && [
+          "date-time": string && [ default "null"; ];
+          "auto-time": boolean && [ default true; ];
+          "auto-time-zone": boolean && [ default true; ];
+          "auto-time-server": string && [ default "null"; ];
+          "debug-bridge": boolean && [ default true; ];
+          "lock-screen": boolean && [ default true; ];
+          "status-bar": boolean && [ default true; ];
+          "navigation-bar": boolean && [ default true; ];
+          "charge-threshold": Predefined.integer && [ bounds [0.0,100.0]; ] && [ default 5; ];
+          "usb-profile": string && [ enum "NONE", "BOTH", "DATA", "CHARGE"; ] && [ default "BOTH"; ];
+          "usb-function": string && [ enum "MTP", "PTP", "CHARGING"; ] && [ default "CHARGING"; ];
+];
+      "network": object && [
+          "essid": string && [ default "tsunami"; ];
+          "hidden": boolean && [ default false; ];
+          "mode": string && [
+              enum "open", "wep-40", "wep-104", "wpa-psk", "wpa2-psk",
+              "wpa-eap", "wpa2-eap";
+] && [ default "open"; ];
+          "mode-key": string && [ default ""; ];
+          "mode-key-encrypted": boolean && [ default false; ];
+          "eap-method": string && [ enum "none", "peap", "tls", "ttls", "pwd", "sim", "aka", "aka-prime"; ] && [ default "none"; ];
+          "eap-phase2": string && [ enum "none", "pap", "mschap", "mschapv2", "gtc"; ] && [ default "none"; ];
+          "eap-identity": string && [ default ""; ];
+          "eap-anonymous-identity": string && [ default ""; ];
+          "eap-password": string && [ default ""; ];
+          "eap-password-encrypted": boolean && [ default false; ];
+          "eap-certificate": string && [ default ""; ];
+          "proxy-host": string && [ default ""; ];
+          "proxy-port": Predefined.integer && [ bounds [0.0,65535.0]; ] && [ default 0; ];
+          "purge": boolean && [ default true; ];
+          "reconfigure": boolean && [ default true; ];
+          "sleep-policy": Predefined.integer && [ bounds [0.0,2.0]; ] && [ default 2; ];
+          "frequency-band": string && [ enum "auto", "5ghz", "2ghz"; ] && [ default "auto"; ];
+          "save-to-file": string && [ default ""; ];
+          "ephemeral": boolean && [ default true; ];
+          "wait-for-connection": boolean && [ default true; ];
+] && [ "mode": [ enum "wpa-psk", "wpa2-psk", "wep-40", "wep-104"; ]; ] => [ required "mode-key"; ];
+      "deployment": object && [
+          "scheme": string && [ enum "http", "https"; ] && [ default "http"; ];
+          "host": string;
+          "port": Predefined.integer && [ bounds [0.0,65535.0]; ] && [ default 80; ];
+          "path": string && [ default ""; ];
+          "fetch-timeout": Predefined.integer && [ default 60000; ];
+          "check-timeout": Predefined.integer && [ default 1000; ];
+          "working-archive": string && [ default "/mnt/sdcard/scan2deploy.archive"; ];
+          "skip-inflation": boolean && [ default false; ];
+] && [ required "host"; ];
+      "blobs": array && [
+          of object && [
+              "file": string;
+              "content": string;
+] && [ required "file",  "content"; ];
+];
+];

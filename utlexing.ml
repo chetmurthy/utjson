@@ -79,7 +79,7 @@ let rec rawtoken buf =
     | "("|")"
     | "{"|"}"
     | "="
-    | ";"|","|"."
+    | ";"|","|"."|"*"
     | "&&" | "||" | "=>" | "->"
   ) -> (Spcl (Sedlexing.Latin1.lexeme buf), pos())
   | lident ->

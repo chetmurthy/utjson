@@ -1,0 +1,51 @@
+import "lib/predefined.utj" as Predefined;
+  import "utj-generated/http-schema-cache/json.schemastore.org/azure-iot-edge-deployment-1.0.utj" as M0;
+  module DEFINITIONS = struct
+    type rec createOptions = object || (string && [ contentMediaType "application/json"; ])
+    and env = M0.DEFINITIONS.env
+    and moduleSettings = object && [
+        "image": string;
+        "createOptions": createOptions;
+] && [ required "image"; ]
+    and moduleType = M0.DEFINITIONS.moduleType
+    and restartPolicy = M0.DEFINITIONS.restartPolicy
+    and status = M0.DEFINITIONS.status;
+    end;
+  open DEFINITIONS;
+  type nonrec t = object && [
+      "modulesContent": object && [
+          "$edgeAgent": object && [
+              "properties.desired": object && [
+                  "schemaVersion": string;
+                  "runtime": M0.DEFINITIONS.runtime;
+                  "systemModules": object && [
+                      "edgeAgent": object && [
+                          "type": moduleType;
+                          "settings": moduleSettings;
+                          "env": env;
+] && [ required "type",  "settings"; ];
+                      "edgeHub": object && [
+                          "type": moduleType;
+                          "settings": moduleSettings;
+                          "env": env;
+                          "status": status;
+                          "restartPolicy": restartPolicy;
+] && [ required "type",  "settings",  "status",  "restartPolicy"; ];
+] && (object && [ sealed; ]) && [ required "edgeAgent",  "edgeHub"; ];
+                  "modules": object && [
+                      /^[a-zA-Z0-9_-]+$/ : object && [
+                          "version": string;
+                          "type": moduleType;
+                          "status": status;
+                          "restartPolicy": restartPolicy;
+                          "env": env;
+                          "settings": moduleSettings;
+] && [ required "type",  "status",  "restartPolicy",  "settings"; ];
+] && object && [ sealed; ];
+] && [ required "schemaVersion",  "runtime",  "systemModules",  "modules"; ];
+] && [ required "properties.desired"; ];
+          "$edgeHub": M0.DEFINITIONS._edgeHub;
+] && [
+          /^[a-zA-Z0-9_-]+$/ : object && [ "properties.desired": object; ] && [ required "properties.desired"; ];
+] && (object && [ sealed; ]) && [ required "$edgeAgent",  "$edgeHub"; ];
+] && [ required "modulesContent"; ];

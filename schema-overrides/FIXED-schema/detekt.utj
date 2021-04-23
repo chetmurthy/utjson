@@ -1,0 +1,650 @@
+import "lib/predefined.utj" as Predefined;
+  type nonrec t = object && [
+      "build": object && [
+          "maxIssues": number;
+          "excludeCorrectable": boolean;
+          "weights": null || (object && [ orelse number; ]);
+];
+      "config": object && [
+          "validation": boolean;
+          "warningsAsErrors": boolean;
+          "excludes": string;
+];
+      "processors": object && [
+          "active": boolean;
+          "exclude": array && [ of string; ];
+];
+      "console-reports": object && [
+          "active": boolean;
+          "exclude": array && [ of string; ];
+];
+      "output-reports": object && [
+          "active": boolean;
+          "exclude": null || (array && [ of string; ]);
+];
+      "comments": object && [
+          "active": boolean;
+          "excludes": array && [ of string; ];
+          "AbsentOrWrongFileLicense": object && [
+              "active": boolean;
+              "licenseTemplateFile": string;
+];
+          "CommentOverPrivateFunction": object && [ "active": boolean; ];
+          "CommentOverPrivateProperty": object && [ "active": boolean; ];
+          "EndOfSentenceFormat": object && [
+              "active": boolean;
+              "endOfSentenceFormat": string;
+];
+          "UndocumentedPublicClass": object && [
+              "active": boolean;
+              "searchInNestedClass": boolean;
+              "searchInInnerClass": boolean;
+              "searchInInnerObject": boolean;
+              "searchInInnerInterface": boolean;
+];
+          "UndocumentedPublicFunction": object && [ "active": boolean; ];
+          "UndocumentedPublicProperty": object && [ "active": boolean; ];
+];
+      "complexity": object && [
+          "active": boolean;
+          "ComplexCondition": object && [
+              "active": boolean;
+              "threshold": number;
+];
+          "ComplexInterface": object && [
+              "active": boolean;
+              "threshold": number;
+              "includeStaticDeclarations": boolean;
+              "includePrivateDeclarations": boolean;
+];
+          "ComplexMethod": object && [
+              "active": boolean;
+              "threshold": number;
+              "ignoreSingleWhenExpression": boolean;
+              "ignoreSimpleWhenEntries": boolean;
+              "ignoreNestingFunctions": boolean;
+              "nestingFunctions": array && [ of string; ];
+];
+          "LabeledExpression": object && [
+              "active": boolean;
+              "ignoredLabels": array && [ of [ of Predefined.json; ]; ];
+];
+          "LargeClass": object && [
+              "active": boolean;
+              "threshold": number;
+];
+          "LongMethod": object && [
+              "active": boolean;
+              "threshold": number;
+];
+          "LongParameterList": object && [
+              "active": boolean;
+              "functionThreshold": number;
+              "constructorThreshold": number;
+              "ignoreDefaultParameters": boolean;
+              "ignoreDataClasses": boolean;
+              "ignoreAnnotated": array && [ of [ of Predefined.json; ]; ];
+];
+          "MethodOverloading": object && [
+              "active": boolean;
+              "threshold": number;
+];
+          "NestedBlockDepth": object && [
+              "active": boolean;
+              "threshold": number;
+];
+          "ReplaceSafeCallChainWithRun": object && [ "active": boolean; ];
+          "StringLiteralDuplication": object && [
+              "active": boolean;
+              "excludes": array && [ of string; ];
+              "threshold": number;
+              "ignoreAnnotation": boolean;
+              "excludeStringsWithLessThan5Characters": boolean;
+              "ignoreStringsRegex": string;
+];
+          "TooManyFunctions": object && [
+              "active": boolean;
+              "excludes": array && [ of string; ];
+              "thresholdInFiles": number;
+              "thresholdInClasses": number;
+              "thresholdInInterfaces": number;
+              "thresholdInObjects": number;
+              "thresholdInEnums": number;
+              "ignoreDeprecated": boolean;
+              "ignorePrivate": boolean;
+              "ignoreOverridden": boolean;
+];
+];
+      "coroutines": object && [
+          "active": boolean;
+          "GlobalCoroutineUsage": object && [ "active": boolean; ];
+          "RedundantSuspendModifier": object && [ "active": boolean; ];
+          "SuspendFunWithFlowReturnType": object && [ "active": boolean; ];
+];
+      "empty-blocks": object && [
+          "active": boolean;
+          "EmptyCatchBlock": object && [
+              "active": boolean;
+              "allowedExceptionNameRegex": string;
+];
+          "EmptyClassBlock": object && [ "active": boolean; ];
+          "EmptyDefaultConstructor": object && [ "active": boolean; ];
+          "EmptyDoWhileBlock": object && [ "active": boolean; ];
+          "EmptyElseBlock": object && [ "active": boolean; ];
+          "EmptyFinallyBlock": object && [ "active": boolean; ];
+          "EmptyForBlock": object && [ "active": boolean; ];
+          "EmptyFunctionBlock": object && [
+              "active": boolean;
+              "ignoreOverridden": boolean;
+];
+          "EmptyIfBlock": object && [ "active": boolean; ];
+          "EmptyInitBlock": object && [ "active": boolean; ];
+          "EmptyKtFile": object && [ "active": boolean; ];
+          "EmptySecondaryConstructor": object && [ "active": boolean; ];
+          "EmptyTryBlock": object && [ "active": boolean; ];
+          "EmptyWhenBlock": object && [ "active": boolean; ];
+          "EmptyWhileBlock": object && [ "active": boolean; ];
+];
+      "exceptions": object && [
+          "active": boolean;
+          "ExceptionRaisedInUnexpectedLocation": object && [
+              "active": boolean;
+              "methodNames": array && [ of string; ];
+];
+          "InstanceOfCheckForException": object && [
+              "active": boolean;
+              "excludes": array && [ of string; ];
+];
+          "NotImplementedDeclaration": object && [ "active": boolean; ];
+          "PrintStackTrace": object && [ "active": boolean; ];
+          "RethrowCaughtException": object && [ "active": boolean; ];
+          "ReturnFromFinally": object && [
+              "active": boolean;
+              "ignoreLabeled": boolean;
+];
+          "SwallowedException": object && [
+              "active": boolean;
+              "ignoredExceptionTypes": array && [ of string; ];
+              "allowedExceptionNameRegex": string;
+];
+          "ThrowingExceptionFromFinally": object && [ "active": boolean; ];
+          "ThrowingExceptionInMain": object && [ "active": boolean; ];
+          "ThrowingExceptionsWithoutMessageOrCause": object && [
+              "active": boolean;
+              "excludes": array && [ of string; ];
+              "exceptions": array && [ of string; ];
+];
+          "ThrowingNewInstanceOfSameException": object && [ "active": boolean; ];
+          "TooGenericExceptionCaught": object && [
+              "active": boolean;
+              "excludes": array && [ of string; ];
+              "exceptionNames": array && [ of string; ];
+              "allowedExceptionNameRegex": string;
+];
+          "TooGenericExceptionThrown": object && [
+              "active": boolean;
+              "exceptionNames": array && [ of string; ];
+];
+];
+      "formatting": object && [
+          "active": boolean;
+          "android": boolean;
+          "autoCorrect": boolean;
+          "AnnotationOnSeparateLine": object && [
+              "active": boolean;
+              "autoCorrect": boolean;
+];
+          "AnnotationSpacing": object && [
+              "active": boolean;
+              "autoCorrect": boolean;
+];
+          "ArgumentListWrapping": object && [
+              "active": boolean;
+              "autoCorrect": boolean;
+];
+          "ChainWrapping": object && [
+              "active": boolean;
+              "autoCorrect": boolean;
+];
+          "CommentSpacing": object && [
+              "active": boolean;
+              "autoCorrect": boolean;
+];
+          "EnumEntryNameCase": object && [
+              "active": boolean;
+              "autoCorrect": boolean;
+];
+          "Filename": object && [ "active": boolean; ];
+          "FinalNewline": object && [
+              "active": boolean;
+              "autoCorrect": boolean;
+              "insertFinalNewLine": boolean;
+];
+          "ImportOrdering": object && [
+              "active": boolean;
+              "autoCorrect": boolean;
+              "layout": string;
+];
+          "Indentation": object && [
+              "active": boolean;
+              "autoCorrect": boolean;
+              "indentSize": number;
+              "continuationIndentSize": number;
+];
+          "MaximumLineLength": object && [
+              "active": boolean;
+              "maxLineLength": number;
+];
+          "ModifierOrdering": object && [
+              "active": boolean;
+              "autoCorrect": boolean;
+];
+          "MultiLineIfElse": object && [
+              "active": boolean;
+              "autoCorrect": boolean;
+];
+          "NoBlankLineBeforeRbrace": object && [
+              "active": boolean;
+              "autoCorrect": boolean;
+];
+          "NoConsecutiveBlankLines": object && [
+              "active": boolean;
+              "autoCorrect": boolean;
+];
+          "NoEmptyClassBody": object && [
+              "active": boolean;
+              "autoCorrect": boolean;
+];
+          "NoEmptyFirstLineInMethodBlock": object && [
+              "active": boolean;
+              "autoCorrect": boolean;
+];
+          "NoLineBreakAfterElse": object && [
+              "active": boolean;
+              "autoCorrect": boolean;
+];
+          "NoLineBreakBeforeAssignment": object && [
+              "active": boolean;
+              "autoCorrect": boolean;
+];
+          "NoMultipleSpaces": object && [
+              "active": boolean;
+              "autoCorrect": boolean;
+];
+          "NoSemicolons": object && [
+              "active": boolean;
+              "autoCorrect": boolean;
+];
+          "NoTrailingSpaces": object && [
+              "active": boolean;
+              "autoCorrect": boolean;
+];
+          "NoUnitReturn": object && [
+              "active": boolean;
+              "autoCorrect": boolean;
+];
+          "NoUnusedImports": object && [
+              "active": boolean;
+              "autoCorrect": boolean;
+];
+          "NoWildcardImports": object && [ "active": boolean; ];
+          "PackageName": object && [
+              "active": boolean;
+              "autoCorrect": boolean;
+];
+          "ParameterListWrapping": object && [
+              "active": boolean;
+              "autoCorrect": boolean;
+              "indentSize": number;
+];
+          "SpacingAroundColon": object && [
+              "active": boolean;
+              "autoCorrect": boolean;
+];
+          "SpacingAroundComma": object && [
+              "active": boolean;
+              "autoCorrect": boolean;
+];
+          "SpacingAroundCurly": object && [
+              "active": boolean;
+              "autoCorrect": boolean;
+];
+          "SpacingAroundDot": object && [
+              "active": boolean;
+              "autoCorrect": boolean;
+];
+          "SpacingAroundDoubleColon": object && [
+              "active": boolean;
+              "autoCorrect": boolean;
+];
+          "SpacingAroundKeyword": object && [
+              "active": boolean;
+              "autoCorrect": boolean;
+];
+          "SpacingAroundOperators": object && [
+              "active": boolean;
+              "autoCorrect": boolean;
+];
+          "SpacingAroundParens": object && [
+              "active": boolean;
+              "autoCorrect": boolean;
+];
+          "SpacingAroundRangeOperator": object && [
+              "active": boolean;
+              "autoCorrect": boolean;
+];
+          "SpacingBetweenDeclarationsWithAnnotations": object && [
+              "active": boolean;
+              "autoCorrect": boolean;
+];
+          "SpacingBetweenDeclarationsWithComments": object && [
+              "active": boolean;
+              "autoCorrect": boolean;
+];
+          "StringTemplate": object && [
+              "active": boolean;
+              "autoCorrect": boolean;
+];
+];
+      "naming": object && [
+          "active": boolean;
+          "ClassNaming": object && [
+              "active": boolean;
+              "excludes": array && [ of string; ];
+              "classPattern": string;
+];
+          "ConstructorParameterNaming": object && [
+              "active": boolean;
+              "excludes": array && [ of string; ];
+              "parameterPattern": string;
+              "privateParameterPattern": string;
+              "excludeClassPattern": string;
+              "ignoreOverridden": boolean;
+];
+          "EnumNaming": object && [
+              "active": boolean;
+              "excludes": array && [ of string; ];
+              "enumEntryPattern": string;
+];
+          "ForbiddenClassName": object && [
+              "active": boolean;
+              "excludes": array && [ of string; ];
+              "forbiddenName": array && [ of [ of Predefined.json; ]; ];
+];
+          "FunctionMaxLength": object && [
+              "active": boolean;
+              "excludes": array && [ of string; ];
+              "maximumFunctionNameLength": number;
+];
+          "FunctionMinLength": object && [
+              "active": boolean;
+              "excludes": array && [ of string; ];
+              "minimumFunctionNameLength": number;
+];
+          "FunctionNaming": object && [
+              "active": boolean;
+              "excludes": array && [ of string; ];
+              "functionPattern": string;
+              "excludeClassPattern": string;
+              "ignoreOverridden": boolean;
+              "ignoreAnnotated": array && [ of string; ];
+];
+          "FunctionParameterNaming": object && [
+              "active": boolean;
+              "excludes": array && [ of string; ];
+              "parameterPattern": string;
+              "excludeClassPattern": string;
+              "ignoreOverridden": boolean;
+];
+          "InvalidPackageDeclaration": object && [
+              "active": boolean;
+              "rootPackage": string;
+];
+          "MatchingDeclarationName": object && [
+              "active": boolean;
+              "mustBeFirst": boolean;
+];
+          "MemberNameEqualsClassName": object && [
+              "active": boolean;
+              "ignoreOverridden": boolean;
+];
+          "NonBooleanPropertyPrefixedWithIs": object && [
+              "active": boolean;
+              "excludes": array && [ of string; ];
+];
+          "ObjectPropertyNaming": object && [
+              "active": boolean;
+              "excludes": array && [ of string; ];
+              "constantPattern": string;
+              "propertyPattern": string;
+              "privatePropertyPattern": string;
+];
+          "PackageNaming": object && [
+              "active": boolean;
+              "excludes": array && [ of string; ];
+              "packagePattern": string;
+];
+          "TopLevelPropertyNaming": object && [
+              "active": boolean;
+              "excludes": array && [ of string; ];
+              "constantPattern": string;
+              "propertyPattern": string;
+              "privatePropertyPattern": string;
+];
+          "VariableMaxLength": object && [
+              "active": boolean;
+              "excludes": array && [ of string; ];
+              "maximumVariableNameLength": number;
+];
+          "VariableMinLength": object && [
+              "active": boolean;
+              "excludes": array && [ of string; ];
+              "minimumVariableNameLength": number;
+];
+          "VariableNaming": object && [
+              "active": boolean;
+              "excludes": array && [ of string; ];
+              "variablePattern": string;
+              "privateVariablePattern": string;
+              "excludeClassPattern": string;
+              "ignoreOverridden": boolean;
+];
+];
+      "performance": object && [
+          "active": boolean;
+          "ArrayPrimitive": object && [ "active": boolean; ];
+          "ForEachOnRange": object && [
+              "active": boolean;
+              "excludes": array && [ of string; ];
+];
+          "SpreadOperator": object && [
+              "active": boolean;
+              "excludes": array && [ of string; ];
+];
+          "UnnecessaryTemporaryInstantiation": object && [ "active": boolean; ];
+];
+      "potential-bugs": object && [
+          "active": boolean;
+          "Deprecation": object && [ "active": boolean; ];
+          "DuplicateCaseInWhenExpression": object && [ "active": boolean; ];
+          "EqualsAlwaysReturnsTrueOrFalse": object && [ "active": boolean; ];
+          "EqualsWithHashCodeExist": object && [ "active": boolean; ];
+          "ExplicitGarbageCollectionCall": object && [ "active": boolean; ];
+          "HasPlatformType": object && [ "active": boolean; ];
+          "IgnoredReturnValue": object && [
+              "active": boolean;
+              "restrictToAnnotatedMethods": boolean;
+              "returnValueAnnotations": array && [ of string; ];
+];
+          "ImplicitDefaultLocale": object && [ "active": boolean; ];
+          "ImplicitUnitReturnType": object && [
+              "active": boolean;
+              "allowExplicitReturnType": boolean;
+];
+          "InvalidRange": object && [ "active": boolean; ];
+          "IteratorHasNextCallsNextMethod": object && [ "active": boolean; ];
+          "IteratorNotThrowingNoSuchElementException": object && [ "active": boolean; ];
+          "LateinitUsage": object && [
+              "active": boolean;
+              "excludes": array && [ of string; ];
+              "excludeAnnotatedProperties": array && [ of [ of Predefined.json; ]; ];
+              "ignoreOnClassesPattern": string;
+];
+          "MapGetWithNotNullAssertionOperator": object && [ "active": boolean; ];
+          "MissingWhenCase": object && [ "active": boolean; ];
+          "NullableToStringCall": object && [ "active": boolean; ];
+          "RedundantElseInWhen": object && [ "active": boolean; ];
+          "UnconditionalJumpStatementInLoop": object && [ "active": boolean; ];
+          "UnnecessaryNotNullOperator": object && [ "active": boolean; ];
+          "UnnecessarySafeCall": object && [ "active": boolean; ];
+          "UnreachableCode": object && [ "active": boolean; ];
+          "UnsafeCallOnNullableType": object && [ "active": boolean; ];
+          "UnsafeCast": object && [ "active": boolean; ];
+          "UselessPostfixExpression": object && [ "active": boolean; ];
+          "WrongEqualsTypeParameter": object && [ "active": boolean; ];
+];
+      "style": object && [
+          "active": boolean;
+          "ClassOrdering": object && [ "active": boolean; ];
+          "CollapsibleIfStatements": object && [ "active": boolean; ];
+          "DataClassContainsFunctions": object && [
+              "active": boolean;
+              "conversionFunctionPrefix": string;
+];
+          "DataClassShouldBeImmutable": object && [ "active": boolean; ];
+          "EqualsNullCall": object && [ "active": boolean; ];
+          "EqualsOnSignatureLine": object && [ "active": boolean; ];
+          "ExplicitCollectionElementAccessMethod": object && [ "active": boolean; ];
+          "ExplicitItLambdaParameter": object && [ "active": boolean; ];
+          "ExpressionBodySyntax": object && [
+              "active": boolean;
+              "includeLineWrapping": boolean;
+];
+          "ForbiddenComment": object && [
+              "active": boolean;
+              "values": array && [ of string; ];
+              "allowedPatterns": string;
+];
+          "ForbiddenImport": object && [
+              "active": boolean;
+              "imports": array && [ of [ of Predefined.json; ]; ];
+              "forbiddenPatterns": string;
+];
+          "ForbiddenMethodCall": object && [
+              "active": boolean;
+              "methods": array && [ of string; ];
+];
+          "ForbiddenPublicDataClass": object && [
+              "active": boolean;
+              "ignorePackages": array && [ of string; ];
+];
+          "ForbiddenVoid": object && [
+              "active": boolean;
+              "ignoreOverridden": boolean;
+              "ignoreUsageInGenerics": boolean;
+];
+          "FunctionOnlyReturningConstant": object && [
+              "active": boolean;
+              "ignoreOverridableFunction": boolean;
+              "excludedFunctions": string;
+              "excludeAnnotatedFunction": array && [ of string; ];
+];
+          "LibraryCodeMustSpecifyReturnType": object && [ "active": boolean; ];
+          "LibraryEntitiesShouldNotBePublic": object && [ "active": boolean; ];
+          "LoopWithTooManyJumpStatements": object && [
+              "active": boolean;
+              "maxJumpCount": number;
+];
+          "MagicNumber": object && [
+              "active": boolean;
+              "excludes": array && [ of string; ];
+              "ignoreNumbers": array && [ of string; ];
+              "ignoreHashCodeFunction": boolean;
+              "ignorePropertyDeclaration": boolean;
+              "ignoreLocalVariableDeclaration": boolean;
+              "ignoreConstantDeclaration": boolean;
+              "ignoreCompanionObjectPropertyDeclaration": boolean;
+              "ignoreAnnotation": boolean;
+              "ignoreNamedArgument": boolean;
+              "ignoreEnums": boolean;
+              "ignoreRanges": boolean;
+];
+          "MandatoryBracesIfStatements": object && [ "active": boolean; ];
+          "MandatoryBracesLoops": object && [ "active": boolean; ];
+          "MaxLineLength": object && [
+              "active": boolean;
+              "maxLineLength": number;
+              "excludePackageStatements": boolean;
+              "excludeImportStatements": boolean;
+              "excludeCommentStatements": boolean;
+];
+          "MayBeConst": object && [ "active": boolean; ];
+          "ModifierOrder": object && [ "active": boolean; ];
+          "NestedClassesVisibility": object && [ "active": boolean; ];
+          "NewLineAtEndOfFile": object && [ "active": boolean; ];
+          "NoTabs": object && [ "active": boolean; ];
+          "OptionalAbstractKeyword": object && [ "active": boolean; ];
+          "OptionalUnit": object && [ "active": boolean; ];
+          "OptionalWhenBraces": object && [ "active": boolean; ];
+          "PreferToOverPairSyntax": object && [ "active": boolean; ];
+          "ProtectedMemberInFinalClass": object && [ "active": boolean; ];
+          "RedundantExplicitType": object && [ "active": boolean; ];
+          "RedundantVisibilityModifierRule": object && [ "active": boolean; ];
+          "ReturnCount": object && [
+              "active": boolean;
+              "max": number;
+              "excludedFunctions": string;
+              "excludeLabeled": boolean;
+              "excludeReturnFromLambda": boolean;
+              "excludeGuardClauses": boolean;
+];
+          "SafeCast": object && [ "active": boolean; ];
+          "SerialVersionUIDInSerializableClass": object && [ "active": boolean; ];
+          "SpacingBetweenPackageAndImports": object && [ "active": boolean; ];
+          "ThrowsCount": object && [
+              "active": boolean;
+              "max": number;
+];
+          "TrailingWhitespace": object && [ "active": boolean; ];
+          "UnderscoresInNumericLiterals": object && [
+              "active": boolean;
+              "acceptableDecimalLength": number;
+];
+          "UnnecessaryAbstractClass": object && [
+              "active": boolean;
+              "excludeAnnotatedClasses": array && [ of string; ];
+];
+          "UnnecessaryAnnotationUseSiteTarget": object && [ "active": boolean; ];
+          "UnnecessaryApply": object && [ "active": boolean; ];
+          "UnnecessaryInheritance": object && [ "active": boolean; ];
+          "UnnecessaryLet": object && [ "active": boolean; ];
+          "UnnecessaryParentheses": object && [ "active": boolean; ];
+          "UntilInsteadOfRangeTo": object && [ "active": boolean; ];
+          "UnusedImports": object && [ "active": boolean; ];
+          "UnusedPrivateClass": object && [ "active": boolean; ];
+          "UnusedPrivateMember": object && [
+              "active": boolean;
+              "allowedNames": string;
+];
+          "UseArrayLiteralsInAnnotations": object && [ "active": boolean; ];
+          "UseCheckNotNull": object && [ "active": boolean; ];
+          "UseCheckOrError": object && [ "active": boolean; ];
+          "UseDataClass": object && [
+              "active": boolean;
+              "excludeAnnotatedClasses": array && [ of [ of Predefined.json; ]; ];
+              "allowVars": boolean;
+];
+          "UseEmptyCounterpart": object && [ "active": boolean; ];
+          "UseIfInsteadOfWhen": object && [ "active": boolean; ];
+          "UseRequire": object && [ "active": boolean; ];
+          "UseRequireNotNull": object && [ "active": boolean; ];
+          "UselessCallOnNotNull": object && [ "active": boolean; ];
+          "UtilityClassWithPublicConstructor": object && [ "active": boolean; ];
+          "VarCouldBeVal": object && [ "active": boolean; ];
+          "WildcardImport": object && [
+              "active": boolean;
+              "excludes": array && [ of string; ];
+              "excludeImports": array && [ of string; ];
+];
+];
+];
