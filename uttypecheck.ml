@@ -20,11 +20,11 @@ let load_file ?(with_predefined=false) s =
   else stl
 
 module TEnv = struct
-  type t = (unit, module_type_t, module_type_t) Env.t
+  type t = (bool, module_type_t, module_type_t) Env.t
   [@@deriving show { with_path = false },eq]
 
   let mt = Env.mk ()
-  let push_type t id = Env.add_t t (id,())
+  let push_type t (id, sealed) = Env.add_t t (id,sealed)
   let push_module t (id, mty) = Env.add_m t (id, mty)
   let push_module_type t (id, mty) = Env.add_mt t (id, mty)
 
@@ -79,11 +79,6 @@ let closed_over f x l =
 let closed f x = closed_over f x []
 end
 
-let check_has_type t h =
-  if Env.has_t t h then ()
-  else
-    Fmt.(failwith "check_has_type: id %s not found in type-environment" (ID.to_string h))
-
 let rec lookup_module env = function
     REL h -> TEnv.lookup_module env h
   | TOP _ as p -> Fmt.(failwithf "TOP should never appear in a module_path here: %a" pp_module_path_t p)
@@ -132,38 +127,115 @@ let fresh s =
     prefix^(string_of_int (num+1))
   else Fmt.(failwithf "fresh: internal error")
 
-let rec tc_utype env ut =
-  let dt = make_dt () in
-  let old_migrate_utype_t = dt.migrate_utype_t in
-  let new_migrate_utype_t dt = function
-      Ref (None, t) as ut ->
-      check_has_type env t ;
-      ut
+let rec tc_utype env ut = match ut with
+    Ref (None, t) as ut -> begin match Env.lookup_t env t with
+        None -> Fmt.(failwith "tc_utype: id %s not found in type-environment" (ID.to_string t))
+      | Some sealed -> (ut, sealed)
+    end
+  | Ref (Some mpath, t) as ut -> begin match lookup_module env mpath with
+        MtSig l -> begin match l |> List.find_map (function
+            SiType (t', sealed) when t = t' -> Some sealed
+          | _ -> None
+        ) with
+          Some sealed -> (ut, sealed)
+        | None ->
+          Fmt.(failwithf "tc_utype: utype %s not found in environment" (Normal.printer ut))
+        end
+      | _ -> Fmt.(failwithf "tc_utype: module-path %a did not yield a signature" pp_module_path_t mpath)
+    end
+    
+  | UtTrue -> (ut, false)
+  | UtFalse -> (ut, false)
+  | Simple bt -> (Simple bt, false)
+  | And(ut1, ut2) ->
+    let (ut1, sealed1) = tc_utype env ut1 in
+    let (ut2, sealed2) = tc_utype env ut2 in
+    if sealed1=sealed2 then (And(ut1, ut2), sealed1)
+    else Fmt.(failwithf "tc_utype: cannot mix sealed/unsealed types in conjunction: %s"
+                (Normal.printer ut))
+           
+  | Or(ut1, ut2) ->
+    let (ut1, sealed1) = tc_utype env ut1 in
+    let (ut2, sealed2) = tc_utype env ut2 in
+    if sealed1=sealed2 then (Or(ut1, ut2), sealed1)
+    else Fmt.(failwithf "tc_utype: cannot mix sealed/unsealed types in disjunction: %s"
+                (Normal.printer ut))
+           
+  | Xor(ut1, ut2) ->
+    let (ut1, sealed1) = tc_utype env ut1 in
+    let (ut2, sealed2) = tc_utype env ut2 in
+    if sealed1=sealed2 then (Xor(ut1, ut2), sealed1)
+    else Fmt.(failwithf "tc_utype: cannot mix sealed/unsealed types in xor: %s"
+                (Normal.printer ut))
+           
+  | Impl(ut1, ut2) ->
+    let (ut1, sealed1) = tc_utype env ut1 in
+    let (ut2, sealed2) = tc_utype env ut2 in
+    if sealed1=sealed2 then (Impl(ut1, ut2), sealed1)
+    else Fmt.(failwithf "tc_utype: cannot mix sealed/unsealed types in implication: %s"
+                (Normal.printer ut))
+           
+  | Not ut1 ->
+    let (ut1, sealed1) = tc_utype env ut1 in
+      (Not ut1, sealed1)
+        
+  | Atomic l ->
+    let l = List.map (tc_atomic_type env) l in
+    (Atomic l, false)
+    
+  | Seal(ut1, l, orelse) ->
+    let (ut1, sealed1) = tc_utype env ut1 in
+    if sealed1 then
+      Fmt.(failwithf "tc_utype: pointless to seal an already-sealed type: %s"
+             (Normal.printer ut))
+    else
+      let l = List.map (fun (re, ut) -> (re, tc_sub_utype env ut)) l in
+      let orelse = Option.map (tc_sub_utype env) orelse in
+      (Seal(ut1,l,orelse), true)
 
-    | Ref (Some mpath, t) as ut -> begin match lookup_module env mpath with
-          MtSig l ->
-          if List.mem (SiType t) l then
-            ut
-          else 
-            Fmt.(failwithf "tc_utype: utype %s not found in environment" (Normal.printer ut))
-        | _ -> Fmt.(failwithf "tc_utype: module-path %a did not yield a signature" pp_module_path_t mpath)
-      end
-    | ut -> old_migrate_utype_t dt ut in
-  let dt = { dt with migrate_utype_t = new_migrate_utype_t } in
-  dt.migrate_utype_t dt ut
+and tc_sub_utype env ut = fst(tc_utype env ut)
+
+and tc_atomic_type env ty = match ty with
+    Field(fname, ut) -> Field(fname, tc_sub_utype env ut)
+  | FieldRE(re, ut) ->  FieldRE(re, tc_sub_utype env ut)
+  | FieldRequired _ -> ty
+  | ArrayOf ut -> ArrayOf(tc_sub_utype env ut)
+  | ArrayTuple l -> ArrayTuple(List.map (tc_sub_utype env) l)
+  | ArrayUnique -> ty
+  | ArrayIndex (n, ut) -> ArrayIndex (n, tc_sub_utype env ut)
+  | Size _ -> ty
+  | StringRE _ -> ty
+  | NumberBound _ -> ty
+  | Sealed -> ty
+  | OrElse ut -> OrElse (tc_sub_utype env ut)
+  | MultipleOf _ -> ty
+  | Enum _ -> ty
+  | Default _ -> ty
+  | Format _ -> ty
+  | PropertyNames ut -> PropertyNames(tc_sub_utype env ut)
+  | ContentMediaType _ -> ty
+  | ContentEncoding _ -> ty
 
 and tc_struct_item env = function
     StTypes (recflag,l) ->
     let subenv = if recflag then
-        l |> List.fold_left (fun env (id, _) -> TEnv.push_type env id)
+        l |> List.fold_left (fun env (tid, sealed, _) -> TEnv.push_type env (tid, sealed))
           env
     else env in
     let l =
-      l |> List.rev_map (fun (id, ut) -> (id, tc_utype subenv ut)) |> List.rev in
-    let newenv = List.fold_left (fun env (id, _) -> TEnv.push_type env id) env l in
+      l |> List.rev_map (fun (tid, sealed, ut) ->
+          let (ut, sealed') = tc_utype subenv ut in
+          if sealed <> sealed' then
+            Fmt.(failwithf "tc_struct_item: declared status of type %s was %s, but type-checker inferred %s"
+                   (ID.to_string tid)
+                   (if sealed then "sealed" else "unsealed")
+                   (if sealed' then "sealed" else "unsealed"))
+          else
+            (tid, sealed, ut)) |> List.rev in
+    let newenv = List.fold_left (fun env (tid, sealed, _) -> TEnv.push_type env (tid, sealed)) env l in
     (newenv,
      (StTypes(recflag, l),
-     l |> List.map (fun (id, _) -> SiType id)))
+     l |> List.map (fun (tid, sealed, _) -> SiType (tid, sealed))))
 
   | StModuleBinding (mid, me) ->
     let (me, mty) = tc_module_expr env me in
@@ -240,7 +312,7 @@ and tc_signature env l =
   (env, List.concat (List.rev acc))
   
 and tc_sig_item env = function
-    SiType s as si -> (TEnv.push_type env s, [si])
+    SiType (s, sealed) as si -> (TEnv.push_type env (s,sealed), [si])
   | SiModuleBinding (mid, mty) ->
     let mty = tc_module_type env mty in
     (TEnv.push_module env (mid, mty), [SiModuleBinding (mid, mty)])

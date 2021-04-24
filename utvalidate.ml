@@ -27,6 +27,7 @@ let lookup_tid tdl (mpopt, id as tid) =
   end
 
 module Ctxt = struct
+
 module As = struct
 type t = {
   validated_keys : string list
@@ -36,6 +37,14 @@ type t = {
 }
 let mk () = { validated_keys = [] ; sealed = false ; patterns = [] ; orelse = None }
 end
+
+module As2 = struct
+type t = {
+  validated_keys : string list
+}
+let mk () = { validated_keys = [] }
+end
+
 module Ar = struct
 type t = {
   tuple : int option ;
@@ -45,17 +54,29 @@ type t = {
 let mk () = { tuple = None ; orelse = None ; sealed = false }
 end
 
+module Ar2 = struct
+type t = {
+  tuple : int option
+}
+let mk () = { tuple = None }
+end
+
 type t =
     Assoc of As.t
+  | Assoc2 of As2.t
   | Array of Ar.t
+  | Array2 of Ar2.t
   | Other
 
 let start_assoc () = Assoc (As.mk())
+let start_assoc2 () = Assoc2 (As2.mk())
 let start_array () = Array (Ar.mk())
+let start_array2 () = Array2 (Ar2.mk())
 let start_other = Other
 
 let add_field ctxt fname = match ctxt with
-    Assoc ({ validated_keys ; _} as a) -> Ok (Assoc { a with validated_keys = fname::validated_keys })
+    Assoc ({ As.validated_keys ; _} as a) -> Ok (Assoc { a with As.validated_keys = fname::validated_keys })
+  | Assoc2 ({ As2.validated_keys ; _} as a) -> Ok (Assoc2 As2.{ As2.validated_keys = fname::validated_keys })
   | _ -> Fmt.(failwithf "Ctxt.add_field(%a): internal error: wrong kind of context" Dump.string fname)
 
 let add_pattern ctxt (re, ut) = match ctxt with
@@ -76,6 +97,7 @@ let set_sealed ctxt  = match ctxt with
 
 let set_tuple ctxt n  = match ctxt with
     Array a -> Ok (Array { a with tuple = Some n })
+  | Array2 a -> Ok (Array2 Ar2.{ tuple = Some n })
 
   | _ -> Fmt.(failwithf "Ctxt.set_sealed: internal error: wrong kind of context")
 
@@ -204,6 +226,7 @@ and utype path (j : Yojson.Basic.t) (ctxt : Ctxt.t) t = match t with
     | Atomic l -> atomic_type_list path j ctxt l
     | Ref (mpopt, id) ->
       utype path j ctxt (lookup_tid !tdl (mpopt, id))
+    | Seal(ut, patterns, orelse) -> enter_sealed_type path j ctxt (ut, patterns, orelse)
 
   and base_type j bt = match (bt, j) with
       ((JNull, `Null)
@@ -214,6 +237,34 @@ and utype path (j : Yojson.Basic.t) (ctxt : Ctxt.t) t = match t with
       | (JObject, `Assoc _)) -> true
       | _ -> false
         
+  and enter_sealed_type path j ctxt (ut, patterns, orelse) =
+    match j with
+      `Assoc l -> begin
+        match (utype path j (Ctxt.start_assoc2 ()) ut, patterns, orelse) with
+          (Error l, _, _) -> Error l
+        | (Ok (Ctxt.Assoc2 { validated_keys }),
+           [], None)  ->
+          Ok ctxt
+
+        | (Ok (Ctxt.Assoc2 a), patterns, orelse) ->
+          finish_assoc2 path l ctxt (a,patterns,orelse)
+        | (Ok _, _, _) -> assert false
+      end
+
+    | `List l -> begin
+        assert (patterns = []) ;
+        match (utype path j (Ctxt.start_array2 ()) ut, orelse) with
+          (Error l, _) -> Error l
+        | (Ok (Ctxt.Array2 a), _) -> finish_array2 path l ctxt (a, orelse)
+        | (Ok _, _) -> assert false
+          
+      end
+
+    | _ -> begin match utype path j Ctxt.start_other ut with
+          Error l -> Error l
+        | Ok _ -> Ok ctxt
+      end
+
   and enter_utype path j ut =
     match j with
       `Assoc l -> begin
@@ -254,6 +305,19 @@ and utype path (j : Yojson.Basic.t) (ctxt : Ctxt.t) t = match t with
     | { tuple = Some n ; sealed=true ; orelse = None } ->
       Error [path, UtFalse]
 
+  and finish_array2 path l ctxt = function
+      ({ tuple = None }, _) -> Ok ctxt
+    | ({ tuple = Some n }, _) when n = List.length l -> Ok ctxt
+    | ({ tuple = Some n }, Some ut) ->
+      let l = nthtail l n in
+      l |> List.mapi (fun i x -> (i+n, x))
+      |> lifted_forall (fun (i,j) ->
+          enter_utype ((string_of_int i)::path) j ut)
+      |> (function Ok () -> Ok ctxt | Error l -> Error l)
+
+    | ({ tuple = Some n }, None) ->
+      Error [path, UtFalse]
+
   and finish_assoc path l = function
       { validated_keys ; sealed ; patterns ; orelse } ->
       assert ((orelse = None) || not sealed) ;
@@ -268,7 +332,19 @@ and utype path (j : Yojson.Basic.t) (ctxt : Ctxt.t) t = match t with
             | Some ut -> enter_utype (k::path) j ut
         )
 
-
+  and finish_assoc2 path l ctxt = function
+      ({ validated_keys }, patterns, orelse) ->
+      l |> lifted_forall (fun (k, j) ->
+          if List.mem k validated_keys then Ok ()
+          else match patterns |> List.find_map (fun (restr, ut) ->
+              if Pcre.pmatch ~rex:(REC.get restr) k then Some ut else None) with
+            Some ut -> enter_utype (k::path) j ut
+          | None ->
+            match orelse with
+              None -> Error [path, UtFalse]
+            | Some ut -> enter_utype (k::path) j ut
+        )
+      |> (function Ok () -> Ok ctxt | Error l -> Error l)
 
   and atomic_type_list path j ctxt l =
     List.fold_left (fun ctxt t ->

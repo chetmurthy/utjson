@@ -68,6 +68,10 @@ let parsing = "parsing" >::: [
          {|[ enum [1,2], {"a":2}, true ; ]|})
       ; ((Atomic [(Field ("a", (Simple JObject)))]),
          {|[ "a": object ]|})
+      ; ((Atomic [(Field ("a", (Simple JObject)));FieldRequired ["a"]]),
+         {|[ required "a": object ]|})
+      ; ((Atomic [(FieldRE ("foo", (Simple JObject)))]),
+         {|[ /foo/ : object ]|})
       ; ((Atomic [(Field ("a", (Simple JObject)))]),
          {|[ "a": object ; ]|})
       ; ((Atomic [(Field ("a", (Simple JObject))); (Field ("b", (Simple JObject)))]),
@@ -120,37 +124,43 @@ let parsing = "parsing" >::: [
 |})
       ]
       )
+  ; "sealed-utype" >:: (fun ctxt -> List.iter success [
+        ((Seal ((Simple JObject), [], None)), "seal object")
+      ; ((Seal ((Simple JObject), [("^[^\\+#$\\s\\.]+$", (Simple JString))], None)),
+         "seal object with /^[^\+#$\s\.]+$/ : string")
+      ]
+      )
   ; "utype-fail" >:: (fun ctxt -> List.iter fail [
         ("[atomic_utype] expected after '[' (in [utype])",
          {|[  ]|})
       ]
       )
   ; "struct_item" >:: (fun ctxt -> List.iter success_struct_item [
-        (StTypes(false,[(ID.of_string "x",Simple JString)]), "type x = string ;")
-      ; ((StTypes (false, [(ID.of_string "x", (Simple JString)); (ID.of_string "y", (Simple JNumber))])),
-         "type x = string and y = number ;")
-      ; ((StTypes (true, [(ID.of_string "x", (Simple JString)); (ID.of_string "y", (Simple JNumber))])),
-         "type rec x = string and y = number ;")
-      ; ((StTypes (false, [(ID.of_string "x", (Simple JString)); (ID.of_string "y", (Simple JNumber))])),
-         "type nonrec x = string and y = number ;")
-      ; ((StTypes (false,
-                 [(ID.of_string "integer", (And ((Simple JNumber), (Atomic [(MultipleOf 1.)]))))])),
-         "type integer = number && [ multipleOf 1.0 ; ] ;")
-      ; ((StOpen (DEREF (REL (ID.of_string "M"), (ID.of_string "N")), None)),
-         "open M.N;")
-      ; ((StInclude (DEREF (REL (ID.of_string "M"), (ID.of_string "N")), None)),
-         "include M.N;")
-      ; ((StModuleBinding (ID.of_string "M",
-                           (MeStruct [(StTypes (false, [(ID.of_string "t", (Simple JObject))]))]))),
-         "module M = struct type t = object ; end;")
-      ; ((StModuleType ((ID.of_string "MTY"), (MtSig [(SiType (ID.of_string "t"))]))),
-         "module type MTY = sig type t ; end;")
-      ; ((StLocal (
-          [(StImport ("https://example.com/geographical-location.schema.json",
+      (StTypes(false,[(ID.of_string "x",false, Simple JString)]), "type x = string ;")
+    ; ((StTypes (false, [(ID.of_string "x",false, (Simple JString)); (ID.of_string "y",false, (Simple JNumber))])),
+       "type x = string and y = number ;")
+    ; ((StTypes (true, [(ID.of_string "x",false, (Simple JString)); (ID.of_string "y",false, (Simple JNumber))])),
+       "type rec x = string and y = number ;")
+    ; ((StTypes (false, [(ID.of_string "x",false, (Simple JString)); (ID.of_string "y",false, (Simple JNumber))])),
+       "type nonrec x = string and y = number ;")
+    ; ((StTypes (false,
+                 [(ID.of_string "integer",false, (And ((Simple JNumber), (Atomic [(MultipleOf 1.)]))))])),
+       "type integer = number && [ multipleOf 1.0 ; ] ;")
+    ; ((StOpen (DEREF (REL (ID.of_string "M"), (ID.of_string "N")), None)),
+       "open M.N;")
+    ; ((StInclude (DEREF (REL (ID.of_string "M"), (ID.of_string "N")), None)),
+       "include M.N;")
+    ; ((StModuleBinding (ID.of_string "M",
+                         (MeStruct [(StTypes (false, [(ID.of_string "t",false, (Simple JObject))]))]))),
+       "module M = struct type t = object ; end;")
+    ; ((StModuleType ((ID.of_string "MTY"), (MtSig [(SiType (ID.of_string "t",false))]))),
+       "module type MTY = sig type t ; end;")
+    ; ((StLocal (
+        [(StImport ("https://example.com/geographical-location.schema.json",
                     (ID.of_string "GeoLoc")))
-          ],
-          [(StTypes (false,
-                   [(ID.of_string "product",
+        ],
+        [(StTypes (false,
+                   [(ID.of_string "product",false,
                      (And ((Simple JObject),
                            (Atomic
                               [(Field ("productid", (Ref (None, ID.of_string "integer"))));
@@ -190,9 +200,9 @@ let parsing = "parsing" >::: [
                           )))
                    ]
                   ))
-          ]
-        )),
-         {|
+        ]
+      )),
+       {|
 local
 import "https://example.com/geographical-location.schema.json" as GeoLoc ;
 in
@@ -207,7 +217,14 @@ type product = object && [ "productid" : integer ;
                    ] ;
 end ;
 |})
-      ]
+    ]
+
+      )
+  ; "sealed-struct_item" >:: (fun ctxt -> List.iter success_struct_item [
+      (StTypes(false,[(ID.of_string "x",true, Simple JString)]), "type sealed x = string ;")
+    ; (StTypes(true,[(ID.of_string "x",true, Simple JString);(ID.of_string "y",false, Simple JNumber)]),
+       "type rec sealed x = string and y = number ;")
+    ]
 
       )
   ; "module_type" >:: (fun ctxt -> List.iter success_module_type [
@@ -215,11 +232,11 @@ end ;
        "M.N")
     ; ((MtSig []),
        "sig end")
-    ; ((MtFunctorType (((ID.of_string "M"), (MtSig [(SiType (ID.of_string "u"))])), (MtSig [(SiType (ID.of_string "t"))]))),
+    ; ((MtFunctorType (((ID.of_string "M"), (MtSig [(SiType (ID.of_string "u",false))])), (MtSig [(SiType (ID.of_string "t",false))]))),
        "functor (M: sig type u; end) -> sig type t ; end")
     ; ((MtSig
-          [(SiType (ID.of_string "t")); (SiModuleBinding ((ID.of_string "M"), (MtPath (None, (ID.of_string "MTY")))));
-           (SiModuleType ((ID.of_string "MTY2"), (MtSig [(SiType (ID.of_string "u"))])))]),
+          [(SiType (ID.of_string "t",false)); (SiModuleBinding ((ID.of_string "M"), (MtPath (None, (ID.of_string "MTY")))));
+           (SiModuleType ((ID.of_string "MTY2"), (MtSig [(SiType (ID.of_string "u",false))])))]),
        "sig type t; module M : MTY ; module type MTY2 = sig type u ; end ; end")
       ]
 
@@ -230,11 +247,11 @@ end ;
     ; ((MeFunctorApp ((MePath (REL (ID.of_string "M"))), (MePath (REL (ID.of_string "N"))))),
        "M(N)")
     ; ((MeFunctorApp ((MePath (REL (ID.of_string "M"))),
-                      (MeStruct [(StTypes (false, [(ID.of_string "t", (Simple JObject))]))]))),
+                      (MeStruct [(StTypes (false, [(ID.of_string "t",false, (Simple JObject))]))]))),
        "M(struct type t = object ; end)")
     ; ((MeFunctor (((ID.of_string "M1"), (MtSig [])),
                    (MeFunctor (((ID.of_string "M2"), (MtSig [])),
-                               (MeStruct [(StTypes (false, [(ID.of_string "t", (Simple JObject))]))])))
+                               (MeStruct [(StTypes (false, [(ID.of_string "t",false, (Simple JObject))]))])))
                   )),
        "functor (M1: sig end)(M2:sig end) -> struct type t = object ; end")
       ]
@@ -245,8 +262,15 @@ end ;
        "include M.N;")
     ; ([SiModuleBinding ((ID.of_string "M"), (MtPath (None, (ID.of_string "MTY"))))],
        "module M : MTY;")
-    ; ([SiModuleType ((ID.of_string "MTY"), (MtSig [(SiType (ID.of_string "t"))]))],
+    ; ([SiModuleType ((ID.of_string "MTY"), (MtSig [(SiType (ID.of_string "t",false))]))],
        "module type MTY = sig type t ; end;")
+    ]
+      )
+  ; "sealed-sig_item" >:: (fun ctxt -> List.iter success_sig_item [
+      ([(SiType ({ prefix = "x"; index = -1 }, false))],
+       "type x;")
+    ; ([(SiType ({ prefix = "x"; index = -1 }, true))],
+       "type sealed x;")
     ]
       )
   ]

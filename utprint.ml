@@ -78,7 +78,7 @@ and pr_module_type pc = fun [
   | MtPath None id -> pprintf pc "%s" (ID.to_string id)
   ]
 and pr_sig_item pc = fun [
-    SiType s -> pprintf pc "type %s;" (ID.to_string s)
+    SiType s sealed -> pprintf pc "type %s%s;" (if sealed then "sealed " else "") (ID.to_string s)
   | SiModuleBinding s mty -> 
     pprintf pc "module %s : %p;" (ID.to_string s) print_module_type mty
   | SiModuleType s mty ->
@@ -90,8 +90,8 @@ and pr_struct_item pc = fun [
     StTypes recflag l ->
     pprintf pc "type%s %p;" (if recflag then " rec" else " nonrec")
       (Prtools.vlist2
-         (fun pc (s,t) -> pprintf pc "%s = %p" (ID.to_string s) print_utype t)
-         (fun pc (s,t) -> pprintf pc "and %s = %p" (ID.to_string s) print_utype t)
+         (fun pc (s, sealed,t) -> pprintf pc "%s%s = %p" (if sealed then "sealed " else "") (ID.to_string s) print_utype t)
+         (fun pc (s, sealed, t) -> pprintf pc "and %s%s = %p" (if sealed then "sealed " else "") (ID.to_string s) print_utype t)
       ) l
   | StModuleBinding id mexp ->
     pprintf pc "module %s = %p;" (ID.to_string id) print_module_expr mexp
@@ -131,9 +131,19 @@ and pr_utype_impl pc = fun [
     | x -> pr_utype_not pc x
     ]
 and pr_utype_not pc = fun [
-      Not x -> pprintf pc "not %p" pr_utype_simple x
+      Not x -> pprintf pc "not %p" pr_utype_seal x
+    | x -> pr_utype_seal pc x
+    ]
+and pr_utype_seal pc = fun [
+      Seal x [] None -> pprintf pc "seal %p" pr_utype_simple x
+    | Seal x l orelse -> pprintf pc "seal %p with %p" pr_utype_simple x pr_seal_extras (l,orelse)
     | x -> pr_utype_simple pc x
     ]
+and pr_seal_extras pc = fun [
+    ([(re,t)],None) -> pprintf pc "/%s/ : %p" (Escape.regexp re) pr_utype_simple t
+  | ([], Some t) ->  pprintf pc "%p" pr_utype_simple t
+  | ([(re,t)::l],orelse) -> pprintf pc "/%s/ : %p, %p" (Escape.regexp re) pr_utype_simple t pr_seal_extras (l,orelse)
+  ]
 and pr_utype_simple pc = fun [
       Simple x -> pprintf pc "%p" print_base_type x
     | UtTrue -> pprintf pc "true"

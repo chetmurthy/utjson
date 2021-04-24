@@ -62,6 +62,7 @@ let keywords = [
   "module";"struct";"sig";"functor";"end";"local";"in";"of";"required";"unique";"size";"type";"and";"rec";"nonrec"
     ;"null";"string";"boolean";"number";"array";"object"
     ;"sealed";"unsealed";"bounds";"enum";"default"
+    ;"seal"; "with"
     ;"true";"false";"not";"max";"min"
     ;"import";"open";"include";"as";"multipleOf";"format";"propertyNames";"orelse"
     ;"xor"
@@ -176,7 +177,8 @@ and unrec2 hi =
 
 let regexp s =
   let esc_slash_re = Str.regexp ("\\\\/") in
-  Str.global_replace esc_slash_re "/" s
+  let s = Str.global_replace esc_slash_re "/" s in
+  String.sub s 1 (String.length s - 2)
 end
 
 module Escape = struct

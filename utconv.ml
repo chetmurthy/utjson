@@ -306,7 +306,7 @@ let known_keys = documentation_keys@known_useful_keys
 
   let rec conv_type_l (j : json) = match j with
       `Assoc l when l |> List.for_all (fun (k,_) -> List.mem k documentation_keys) ->
-      [Ref (Some(REL (ID.of_string "Predefined")), (ID.of_string "json"))]
+      ([Ref (Some(REL (ID.of_string "Predefined")), (ID.of_string "json"))], [])
     | `Assoc l ->
       let keys = List.map fst l in
       keys |> List.iter (fun k ->
@@ -317,6 +317,7 @@ let known_keys = documentation_keys@known_useful_keys
               Fmt.(failwithf "conv_type: unrecognized object-key %s in@.%s@.%!" k (Yojson.Basic.pretty_to_string j))
           end
         ) ;
+      let l1 = 
       (match assoc_opt "type" l with
        | (Some (`String _ as j)) -> conv_simple j
        | (Some (`List (_::_ as l))) when List.for_all isString l ->
@@ -335,17 +336,6 @@ let known_keys = documentation_keys@known_useful_keys
        | Some (`Assoc l) ->
          [Atomic (List.rev (List.rev_map (fun (k,v) -> Field(k,conv_type0 v)) l))]
        | Some v -> Fmt.(failwithf "conv_type: malformed properties member: %a" pp_json v)
-       | None -> []
-      )@
-      (match assoc_opt "patternProperties" l with
-         Some (`Assoc l) ->
-         [Atomic (List.map (fun (k,v) ->
-              let ut = conv_type0 v in
-              if k <> "" then
-                FieldRE(k,ut)
-              else OrElse ut
-            ) l)]
-       | Some v -> Fmt.(failwithf "conv_type: malformed patternProperties member: %a" pp_json v)
        | None -> []
       )@
       (match assoc_opt "items" l with
@@ -460,36 +450,6 @@ let known_keys = documentation_keys@known_useful_keys
        | Some v -> Fmt.(failwithf "conv_type: oneOf did not have nonempty array paylaod: %a" pp_json v)
        | None -> []
       )@
-      (match assoc_opt "additionalProperties" l with
-         Some (`Bool false) -> [And(Simple JObject, Atomic[Sealed])]
-       | Some (`Bool true) -> [Simple JObject]
-       | Some (`Assoc _ as j) ->
-         let l = conv_type_l j in
-         if l = [] then Fmt.(failwithf "additionalProperties %a yielded no type-constraints" pp_json j) ;
-         [Atomic [OrElse (andList l)]]
-       | Some v -> Fmt.(failwithf "conv_type: additionalProperties did not have bool or type payload: %a" pp_json v)
-       | None -> []
-      )@
-      (match assoc_opt "additionalItems" l with
-         Some (`Bool false) -> [And(Simple JArray, Atomic[Sealed])]
-       | Some (`Bool true) -> []
-       | Some (`Assoc _ as j) ->
-         let l = conv_type_l j in
-         if l = [] then Fmt.(failwithf "additionalItems %a yielded no type-constraints" pp_json j) ;
-         [And(Simple JArray, Atomic [OrElse (andList l)])]
-       | Some v -> Fmt.(failwithf "conv_type: additionalItems did not have bool or type payload: %a" pp_json v)
-       | None -> []
-      )@
-      (match assoc_opt "unevaluatedProperties" l with
-         Some (`Bool false) -> [And(Simple JObject, Atomic[Sealed])]
-       | Some (`Bool true) -> []
-       | Some (`Assoc _ as j) ->
-         let l = conv_type_l j in
-         if l = [] then Fmt.(failwithf "unevaluatedProperties %a yielded no type-constraints" pp_json j) ;
-         [Atomic [OrElse (andList l)]]
-       | Some v -> Fmt.(failwithf "conv_type: unevaluatedProperties did not have bool or type payload: %a" pp_json v)
-       | None -> []
-      )@
       (match assoc_opt "required" l with
          Some (`List [])  ->
          []
@@ -589,19 +549,100 @@ let known_keys = documentation_keys@known_useful_keys
 
        | (None,None,None) -> []
       )
+      in
+      let l2 =
+        (match assoc_opt "patternProperties" l with
+         Some (`Assoc l) ->
+         (List.map (fun (k,v) ->
+              let ut = conv_type0 v in
+              if k <> "" then
+                FieldRE(k,ut)
+              else OrElse ut
+            ) l)
+       | Some v -> Fmt.(failwithf "conv_type: malformed patternProperties member: %a" pp_json v)
+       | None -> []
+      )@
+      (match assoc_opt "additionalProperties" l with
+         Some (`Bool false) -> [Sealed]
+       | Some (`Bool true) -> []
+       | Some (`Assoc _ as j) -> begin
+           match conv_type_l j with
+             ([], _) -> Fmt.(failwithf "additionalProperties %a yielded no type-constraints" pp_json j)
+           | _ ->
+             [OrElse (conv_type0 j)]
+       end
+       | Some v -> Fmt.(failwithf "conv_type: additionalProperties did not have bool or type payload: %a" pp_json v)
+       | None -> []
+      )@
+      (match assoc_opt "additionalItems" l with
+         Some (`Bool false) -> [Sealed]
+       | Some (`Bool true) -> []
+       | Some (`Assoc _ as j) -> begin
+           match conv_type_l j with
+             ([], _) -> Fmt.(failwithf "additionalItems %a yielded no type-constraints" pp_json j)
+           | _ ->
+             [OrElse (conv_type0 j)]
+       end
+       | Some v -> Fmt.(failwithf "conv_type: additionalItems did not have bool or type payload: %a" pp_json v)
+       | None -> []
+      )@
+      (match assoc_opt "unevaluatedProperties" l with
+         Some (`Bool false) -> [Sealed]
+       | Some (`Assoc _ as j) -> begin
+           match conv_type_l j with
+             ([], _) -> Fmt.(failwithf "unevaluatedProperties %a yielded no type-constraints" pp_json j)
+           | _ ->
+             [OrElse (conv_type0 j)]
+       end
+       | Some v -> Fmt.(failwithf "conv_type: unevaluatedProperties did not have bool or type payload: %a" pp_json v)
+       | None -> []
+      )
+      in
+      (l1,l2)
 
     | j -> Fmt.(failwithf "conv_type: expected an object but got@.%s@." (Yojson.Basic.pretty_to_string j))
 
-  and conv_type0 t =
+  and wrap_seal j ut l2 =
+    let patterns = l2 |> List.filter_map (function
+          FieldRE(re,ut) -> Some(re, ut)
+        | _ -> None
+      ) in
+    let orelse = match l2 |> List.filter_map (function
+          OrElse ut -> Some ut
+        | _ -> None
+      ) with
+      [] -> None
+    | [ut] -> Some ut
+    | _ -> Fmt.(failwithf "conv_type: type had more than one Orelse: %s"
+                  (Yojson.Basic.pretty_to_string j)) in
+    let isSealed = List.mem Sealed l2 in
+    let addSealed =
+      patterns <> [] || orelse <> None || isSealed in
+      if addSealed then
+        Seal(ut, patterns, orelse)
+      else ut
+
+  and conv_type0 ?(allow_empty=false) t =
     match conv_type_l t with
-      [] -> Fmt.(failwithf "conv_type: conversion produced no result: %a" pp_json t)
-    | l -> andList l
+      ([],[]) ->
+      if allow_empty then begin
+        Fmt.(pf stderr "WARNING: conv_type: conversion produced no result: %a" pp_json t) ;
+        UtTrue
+      end
+      else
+        Fmt.(failwithf "conv_type: conversion produced no result: %a" pp_json t)
+    | ([],l2) ->
+      Fmt.(pf stderr "WARNING: conv_type: conversion produced no type, but FieldRE/Orelse : %s"
+             (Yojson.Basic.pretty_to_string t)) ;
+      wrap_seal t UtFalse l2
+
+    | (l,[]) -> andList l
+    | (l1,l2) ->
+      let ut = andList l1 in
+      wrap_seal t ut l2
 
   let conv_type j = conv_type0 j
-  let top_conv_type t =
-    match conv_type_l t with
-      [] -> None
-    | l -> Some (andList l)
+  let top_conv_type t = conv_type0 ~allow_empty:true t
 
   let conv_definitions () =
     let rec drec acc =
@@ -612,7 +653,8 @@ let known_keys = documentation_keys@known_useful_keys
         Stack.pop definitions_worklist ;
         let def = conv_type def in
         let tname = typename_of_path path in
-        drec ((tname, def)::acc)
+        let isSealed = match def with Seal _ -> true | _ -> false in
+        drec ((tname, isSealed, def)::acc)
     in
     drec []
 
@@ -648,9 +690,7 @@ let recognize_definitions cc (t : Yojson.Basic.t) = match t with
 let conv_schema cc t =
   reset cc t ;
   recognize_definitions cc t ;
-  let t = match top_conv_type t with
-      None -> Fmt.(pf stderr "WARNING: top_conv_type: conversion produced no result\n") ; UtTrue
-    | Some t -> t in
+  let t = top_conv_type t in
   let defs = conv_definitions() in
   let defs = List.stable_sort Stdlib.compare defs in
   let l = List.map (fun (id, mid) -> StImport(id, mid)) !imports in
@@ -660,7 +700,8 @@ let conv_schema cc t =
       ; StOpen(REL (ID.of_string "DEFINITIONS"), None)
       ]
     else l in
-  l@[StTypes(false, [(ID.of_string "t", t)])]
+  let isSealed = match t with Seal _ -> true | _ -> false in
+  l@[StTypes(false, [(ID.of_string "t", isSealed, t)])]
 
 let convert_file ?(with_predefined=false) cc s =
   let open Fpath in

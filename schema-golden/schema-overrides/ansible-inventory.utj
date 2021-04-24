@@ -1,8 +1,8 @@
 module DEFINITIONS = struct
 type rec group = object && [
-    "hosts": (object || string) && [ /[a-zA-Z.-_0-9]/ : (object || null); ];
+    "hosts": seal (object || string) with /[a-zA-Z.-_0-9]/ : (object || null);
     "vars": object;
-    "children": [ /[a-zA-Z-_0-9]/ : group; ];
+    "children": seal false with /[a-zA-Z-_0-9]/ : group;
 ];
 end ;
 open DEFINITIONS ;

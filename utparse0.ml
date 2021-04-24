@@ -143,25 +143,27 @@ EXTEND
     ;
 
     atomic_utype: [ [
-        fname = STRING ; ":" ; t = utype -> Field fname t
-      | re = REGEXP ; ":" ; t = utype -> FieldRE (String.sub re 1 (String.length re - 2)) t
-      | re = REGEXP -> StringRE (String.sub re 1  (String.length re - 2))
-      | "required" ; l = LIST1 STRING SEP "," -> FieldRequired l
-      | "of" ; t = utype -> ArrayOf t
-      | l = LIST1 utype SEP "*" -> ArrayTuple l
-      | "unique" -> ArrayUnique
-      | n=INT ; ":" ; t=utype -> ArrayIndex (int_of_string n) t
-      | "size" ; s=size_constraint -> Size s
-      | "bounds" ; s=range_constraint -> NumberBound s
-      | "sealed" -> Sealed
-      | "orelse" ; t=utype -> OrElse t
-      | "multipleOf" ; n = FLOAT -> MultipleOf (float_of_string n)
-      | "enum" ; l = LIST1 json SEP "," -> Enum (List.map canon_json l)
-      | "default" ; j=json -> Default j
-      | "format" ; s=STRING -> Format s
-      | "propertyNames" ; t = utype -> PropertyNames t
-      | "contentMediaType" ; s=STRING -> ContentMediaType s
-      | "contentEncoding" ; s=STRING -> ContentEncoding s
+        "required" ; id = STRING ; "," ; l = LIST0 STRING SEP "," -> [FieldRequired [id::l]]
+      | "required" ; id = STRING -> [FieldRequired [id]]
+      | "required" ; id = STRING ; ":" ; t = utype -> [Field id t;FieldRequired [id]]
+      | id = STRING ; ":" ; t = utype -> [Field id t]
+      | re = REGEXP ; ":" ; t = utype -> [FieldRE re t]
+      | re = REGEXP -> [StringRE re]
+      | "of" ; t = utype -> [ArrayOf t]
+      | l = LIST1 utype SEP "*" -> [ArrayTuple l]
+      | "unique" -> [ArrayUnique]
+      | n=INT ; ":" ; t=utype -> [ArrayIndex (int_of_string n) t]
+      | "size" ; s=size_constraint -> [Size s]
+      | "bounds" ; s=range_constraint -> [NumberBound s]
+      | "sealed" -> [Sealed]
+      | "orelse" ; t=utype -> [OrElse t]
+      | "multipleOf" ; n = FLOAT -> [MultipleOf (float_of_string n)]
+      | "enum" ; l = LIST1 json SEP "," -> [Enum (List.map canon_json l)]
+      | "default" ; j=json -> [Default j]
+      | "format" ; s=STRING -> [Format s]
+      | "propertyNames" ; t = utype -> [PropertyNames t]
+      | "contentMediaType" ; s=STRING -> [ContentMediaType s]
+      | "contentEncoding" ; s=STRING -> [ContentEncoding s]
       ] ]
     ;
 
@@ -181,24 +183,34 @@ EXTEND
     | "not" [
         "not" ; t = utype -> Not t
       ]
+    | "seal" [
+        "seal" ; t = utype LEVEL "simple" -> Seal t [] None
+      | "seal" ; t = utype LEVEL "simple" ; "with" ; (l,orelse) = seal_extras -> Seal t l orelse
+      ]
     | "simple" [
         b = base_type -> Simple b
       | "true" -> UtTrue
       | "false" -> UtFalse
       | (mpopt, tid) = tid_path -> Ref mpopt tid
-      | "[" ; h = atomic_utype ; ";" ; l = atomic_utype_semi_list ; "]" -> Atomic [h::l]
-      | "[" ; h = atomic_utype ; "]" -> Atomic [h]
+      | "[" ; h = atomic_utype ; ";" ; l = atomic_utype_semi_list ; "]" -> Atomic (h@l)
+      | "[" ; h = atomic_utype ; "]" -> Atomic h
       | "(" ; t = utype ; ")" -> t
       ]
     ]
     ;
+    seal_extras: [ [
+        r = REGEXP ; ":" ; t = utype -> ([(r,t)],None)
+      | t = utype -> ([],Some t)
+      | r = REGEXP ; ":" ; t = utype; "," ; (l,orelse) = seal_extras -> ([(r,t)::l],orelse)
 
+      ] ]
+    ;
 
     atomic_utype_semi_list:
       [ [
-        v = atomic_utype -> [v]
-      | v = atomic_utype ; ";" -> [v]
-      | v = atomic_utype ; ";" ; vl = atomic_utype_semi_list -> [v::vl]
+        v = atomic_utype -> v
+      | v = atomic_utype ; ";" -> v
+      | v = atomic_utype ; ";" ; vl = atomic_utype_semi_list -> v@vl
       | -> []
       ] ]
     ;
@@ -259,7 +271,7 @@ EXTEND
       | "module" ; "type" ; uid=mid ; "=" ; e = module_type ; ";" -> StModuleType uid e
       | "local" ; l1 = structure ; "in" ; l2 = structure ; "end" ; ";" -> StLocal l1 l2
       | "type" ; rflag = [ "rec" -> True | "nonrec" -> False | -> False ] ;
-        l = LIST1 [ id = LIDENT ; "=" ; t = utype -> (ID.of_string id, t) ] SEP "and" ;
+        l = LIST1 [ (id,sealed) = [ id = LIDENT -> (id, False) | "sealed" ; id = LIDENT -> (id, True) ] ; "=" ; t = utype -> (ID.of_string id, sealed, t) ] SEP "and" ;
         ";" -> StTypes rflag l
       | "import" ; s=STRING ; "as"; uid=mid ; ";" -> StImport s uid
       | "open" ; p = module_path ; ";" -> StOpen p None
@@ -269,8 +281,8 @@ EXTEND
       ] ]
     ;
     sig_item: [ [
-        "type" ; l = LIST1 LIDENT SEP "," ; ";" ->
-        l |> List.map (fun s -> SiType (ID.of_string s))
+        "type" ; l = LIST1 [ id = LIDENT -> (id, False) | "sealed" ; id = LIDENT -> (id, True) ] SEP "," ; ";" ->
+        l |> List.map (fun (s,sealed) -> SiType (ID.of_string s) sealed)
       | "module" ; uid = mid ; ":" ; mty=module_type ; ";" -> [SiModuleBinding uid mty]
       | "module" ; "type" ; uid = mid ; "=" ; mty=module_type ; ";" -> [SiModuleType uid mty]
       | "include" ; p = module_path ; ";" -> [SiInclude p]

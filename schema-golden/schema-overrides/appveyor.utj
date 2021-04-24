@@ -1,12 +1,12 @@
 module DEFINITIONS = struct
-type rec possiblySecretString = string || number || object && [ "secure": string; ] && (object && [ sealed; ])
-and commitFilter = object && [
+type rec possiblySecretString = string || number || seal (object && [ "secure": string; ])
+and sealed commitFilter = seal (object && [
     "message": string && [ format "regex"; ];
     "author": string && [ format "regex"; ] || string;
     "files": array && [ of string; ];
-] && (object && [ sealed; ])
-and command = string xor object && [ "ps": string; ] && (object && [ sealed; ]) xor object && [ "pwsh": string; ] && (object && [ sealed; ]) xor object && [ "cmd": string; ] && (object && [ sealed; ]) xor object && [ "sh": string; ] && (object && [ sealed; ])
-and envVarHash = object && [ orelse possiblySecretString; ]
+])
+and command = string xor (seal (object && [ "ps": string; ])) xor (seal (object && [ "pwsh": string; ])) xor (seal (object && [ "cmd": string; ])) xor (seal (object && [ "sh": string; ]))
+and sealed envVarHash = seal object with possiblySecretString
 and platform = [ enum "x86", "x64", "ARM", "ARM64", "Win32", "Any CPU"; ]
 and configuration = string
 and imageName = [
@@ -27,10 +27,10 @@ and jobScalars = object && [
 ] && not [ required "skip_tags"; ] && not [ required "skip_commits"; ] && not [ required "skip_branch_with_pr"; ] && not [ required "skip_non_tags"; ]
 and job = [
     "version": string;
-    "branches": object && [
+    "branches": seal (object && [
         "only": array && [ of string; ];
         "except": array && [ of string; ];
-] && (object && [ sealed; ]);
+]);
     "skip_tags": boolean;
     "skip_non_tags": boolean;
     "skip_commits": commitFilter;
@@ -43,16 +43,16 @@ and job = [
     "clone_folder": string;
     "shallow_clone": boolean && [ default false; ];
     "clone_depth": Predefined.integer;
-    "hosts": object && [ orelse string && ([ format "ipv4"; ] || [ format "ipv6"; ]); ];
+    "hosts": seal object with (string && ([ format "ipv4"; ] || [ format "ipv6"; ])) ;
     "environment": object && [
         "global": envVarHash;
         "matrix": array && [ of envVarHash; ];
 ] || envVarHash;
-    "matrix": object && [
+    "matrix": seal (object && [
         "fast_finish": boolean;
         "allow_failures": array && [ of jobScalars; ];
         "exclude": array && [ of job; ];
-] && (object && [ sealed; ]);
+]);
     "cache": array && [ of string; ];
     "services": array && [
         of [
@@ -63,13 +63,13 @@ and job = [
 ];
 ];
     "install": array && [ of command; ];
-    "assembly_info": object && [
+    "assembly_info": seal (object && [
         "patch": boolean;
         "file": string;
         "assembly_version": string;
         "assembly_file_version": string;
         "assembly_informational_version": string;
-] && (object && [ sealed; ]);
+]);
     "nuget": object && [
         "account_feed": boolean;
         "project_feed": boolean;
@@ -77,7 +77,7 @@ and job = [
 ];
     "platform": platform xor array && [ of platform; ];
     "configuration": configuration xor array && [ of configuration; ];
-    "build": [ enum false; ] xor object && [
+    "build": [ enum false; ] xor seal (object && [
         "parallel": boolean;
         "project": string;
         "publish_wap": boolean;
@@ -87,29 +87,29 @@ and job = [
         "publish_nuget_symbols": boolean;
         "include_nuget_references": boolean;
         "verbosity": [ enum "quiet", "minimal", "normal", "detailed"; ];
-] && (object && [ sealed; ]);
+]);
     "before_build": array && [ of command; ];
     "before_package": array && [ of command; ];
     "after_build": array && [ of command; ];
     "build_script": array && [ of command; ];
     "before_test": array && [ of command; ];
-    "test": boolean && [ enum false; ] xor object && [
-        "assemblies": object && [
+    "test": boolean && [ enum false; ] xor seal (object && [
+        "assemblies": seal (object && [
             "only": array && [ of string; ];
             "except": array && [ of string; ];
-] && (object && [ sealed; ]);
-        "categories": object && [
-            "only": array && [ of string; ];
-            "except": array && [ of string; ];
-] && (object && [ sealed; ]) xor array && [ of string xor array && [ of string; ]; ];
-] && (object && [ sealed; ]);
+]);
+        "categories": seal (object && [
+              "only": array && [ of string; ];
+              "except": array && [ of string; ];
+]) xor array && [ of string xor array && [ of string; ]; ];
+]);
     "test_script": array && [ of command; ];
     "after_test": array && [ of command; ];
     "artifacts": array && [
-        of object && [
+        of seal (object && [
             "path": string;
             "name": string;
-] && (object && [ sealed; ]) && [ required "path"; ];
+] && [ required "path"; ]);
 ];
     "before_deploy": array && [ of command; ];
     "deploy": [ enum false; ] xor array && [ of object; ];

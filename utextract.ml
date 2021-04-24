@@ -112,11 +112,11 @@ let all_tids stl =
       Ref(_, tid) -> add_tid tid ; ut
     | _ -> old_migrate_utype_t dt ut in
   let new_migrate_struct_item_t dt st = match st with
-      StTypes (_, l) -> l |> List.iter (fun (tid, _) ->  add_tid tid) ;
+      StTypes (_, l) -> l |> List.iter (fun (tid, _, _) ->  add_tid tid) ;
       old_migrate_struct_item_t dt st
     | _ -> old_migrate_struct_item_t dt st in
   let new_migrate_sig_item_t dt si = match si with
-      SiType tid -> add_tid tid ; si
+      SiType (tid, _) -> add_tid tid ; si
     | _ -> old_migrate_sig_item_t dt si in
   let dt = { dt with
              migrate_utype_t = new_migrate_utype_t ;
@@ -314,8 +314,8 @@ let exec stl =
              pp_struct_item_t st)
     | StInclude (mp, Some (MtSig l as mty)) ->
       let stl = l |> List.map (function
-            SiType tid ->
-            StTypes(false, [(tid, Ref(Some mp, tid))])
+            SiType (tid, sealed) ->
+            StTypes(false, [(tid, sealed, Ref(Some mp, tid))])
           | SiModuleBinding(mid, mty) ->
             StModuleBinding(mid, MeCast(MePath(DEREF(mp, mid)), mty))
           | SiModuleType(mid, mty) ->
@@ -414,12 +414,12 @@ and st_uses_exports st = match st with
     StTypes (recflag, l) ->
     let uses =
       l
-      |> List.map (fun (_, ut) -> utype_uses ut)
+      |> List.map (fun (_, _, ut) -> utype_uses ut)
       |> List.fold_left Env.merge (Env.mk()) in
     let uses = if recflag then
-        Env.sub uses (Env.mk ~t:(List.map (fun (id, _) -> (id, ())) l) ())
+        Env.sub uses (Env.mk ~t:(List.map (fun (id, _, _) -> (id, ())) l) ())
       else uses in
-    UE.mk ~uses ~exports:(Env.mk ~t:(List.map (fun (id, _) -> (id, ())) l) ()) ()
+    UE.mk ~uses ~exports:(Env.mk ~t:(List.map (fun (id, _, _) -> (id, ())) l) ()) ()
 
   | StModuleBinding (mid, me) ->
     let uses = me_uses me in
@@ -445,7 +445,7 @@ and st_uses_exports st = match st with
 
 and sil_exports sil =
   List.fold_left (fun n -> function
-        SiType tid -> Env.add_t n (tid,())
+        SiType (tid, _) -> Env.add_t n (tid,())
       | SiModuleBinding (mid, mty) ->
         assert FMV.(closed module_type mty) ;
         Env.add_m n (mid,())
@@ -520,10 +520,10 @@ let rename_mp env mp =
 
 let rec rename_st env st = match st with
     StTypes(false, l) ->
-    StTypes(false, l |> List.map (fun (id, ut) -> (id, rename_ut env ut)))
+    StTypes(false, l |> List.map (fun (id, sealed, ut) -> (id, sealed, rename_ut env ut)))
   | StTypes(true, l) ->
-    let env = Env.(sub env (mk ~t:(List.map (fun (id, _) -> (id, ())) l) ())) in
-    StTypes(true, l |> List.map (fun (id, ut) -> (id, rename_ut env ut)))
+    let env = Env.(sub env (mk ~t:(List.map (fun (id, _, _) -> (id, ())) l) ())) in
+    StTypes(true, l |> List.map (fun (id, sealed, ut) -> (id, sealed, rename_ut env ut)))
   | StModuleBinding(mid, me) ->
     let env = Env.(sub env (mk ~m:[mid,()] ())) in
     StModuleBinding(mid, rename_me env me)
@@ -562,26 +562,26 @@ and rename_structure env l =
 
 let rebind_st allnames exports_and_overridden (env, st) = match st with
     StTypes(false, l) ->
-    let (env, revacc) = List.fold_left (fun (env, revacc) (tid, ut) ->
+    let (env, revacc) = List.fold_left (fun (env, revacc) (tid, sealed, ut) ->
         if Env.has_t exports_and_overridden tid then
           let tid' = Fresh.fresh allnames tid in
-          (Env.add_t env (tid, tid'), (tid', ut)::revacc)
-        else (env, (tid, ut)::revacc)
+          (Env.add_t env (tid, tid'), (tid', sealed, ut)::revacc)
+        else (env, (tid, sealed, ut)::revacc)
       ) (env, []) l in
     (env, StTypes(false, List.rev revacc))
   | StTypes(true, l) ->
-    let torebind = Env.(intersect exports_and_overridden (mk ~t:l ())) in
+    let torebind = Env.(intersect exports_and_overridden (mk ~t:(l |> List.map (fun (tid, _, _) -> (tid, ()))) ())) in
     let renv =
       torebind
       |> Env.dom_t
       |> List.map (fun tid -> (tid, Fresh.fresh allnames tid))
       |> (fun l -> Env.mk ~t:l ()) in
-    let l = l |> List.map (fun (tid, ut) ->
+    let l = l |> List.map (fun (tid, sealed, ut) ->
         let tid = match Env.lookup_t renv tid with
             Some tid' -> tid'
           | None -> tid in
         let ut = rename_ut renv ut in
-        (tid, ut)) in
+        (tid, sealed, ut)) in
     (Env.merge renv env, StTypes(true, l))
 
   | StModuleBinding(mid, me) ->
@@ -682,22 +682,22 @@ let rec abs_me prefix env me = match me with
 
 and abs_st prefix env st = match (prefix, st) with
     (Some mpopt, StTypes(false, l)) ->
-    let l = l |> List.map (fun (tid, ut) ->
-        (tid, subst_ut env ut)) in
-    let env' = Env.mk ~t:(l |> List.map (fun (tid, _) -> (tid, Ref (mpopt, tid)))) () in 
+    let l = l |> List.map (fun (tid, sealed, ut) ->
+        (tid, sealed, subst_ut env ut)) in
+    let env' = Env.mk ~t:(l |> List.map (fun (tid, _, _) -> (tid, Ref (mpopt, tid)))) () in 
     let env = Env.(merge env' env) in
     (env, StTypes(false, l))
   | (Some mpopt, StTypes(true, l)) ->
-    let env' = Env.mk ~t:(l |> List.map (fun (tid, _) -> (tid, Ref (mpopt, tid)))) () in 
+    let env' = Env.mk ~t:(l |> List.map (fun (tid, _, _) -> (tid, Ref (mpopt, tid)))) () in 
     let env = Env.(merge env' env) in
-    let l = l |> List.map (fun (tid, ut) ->
-        (tid, subst_ut env ut)) in
+    let l = l |> List.map (fun (tid, sealed, ut) ->
+        (tid, sealed, subst_ut env ut)) in
     (env, StTypes(false, l))
 
   | (None, StTypes(recflag, l)) ->
-    let env' = Env.(sub_tids env (List.map fst l)) in
-    let l = l |> List.map (fun (tid, ut) ->
-        (tid, subst_ut env' ut)) in
+    let env' = Env.(sub_tids env (List.map (fun (x, _, _) -> x) l)) in
+    let l = l |> List.map (fun (tid, sealed, ut) ->
+        (tid, sealed, subst_ut env' ut)) in
     (env', StTypes(recflag, l))
 
   | (None, StModuleBinding(mid, me)) ->
@@ -714,7 +714,7 @@ and abs_st prefix env st = match (prefix, st) with
   | (_, StOpen (mp, Some (MtSig l))) ->
     let mp = abs_mp env mp in
     let env = List.fold_left (fun env -> function
-          SiType tid ->
+          SiType (tid, _) ->
           Env.(add_t env (tid, Ref(Some mp, tid)))
         | SiModuleBinding(mid, _) ->
           Env.(add_m env (mid, DEREF(mp, mid)))
@@ -875,7 +875,7 @@ let rec extract_stl mpopt acc stl =
 
 and extract_st mpopt acc = function
     StTypes(_, l) ->
-    List.fold_left (fun acc (id, ut) -> ((mpopt, id), ut)::acc) acc l
+    List.fold_left (fun acc (id, _, ut) -> ((mpopt, id), ut)::acc) acc l
 
   | StModuleBinding(mid, MeStruct l) ->
     let mpopt = match mpopt with None -> Some(TOP mid) | Some mp -> Some(DEREF(mp, mid)) in

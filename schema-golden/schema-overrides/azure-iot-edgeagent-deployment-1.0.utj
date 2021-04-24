@@ -6,13 +6,12 @@ and moduleSettings = object && [
     "image": string;
     "createOptions": createOptions;
 ] && [ required "image"; ]
-and env = object && [
-    /^[^\+#$\s\.]+$/ : object && [ "value": number || string || boolean; ] && [ required "value"; ];
-] && (object && [ sealed; ])
+and sealed env = seal object with
+    /^[^\+#$\s\.]+$/ : (object && [ "value": number || string || boolean; ] && [ required "value"; ])
 and createOptions = string && [ contentMediaType "application/json"; ];
 end ;
 open DEFINITIONS ;
- type nonrec t = object && [
+ type nonrec sealed t = seal (object && [
     "$edgeAgent": object && [
         "properties.desired": object && [
             "schemaVersion": string && [ /1.0/ ];
@@ -21,16 +20,14 @@ open DEFINITIONS ;
                 "settings": object && [
                     "minDockerVersion": string;
                     "loggingOptions": string;
-                    "registryCredentials": object && [
-                        /^.+$/ : object && [
+                    "registryCredentials": (seal object with /^.+$/ : object && [
                             "username": string;
                             "password": string;
                             "address": string && [ /^[^\s]+$/ ];
-] && [ required "username",  "password",  "address"; ];
-] && (object && [ sealed; ]);
+] && [ required "username",  "password",  "address"; ]);
 ];
 ] && [ required "type",  "settings"; ];
-            "systemModules": object && [
+            "systemModules": seal (object && [
                 "edgeAgent": object && [
                     "type": moduleType;
                     "settings": moduleSettings;
@@ -43,18 +40,17 @@ open DEFINITIONS ;
                     "status": status;
                     "restartPolicy": restartPolicy;
 ] && [ required "type",  "settings",  "status",  "restartPolicy"; ];
-] && (object && [ sealed; ]) && [ required "edgeAgent",  "edgeHub"; ];
-            "modules": object && [
-                /^[a-zA-Z0-9_-]+$/ : object && [
+] && [ required "edgeAgent",  "edgeHub"; ]);
+            "modules": seal object with
+                /^[a-zA-Z0-9_-]+$/ : (object && [
                     "version": string;
                     "type": moduleType;
                     "status": status;
                     "restartPolicy": restartPolicy;
                     "env": env;
                     "settings": moduleSettings;
-] && [ required "type",  "status",  "restartPolicy",  "settings"; ];
-] && (object && [ sealed; ]);
+] && [ required "type",  "status",  "restartPolicy",  "settings"; ]);
 ] && [ required "schemaVersion",  "runtime",  "systemModules",  "modules"; ];
 ] && [ required "properties.desired"; ];
-] && (object && [ sealed; ]) && [ required "$edgeAgent"; ];
+] && [ required "$edgeAgent"; ]);
 end;

@@ -62,10 +62,12 @@ and utype_t =
   | Not of utype_t
   | Atomic of atomic_utype_t list
   | Ref of module_path_t option * ID.t
+  | Seal of utype_t * (string * utype_t) list * utype_t option
+
 [@@deriving show { with_path = false },eq]
 
 type struct_item_t =
-    StTypes of bool * (ID.t * utype_t) list
+    StTypes of bool * (ID.t * bool * utype_t) list
   | StModuleBinding of ID.t * module_expr_t
   | StImport of string * ID.t
   | StLocal of structure * structure
@@ -90,7 +92,7 @@ and module_type_t =
 and signature = sig_item_t list
 
 and sig_item_t =
-    SiType of ID.t
+    SiType of ID.t * bool
   | SiModuleBinding of ID.t * module_type_t
   | SiModuleType of ID.t * module_type_t
   | SiInclude of module_path_t

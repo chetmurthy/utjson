@@ -38,34 +38,31 @@ and sslProtocols = array && [
 ]
 and clientCertificateMode = string && [ enum "NoCertificate", "AllowCertificate", "RequireCertificate"; ] && [ default "NoCertificate"; ]
 and kestrel = object && [
-    "Endpoints": object && [
-        orelse object && [
+    "Endpoints": seal object with (object && [
             "Url": string && [ format "uri"; ];
             "Protocols": protocols;
             "SslProtocols": sslProtocols;
             "Certificate": certificate;
             "ClientCertificateMode": clientCertificateMode;
-            "Sni": object && [
-                orelse object && [
+            "Sni": seal object with (object && [
                     "Protocols": protocols;
                     "SslProtocols": sslProtocols;
                     "Certificate": certificate;
                     "ClientCertificateMode": clientCertificateMode;
-];
-];
-] && [ required "Url"; ];
-];
+]);
+] && [ required "Url"; ]
+);
     "EndpointDefaults": object && [
         "Protocols": protocols;
         "SslProtocols": sslProtocols;
         "ClientCertificateMode": clientCertificateMode;
 ];
-    "Certificates": object && [ orelse certificate; ];
+    "Certificates": seal object with certificate;
 ]
 and logLevelThreshold = string && [ enum "Trace", "Debug", "Information", "Warning", "Error", "Critical", "None";
 ]
-and logLevel = object && [ orelse logLevelThreshold; ]
-and logging = object && [
+and sealed logLevel = seal object with logLevelThreshold
+and sealed logging = seal (object && [
     "LogLevel": logLevel;
     "Console": [
         "LogLevel": logLevel;
@@ -80,9 +77,9 @@ and logging = object && [
     "EventSource": [ "LogLevel": logLevel; ];
     "Debug": [ "LogLevel": logLevel; ];
     "EventLog": [ "LogLevel": logLevel; ];
-] && [ orelse object && [ "LogLevel": logLevel; ]; ]
+]) with (object && [ "LogLevel": logLevel; ])
 and allowedHosts = string
-and connectionStrings = object && [ orelse string; ]
+and sealed connectionStrings = seal object with string
 and _NLog = object && [
     "autoReload": boolean && [ default false; ];
     "throwConfigExceptions": (boolean || null) && [ default false; ];
@@ -100,10 +97,10 @@ and _NLog = object && [
             "assemblyFile": string && [ default ""; ];
 ] && [ default {}; ];
 ] && [ default []; ];
-    "variables": object && [ /.*/ : Predefined.scalar; ] && [ propertyNames [ /^[A-Za-z0-9_.-]+$/ ]; ];
+    "variables": seal (object && [ propertyNames [ /^[A-Za-z0-9_.-]+$/ ]; ]) with /.*/ : Predefined.scalar;
     "default-wrapper": object && [ "type": string; ] && [ required "type"; ] && [ default {}; ];
     "targets": object && [ default {}; ];
-    "rules": array && [ of _NLogRulesItem; ] && [ default []; ] xor object && [ /.*/ : _NLogRulesItem; ] && [ propertyNames [ /^[0-9]+$/ ]; ];
+    "rules": array && [ of _NLogRulesItem; ] && [ default []; ] xor seal (object && [ propertyNames [ /^[0-9]+$/ ]; ]) with /.*/ : _NLogRulesItem;
 ] && [ default {}; ]
 and _NLogRulesItem = object && [
     "logger": string;
@@ -232,14 +229,12 @@ and umbracoHealthChecks = [
         "Enabled": boolean && [ default false; ];
         "FirstRunTime": string;
         "Period": string && [ default "1.00:00:00"; ];
-        "NotificationMethods": object && [
-            orelse object && [
+        "NotificationMethods": seal object with (object && [
                 "Enabled": boolean;
                 "Verbosity": [ enum "Summary", "Detailed"; ] && [ default "Summary"; ];
                 "FailureOnly": boolean && [ default false; ];
                 "Settings": object;
-];
-];
+]);
         "DisabledChecks": array && [ of umbracoDisabledHealthChecks; ];
 ];
 ]
@@ -338,19 +333,19 @@ and umbracoUnattended = [
 ];
 end ;
 open DEFINITIONS ;
- type nonrec t = object && [
+ type nonrec sealed t = seal (object && [
     "Kestrel": kestrel;
     "Logging": logging;
     "AllowedHosts": allowedHosts;
     "ConnectionStrings": connectionStrings;
-] && [
-    /^WebOptimizer$/ : webOptimizer;
-    /^webOptimizer$/ : webOptimizer;
-    /^weboptimizer$/ : webOptimizer;
-    /^(cdn|Cdn)$/ : cdn;
-    /^(pwa|PWA|Pwa)$/ : pwa;
-    /^(ElmahIo|Elmahio|elmahIo|elmahio)$/ : _ElmahIo;
-    /^(nlog|Nlog|NLog)$/ : _NLog;
-    /^(Umbraco|umbraco)$/ : umbraco;
-];
+]) with
+    /^WebOptimizer$/ : webOptimizer,
+    /^webOptimizer$/ : webOptimizer,
+    /^weboptimizer$/ : webOptimizer,
+    /^(cdn|Cdn)$/ : cdn,
+    /^(pwa|PWA|Pwa)$/ : pwa,
+    /^(ElmahIo|Elmahio|elmahIo|elmahio)$/ : _ElmahIo,
+    /^(nlog|Nlog|NLog)$/ : _NLog,
+    /^(Umbraco|umbraco)$/ : umbraco
+;
 end ;
