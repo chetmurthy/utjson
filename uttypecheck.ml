@@ -40,6 +40,11 @@ module TEnv = struct
     | None -> Fmt.(failwithf "Env.lookup_module: cannot find module_type id %s in type-environment" (ID.to_string name))
 end
 
+module TCtxt = struct
+  type t = { sealed_context : bool }
+  let mk sealed_context = { sealed_context }
+end
+
 module FMV = struct
   let rec module_type env = function
       MtSig l ->
@@ -146,7 +151,7 @@ let rec tc_utype env ut = match ut with
     
   | UtTrue -> (ut, false)
   | UtFalse -> (ut, false)
-  | Simple bt -> (Simple bt, false)
+  | Simple bt -> let (bt, sealed) = tc_base_type env bt in (Simple bt, sealed)
   | And(ut1, ut2) ->
     let (ut1, sealed1) = tc_utype env ut1 in
     let (ut2, sealed2) = tc_utype env ut2 in
@@ -192,6 +197,10 @@ let rec tc_utype env ut = match ut with
       let l = List.map (fun (re, ut) -> (re, tc_sub_utype env ut)) l in
       let orelse = Option.map (tc_sub_utype env) orelse in
       (Seal(ut1,l,orelse), true)
+
+and tc_base_type env t = match t with
+    JNull | JString | JBool | JNumber -> (t, false)
+  | JArray | JObject -> (t, false)
 
 and tc_sub_utype env ut = fst(tc_utype env ut)
 

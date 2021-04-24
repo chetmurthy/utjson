@@ -626,11 +626,11 @@ let known_keys = documentation_keys@known_useful_keys
     match conv_type_l t with
       ([],[]) ->
       if allow_empty then begin
-        Fmt.(pf stderr "WARNING: conv_type: conversion produced no result: %a" pp_json t) ;
+        Fmt.(pf stderr "WARNING: conv_type: conversion produced no result: %s" (Yojson.Basic.pretty_to_string t)) ;
         UtTrue
       end
       else
-        Fmt.(failwithf "conv_type: conversion produced no result: %a" pp_json t)
+        Fmt.(failwithf "conv_type: conversion produced no result: %s" (Yojson.Basic.pretty_to_string t))
     | ([],l2) ->
       Fmt.(pf stderr "WARNING: conv_type: conversion produced no type, but FieldRE/Orelse : %s"
              (Yojson.Basic.pretty_to_string t)) ;

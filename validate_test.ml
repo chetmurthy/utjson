@@ -109,7 +109,7 @@ let schema_test schemabase =
       success_file (Fpath.to_string schemafile, Fpath.to_string t)))
 
 
-let testfiles = all_schemastore_files
+let testfiles = firstn 20 all_schemastore_files
 let testfiles = subtract testfiles [
     "kubernetesjsonschema.dev/master/_definitions.json"
   ; "jsonld.json"
