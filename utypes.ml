@@ -1,4 +1,34 @@
+open Pa_ppx_base.Pp_MLast
+
 open Ututil
+
+[%%import: Utypes.loc]
+[@@deriving show { with_path = false },eq]
+
+module LJ = struct
+[%%import: Utypes.LJ.t]
+[@@deriving show { with_path = false },eq]
+
+let to_json lj =
+  let rec jrec = function
+    | Null _ -> `Null
+    | Bool (_, b) -> `Bool b
+    | Int (_, n) -> `Int n
+    | Float (_, f) -> `Float f
+    | String (_, s) -> `String s
+    | Assoc (_, l) -> `Assoc(l |> List.map (fun (k,j) -> (k,jrec j)))
+    | List (_, l) -> `List(l |> List.map jrec)
+  in jrec lj
+
+let to_loc = function
+    | Null loc
+    | Bool (loc, _)
+    | Int (loc, _)
+    | Float (loc, _)
+    | String (loc, _)
+    | Assoc (loc, _)
+    | List (loc, _) -> loc
+end
 
 module ID = struct
 type t = [%import: Utypes.ID.t]
@@ -46,6 +76,79 @@ type range_constraint_t = [%import: Utypes.range_constraint_t]
 
 [%%import: Utypes.struct_item_t]
 [@@deriving show { with_path = false },eq]
+
+let loc_of_utype = function
+    UtTrue loc 
+  | UtFalse loc
+  | Simple (loc, _)
+  | And (loc, _, _)
+  | Or (loc, _, _)
+  | Xor (loc, _, _)
+  | Impl (loc, _, _)
+  | Not (loc, _)
+  | Atomic (loc, _)
+  | Ref (loc, _)
+  | Seal (loc, _, _, _) -> loc
+
+let loc_of_struct_item = function
+    StTypes (loc, _, _)
+  | StModuleBinding (loc, _, _)
+  | StImport (loc, _, _)
+  | StLocal (loc, _, _)
+  | StOpen (loc, _, _)
+  | StInclude (loc, _, _)
+  | StModuleType (loc, _, _) -> loc
+
+let loc_of_structure = function
+  h::t ->
+  List.fold_left (fun loc st -> Ploc.encl loc (loc_of_struct_item st))
+    (loc_of_struct_item h) t
+  | [] -> Ploc.dummy
+
+let loc_of_sig_item = function
+    SiType (loc, _, _)
+  | SiModuleBinding (loc, _, _)
+  | SiModuleType (loc, _, _)
+  | SiInclude (loc, _) -> loc
+
+let loc_of_signature = function
+  h::t ->
+  List.fold_left (fun loc st -> Ploc.encl loc (loc_of_sig_item st))
+    (loc_of_sig_item h) t
+  | [] -> Ploc.dummy
+
+let loc_of_module_type = function
+    MtSig (loc, _)
+  | MtFunctorType (loc, _, _)
+  | MtPath (loc, _) -> loc
+
+let loc_of_module_expr = function
+    MeStruct (loc, _)
+  | MeFunctorApp (loc, _, _)
+  | MePath (loc, _)
+  | MeFunctor (loc, _, _)
+  | MeCast (loc, _, _) -> loc
+
+let loc_of_atomic_utype = function
+    Field (loc, _, _)
+  | FieldRE (loc, _, _)
+  | FieldRequired (loc, _)
+  | ArrayOf (loc, _)
+  | ArrayTuple (loc, _)
+  | ArrayUnique loc
+  | ArrayIndex (loc, _, _)
+  | Size (loc, _)
+  | StringRE (loc, _)
+  | NumberBound (loc, _)
+  | Sealed loc
+  | OrElse (loc, _)
+  | MultipleOf (loc, _)
+  | Enum (loc, _)
+  | Default (loc, _)
+  | Format (loc, _)
+  | PropertyNames (loc, _)
+  | ContentMediaType (loc, _)
+  | ContentEncoding (loc, _) -> loc
 
 type token = [%import: Utypes.token]
 

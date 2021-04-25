@@ -2,19 +2,8 @@ open Pa_ppx_utils.Std
 
 open Ututil
 open Utypes
-
-type json =
-    [
-    | `Null
-    | `Bool of bool
-    | `Int of int
-    | `Float of float
-    | `String of string
-    | `Assoc of (string * json) list
-    | `List of json list
-    ] [@@deriving show,eq]
-
-type json_list = json list [@@deriving show,eq]
+open Utypes.LJ
+open Utparse0
 
 let is_capitalized s =
   let c0 = String.get s 0 in
@@ -112,21 +101,24 @@ module CC = struct
 end
 module ConvContext = CC
 
-let isString (j : Yojson.Basic.t) = match j with
-  `String _ -> true | _ -> false
+let isString j = match j with
+  String _ -> true | _ -> false
+
+let isSealed j = match j with
+  Sealed _ -> true | _ -> false
 
 
-let andList l =
+let andList loc l =
   let (last,l) = sep_last l in
-  List.fold_right (fun a b -> And(a,b)) l last
+  List.fold_right (fun a b -> And(loc,a,b)) l last
 
-let orList l =
+let orList loc l =
   let (last,l) = sep_last l in
-  List.fold_right (fun a b -> Or(a,b)) l last
+  List.fold_right (fun a b -> Or(loc,a,b)) l last
 
-let xorList l =
+let xorList loc l =
   let (last,l) = sep_last l in
-  List.fold_right (fun a b -> Xor(a,b)) l last
+  List.fold_right (fun a b -> Xor(loc, a,b)) l last
 
   let assoc_opt (k: string) l =
     match List.assoc k l with
@@ -134,7 +126,7 @@ let xorList l =
     | exception Not_found -> None
 
   let cc = ref (CC.mk ())
-  let entire_schema = ref `Null
+  let entire_schema = ref (Null Ploc.dummy)
   let counter = ref 0
   let newmid () =
     let mid = Printf.sprintf "M%d" !counter in
@@ -145,19 +137,19 @@ let xorList l =
   let definitions_worklist = ref []
   let path2type = ref []
 
-  let extract_id2node (schema : Yojson.Basic.t) =
+  let extract_id2node schema =
     let acc = ref [] in
     let rec prec j = match j with
-        `Assoc l ->
+        Assoc (_, l) ->
         if List.mem_assoc "$id" l then
           begin match List.assoc "$id" l with
-              `String id ->
+              String (_, id) ->
               Stack.push acc (id, j)
             | _ -> ()
           end ;
         List.iter (fun (_, v) -> prec v) l
 
-      | `List l -> List.iter prec l
+      | List (_, l) -> List.iter prec l
       | _ -> ()
     in prec schema;
     !acc
@@ -169,17 +161,15 @@ let xorList l =
     let rec findrec = function
         ([], j) -> Some j
       | ("#"::t, j) -> findrec (t, j)
-      | (h::t, `Assoc l) -> begin match assoc_opt h l with
+      | (h::t, Assoc (_, l)) -> begin match assoc_opt h l with
             None -> None
           | Some j -> findrec(t,j)
         end
-      | (h::t, (`List l as j)) ->
+      | (h::t, (List (loc, l) as j)) ->
         let n = try int_of_string h with Failure _ ->
-          Fmt.(failwithf "path-step %a not an integer, but object was an array:@.%s@."
-                 Dump.string h (Yojson.Basic.pretty_to_string j)) in
+          Fmt.(raise_failwithf loc "path-step %a not an integer, but object was an array" Dump.string h) in
         if n < 0 || n >= List.length l then
-          Fmt.(failwithf "path-step %d was out-of-bounds for object@.%s@."
-                 n (Yojson.Basic.pretty_to_string j)) ;
+          Fmt.(raise_failwithf loc "path-step %d was out-of-bounds for object" n) ;
         findrec (t, List.nth l n)
       | _ -> Fmt.(failwithf "path %s mismatched with schema" path)
     in findrec (String.split_on_char '/' path, !entire_schema)
@@ -188,7 +178,7 @@ let xorList l =
   let add_path2type (s,t) =
     Stack.push path2type (s, t)
 
-  let rec lookup_definition_ref s =
+  let rec lookup_definition_ref loc s =
     match assoc_path2type s with
       Some v -> v
     | None ->
@@ -201,7 +191,7 @@ let xorList l =
         | (Some def, None) -> def
         | (None, Some def) -> def in
       let tname = typename_of_path s in
-      let t = Ref(None, tname) in
+      let t = Ref(loc, (None, tname)) in
       Stack.push definitions_worklist (s,def) ;
       add_path2type (s,t) ;
       t
@@ -209,7 +199,7 @@ let xorList l =
   let imports = ref []
   let add_imports s mid = imports := (s, mid):: !imports 
 
-  let lookup_import_ref s =
+  let lookup_import_ref loc s =
     let (filename, typename) = CC.map_url !cc s in
     let mid = match List.assoc filename !imports with
         mid -> mid
@@ -218,18 +208,18 @@ let xorList l =
         add_imports filename mid ;
         mid in begin match typename with
         None -> 
-        Ref(Some (REL mid), ID.of_string "t")
+        Ref(loc, (Some (REL mid), ID.of_string "t"))
       | Some tname ->
-        Ref(Some (DEREF (REL mid, ID.of_string "DEFINITIONS")), tname)
+        Ref(loc, (Some (DEREF (REL mid, ID.of_string "DEFINITIONS")), tname))
     end
 
-  let lookup_ref s =
+  let lookup_ref loc s =
     if s = "#" then
       Fmt.(failwithf "Cannot have a ref %a: need at least some kind of name; use $id" Dump.string s) ;
     if String.get s 0 = '#' then
-      lookup_definition_ref s
+      lookup_definition_ref loc s
     else
-      lookup_import_ref s
+      lookup_import_ref loc s
 
   let reset newcc t = 
     cc := newcc ;
@@ -240,16 +230,16 @@ let xorList l =
     imports := [] ;
     populate_id2node t
 
-  let conv_simple = function
-      `String "null" -> [Simple JNull]
-    | `String "string" -> [Simple JString]
-    | `String "boolean" -> [Simple JBool]
-    | `String "number" -> [Simple JNumber]
-    | `String "array" -> [Simple JArray]
-    | `String "object" -> [Simple JObject]
-    | `String "integer" -> [Ref (Some(REL (ID.of_string "Predefined")), (ID.of_string "integer"))]
-    | `String "scalar" -> [Ref (Some(REL (ID.of_string "Predefined")), (ID.of_string "scalar"))]
-    | v -> Fmt.(failwithf "conv_type: malformed type member: %a" pp_json v)
+  let conv_simple j = match j with
+      String (loc, "null") -> [Simple (loc, JNull)]
+    | String (loc, "string") -> [Simple (loc, JString)]
+    | String (loc, "boolean") -> [Simple (loc, JBool)]
+    | String (loc, "number") -> [Simple (loc, JNumber)]
+    | String (loc, "array") -> [Simple (loc, JArray)]
+    | String (loc, "object") -> [Simple (loc, JObject)]
+    | String (loc, "integer") -> [Ref (loc, (Some(REL (ID.of_string "Predefined")), (ID.of_string "integer")))]
+    | String (loc, "scalar") -> [Ref (loc, (Some(REL (ID.of_string "Predefined")), (ID.of_string "scalar")))]
+    | v -> Fmt.(raise_failwithf (LJ.to_loc v) "conv_type: malformed type member")
 
 let documentation_keys = [
   "$schema"; "$id"; "title"; "titles"; "description"; "$contact"; "$comment"
@@ -304,341 +294,375 @@ let known_garbage_keys = [
   ]
 let known_keys = documentation_keys@known_useful_keys
 
-  let rec conv_type_l (j : json) = match j with
-      `Assoc l when l |> List.for_all (fun (k,_) -> List.mem k documentation_keys) ->
-      ([Ref (Some(REL (ID.of_string "Predefined")), (ID.of_string "json"))], [])
-    | `Assoc l ->
+  let rec conv_type_l j = match j with
+      Assoc (loc, l) when l |> List.for_all (fun (k,_) -> List.mem k documentation_keys) ->
+      ([Ref (loc, (Some(REL (ID.of_string "Predefined")), (ID.of_string "json")))], [])
+    | Assoc (loc, l) ->
       let keys = List.map fst l in
       keys |> List.iter (fun k ->
           if not (List.mem k known_keys) then begin
             if List.mem k known_garbage_keys then
-              Fmt.(pf stderr "conv_type: known garbage object-key %s in@.%s@.%!" k (Yojson.Basic.pretty_to_string j))
+              Fmt.(pf stderr "%s: conv_type: known garbage object-key %s"
+                     (Ploc.string_of_location loc)
+                     k)
             else
-              Fmt.(failwithf "conv_type: unrecognized object-key %s in@.%s@.%!" k (Yojson.Basic.pretty_to_string j))
+              Fmt.(raise_failwithf loc "conv_type: unrecognized object-key %s" k)
           end
         ) ;
       let l1 = 
       (match assoc_opt "type" l with
-       | (Some (`String _ as j)) -> conv_simple j
-       | (Some (`List (_::_ as l))) when List.for_all isString l ->
+       | (Some (String _ as j)) -> conv_simple j
+       | (Some (List (loc, (_::_ as l)))) when List.for_all isString l ->
          let l = List.concat_map conv_simple l in
-         [orList l]
-       | (Some j) -> Fmt.(failwithf "conv_type: type must have string member: %a" pp_json j)
+         [orList loc l]
+       | (Some j) -> Fmt.(raise_failwithf (LJ.to_loc j) "conv_type: type must have string member")
        | None -> []
       )@
       (match assoc_opt "$ref" l with
-       | Some (`String s) -> [lookup_ref s]
-       | Some j -> Fmt.(failwithf "conv_type: $ref has malformed member: %a" pp_json j)
+       | Some (String (loc, s)) -> [lookup_ref loc s]
+       | Some j -> Fmt.(raise_failwithf loc "conv_type: $ref has malformed member")
        | None -> []
       )@
       (match assoc_opt "properties" l with
-         Some (`Assoc []) -> []
-       | Some (`Assoc l) ->
-         [Atomic (List.rev (List.rev_map (fun (k,v) -> Field(k,conv_type0 v)) l))]
-       | Some v -> Fmt.(failwithf "conv_type: malformed properties member: %a" pp_json v)
+         Some (Assoc (_, [])) -> []
+       | Some (Assoc (loc, l)) ->
+         [Atomic (loc, List.rev (List.rev_map (fun (k,v) -> Field(LJ.to_loc v, k,conv_type0 v)) l))]
+       | Some v -> Fmt.(raise_failwithf loc "conv_type: malformed properties member")
        | None -> []
       )@
       (match assoc_opt "items" l with
-         Some (`List l) ->
-         [Atomic [ArrayTuple (List.map conv_type0 l)]]
-       | Some (`Assoc _ as t) ->
-         [Atomic [ArrayOf (conv_type0 t)]]
+         Some (List (loc, l)) ->
+         [Atomic (loc, [ArrayTuple (loc, List.map conv_type0 l)])]
+       | Some (Assoc (loc, _) as t) ->
+         [Atomic (loc, [ArrayOf (loc, conv_type0 t)])]
        | None -> []
       )@
       (match assoc_opt "uniqueItems" l with
-         Some (`Bool true) -> [Atomic [ArrayUnique]]
-       | Some (`Bool false) -> []
+         Some (Bool (loc, true)) -> [Atomic (loc, [ArrayUnique loc])]
+       | Some (Bool (_, false)) -> []
        | None -> []
       )@
       (match (assoc_opt "minLength" l, assoc_opt "maxLength" l) with
          (None, None) -> []
        | (min, max) ->
-         let min = match min with
-             Some (`Int n) -> n
-           | Some (`Float f) -> int_of_float f
-           | None -> 0
-           | Some j -> Fmt.(failwithf "conv_type: minLength must be number: %a" pp_json j) in
-         let max = match max with
-             None -> None
-           | Some (`Int n) -> Some n
-           | Some (`Float f) -> Some (int_of_float f)
-           | Some j -> Fmt.(failwithf "conv_type: maxLength must be number: %a" pp_json j) in
-         [Atomic [(Size Bound.({it=min; exclusive = false}, {it=max; exclusive = false}))]]
+         let (min,min_loc_opt) = match min with
+             Some (Int (loc, n)) -> (n, Some loc)
+           | Some (Float (loc, f)) -> (int_of_float f, Some loc)
+           | None -> (0, None)
+           | Some j -> Fmt.(raise_failwithf (LJ.to_loc j) "conv_type: minLength must be number") in
+         let (max, max_loc_opt) = match max with
+             None -> (None, None)
+           | Some (Int (loc, n)) -> (Some n, Some loc)
+           | Some (Float (loc, f)) -> (Some (int_of_float f), Some loc)
+           | Some j -> Fmt.(raise_failwithf (LJ.to_loc j) "conv_type: maxLength must be number") in
+         let loc = match (min_loc_opt, max_loc_opt) with
+             (None, None) -> Ploc.dummy
+           | (Some loc, None) -> loc
+           | (None, Some loc) -> loc
+           | (Some loc1, Some loc2) -> Ploc.encl loc1 loc2 in
+         [Atomic (loc, [(Size (loc, Bound.({it=min; exclusive = false}, {it=max; exclusive = false})))])]
       )@
       (match (assoc_opt "minItems" l, assoc_opt "maxItems" l) with
          (None, None) -> []
        | (min, max) ->
-         let max = match max with
-             Some (`Int n) -> Some n
-           | Some (`Float f) -> Some (int_of_float f)
-           | Some j -> Fmt.(failwithf "conv_type: maxItems be number: %a" pp_json j)
-           | None -> None in
-         let min = match min with
-             Some (`Int n) -> n
-           | Some (`Float f) -> int_of_float f
-           | Some j -> Fmt.(failwithf "conv_type: minItems must be number: %a" pp_json j)
-           | None -> 0 in
-         [Atomic [(Size Bound.({it=min; exclusive = false}, {it=max; exclusive = false}))]]
+         let (max, max_loc_opt) = match max with
+             Some (Int (loc, n)) -> (Some n, Some loc)
+           | Some (Float (loc, f)) -> (Some (int_of_float f), Some loc)
+           | Some j -> Fmt.(raise_failwithf (LJ.to_loc j) "conv_type: maxItems be number")
+           | None -> (None, None) in
+         let (min, min_loc_opt) = match min with
+             Some (Int (loc, n)) -> (n, Some loc)
+           | Some (Float (loc, f)) -> (int_of_float f, Some loc)
+           | Some j -> Fmt.(raise_failwithf (LJ.to_loc j) "conv_type: minItems must be number")
+           | None -> (0, None) in
+         let loc = match (min_loc_opt, max_loc_opt) with
+             (None, None) -> Ploc.dummy
+           | (Some loc, None) -> loc
+           | (None, Some loc) -> loc
+           | (Some loc1, Some loc2) -> Ploc.encl loc1 loc2 in
+         [Atomic (loc, [(Size (loc, Bound.({it=min; exclusive = false}, {it=max; exclusive = false})))])]
       )@
       (match (assoc_opt "minProperties" l, assoc_opt "maxProperties" l) with
          (None, None) -> []
        | (min, max) ->
-         let max = match max with
-             Some (`Int n) -> Some n
-           | Some (`Float f) -> Some (int_of_float f)
-           | Some j -> Fmt.(failwithf "conv_type: maxProperties must be number: %a" pp_json j)
-           | None -> None in
-         let min = match min with
-             Some (`Int n) -> n
-           | Some (`Float f) -> int_of_float f
-           | Some j -> Fmt.(failwithf "conv_type: minProperties must be number: %a" pp_json j)
-           | None -> 0 in
-         [And(Simple JObject, Atomic [(Size Bound.({it=min; exclusive = false}, {it=max; exclusive = false}))])]
+         let (max, max_loc_opt) = match max with
+             Some (Int (loc, n)) -> (Some n, Some loc)
+           | Some (Float (loc, f)) -> (Some (int_of_float f), Some loc)
+           | Some j -> Fmt.(raise_failwithf (LJ.to_loc j) "conv_type: maxProperties must be number")
+           | None -> (None, None) in
+         let (min, min_loc_opt) = match min with
+             Some (Int (loc, n)) -> (n, Some loc)
+           | Some (Float (loc, f)) -> (int_of_float f, Some loc)
+           | Some j -> Fmt.(raise_failwithf (LJ.to_loc j) "conv_type: minProperties must be number")
+           | None -> (0, None) in
+         let loc = match (min_loc_opt, max_loc_opt) with
+             (None, None) -> Ploc.dummy
+           | (Some loc, None) -> loc
+           | (None, Some loc) -> loc
+           | (Some loc1, Some loc2) -> Ploc.encl loc1 loc2 in
+         [And(loc, Simple (loc, JObject), Atomic (loc, [(Size (loc, Bound.({it=min; exclusive = false}, {it=max; exclusive = false})))]))]
       )@
       (match (assoc_opt "minimum" l, assoc_opt "exclusiveMinimum" l,
               assoc_opt "maximum" l, assoc_opt "exclusiveMaximum" l) with
          (None, None, None, None) -> []
        | (min, emin, max, emax) ->
-         let min = match (min,emin) with
-             (Some _, Some _) ->
-             Fmt.(failwithf "conv_type: cannot specify both minimum and exclusiveMinimum: %a" pp_json j)
+         let (min, min_loc_opt) = match (min,emin) with
+             (Some j1, Some j2) ->
+             let loc = Ploc.encl (LJ.to_loc j1) (LJ.to_loc j2) in
+             Fmt.(raise_failwithf loc "conv_type: cannot specify both minimum and exclusiveMinimum")
            | (None, None) ->
-             Bound.{it=None; exclusive = false}
+             (Bound.{it=None; exclusive = false}, None)
 
-           | (Some (`Int n), None) -> Bound.{it=Some (float_of_int n); exclusive = false}
-           | (Some (`Float f), None) -> Bound.{it=Some f; exclusive = false}
-           | (Some j, None) -> Fmt.(failwithf "conv_type: minimum must be number: %a" pp_json j)
+           | (Some (Int (loc, n)), None) -> (Bound.{it=Some (float_of_int n); exclusive = false}, Some loc)
+           | (Some (Float (loc, f)), None) -> (Bound.{it=Some f; exclusive = false}, Some loc)
+           | (Some j, None) -> Fmt.(raise_failwithf (LJ.to_loc j) "conv_type: minimum must be number")
 
-           | (None, Some (`Int n)) -> Bound.{it=Some (float_of_int n); exclusive = true}
-           | (None, Some (`Float f)) -> Bound.{it=Some f; exclusive = true}
-           | (None, Some j) -> Fmt.(failwithf "conv_type: exclusiveMinimum must be number: %a" pp_json j) in
+           | (None, Some (Int (loc, n))) -> (Bound.{it=Some (float_of_int n); exclusive = true}, Some loc)
+           | (None, Some (Float (loc, f))) -> (Bound.{it=Some f; exclusive = true}, Some loc)
+           | (None, Some j) -> Fmt.(raise_failwithf (LJ.to_loc j) "conv_type: exclusiveMinimum must be number") in
 
-         let max = match (max,emax) with
-             (Some _, Some _) ->
-             Fmt.(failwithf "conv_type: cannot specify both maximum and exclusiveMaximum: %a" pp_json j)
+         let (max, max_loc_opt) = match (max,emax) with
+             (Some j1, Some j2) ->
+             let loc = Ploc.encl (LJ.to_loc j1) (LJ.to_loc j2) in
+             Fmt.(raise_failwithf loc "conv_type: cannot specify both maximum and exclusiveMaximum")
            | (None, None) ->
-             Bound.{it=None; exclusive = false}
+             (Bound.{it=None; exclusive = false}, None)
 
-           | (Some (`Int n), None) -> Bound.{it=Some (float_of_int n); exclusive = false}
-           | (Some (`Float f), None) -> Bound.{it=Some f; exclusive = false}
-           | (Some j, None) -> Fmt.(failwithf "conv_type: maximum must be number: %a" pp_json j)
+           | (Some (Int (loc, n)), None) -> (Bound.{it=Some (float_of_int n); exclusive = false}, Some loc)
+           | (Some (Float (loc, f)), None) -> (Bound.{it=Some f; exclusive = false}, Some loc)
+           | (Some j, None) -> Fmt.(raise_failwithf (LJ.to_loc j) "conv_type: maximum must be number")
 
-           | (None, Some (`Int n)) -> Bound.{it=Some (float_of_int n); exclusive = true}
-           | (None, Some (`Float f)) -> Bound.{it=Some f; exclusive = true}
-           | (None, Some j) -> Fmt.(failwithf "conv_type: exclusiveMaximum must be number: %a" pp_json j) in
+           | (None, Some (Int (loc, n))) -> (Bound.{it=Some (float_of_int n); exclusive = true}, Some loc)
+           | (None, Some (Float (loc, f))) -> (Bound.{it=Some f; exclusive = true}, Some loc)
+           | (None, Some j) -> Fmt.(raise_failwithf (LJ.to_loc j) "conv_type: exclusiveMaximum must be number") in
+         let loc = match (min_loc_opt, max_loc_opt) with
+             (None, None) -> Ploc.dummy
+           | (Some loc, None) -> loc
+           | (None, Some loc) -> loc
+           | (Some loc1, Some loc2) -> Ploc.encl loc1 loc2 in
 
-         [Atomic [NumberBound(min, max)]]
+         [Atomic (loc, [NumberBound(loc, (min, max))])]
       )@
       (match assoc_opt "anyOf" l with
-         Some (`List (_::_ as l)) ->
+         Some (List (loc, (_::_ as l))) ->
          let l = List.map conv_type0 l in
-         [orList l]
-       | Some v -> Fmt.(failwithf "conv_type: anyOf did not have nonempty array paylaod: %a" pp_json v)
+         [orList loc l]
+       | Some v -> Fmt.(raise_failwithf loc "conv_type: anyOf did not have nonempty array payload")
        | None -> []
       )@
       (match assoc_opt "allOf" l with
-         Some (`List (_::_ as l)) ->
+         Some (List (loc, (_::_ as l))) ->
          let l = List.map conv_type0 l in
-         [andList l]
-       | Some v -> Fmt.(failwithf "conv_type: allOf did not have nonempty array paylaod: %a" pp_json v)
+         [andList loc l]
+       | Some v -> Fmt.(raise_failwithf loc "conv_type: allOf did not have nonempty array payload")
        | None -> []
       )@
       (match assoc_opt "oneOf" l with
-         Some (`List (_::_ as l)) ->
+         Some (List (loc, (_::_ as l))) ->
          let l = List.map conv_type0 l in
-         [xorList l]
-       | Some v -> Fmt.(failwithf "conv_type: oneOf did not have nonempty array paylaod: %a" pp_json v)
+         [xorList loc l]
+       | Some v -> Fmt.(raise_failwithf loc "conv_type: oneOf did not have nonempty array payload")
        | None -> []
       )@
       (match assoc_opt "required" l with
-         Some (`List [])  ->
-         []
-       | Some (`List l) when List.for_all isString l  ->
-         [Atomic[FieldRequired (List.map (function `String s -> s | _ -> assert false) l)]]
-       | Some v -> Fmt.(failwithf "conv_type: required did not have nonempty string array payload: %a" pp_json v)
+         Some (List (_, []))  -> []
+       | Some (List (loc, l)) when List.for_all isString l  ->
+         [Atomic(loc, [FieldRequired (loc, List.map (function String (_, s) -> s | _ -> assert false) l)])]
+       | Some v -> Fmt.(raise_failwithf (LJ.to_loc v) "conv_type: required did not have nonempty string array payload")
        | None -> []
       )@
       (match assoc_opt "enum" l with
-         Some (`List l)  ->
-         [Atomic[Enum (List.map canon_json l)]]
-       | Some v -> Fmt.(failwithf "conv_type: enum did not have array payload: %a" pp_json v)
+         Some (List (loc, l))  ->
+         [Atomic(loc, [Enum (loc, l |> List.map LJ.to_json |> List.map canon_json)])]
+       | Some v -> Fmt.(raise_failwithf (LJ.to_loc v) "conv_type: enum did not have array payload")
        | None -> []
       )@
       (match assoc_opt "const" l with
          Some j  ->
-         [Atomic[Enum [canon_json j]]]
+         let loc = LJ.to_loc j in
+         [Atomic(loc, [Enum (loc, [canon_json (LJ.to_json j)])])]
        | None -> []
       )@
       (match assoc_opt "pattern" l with
-         Some (`String re)  ->
+         Some (String (loc, re))  ->
          if re <> "" then
-           [Atomic[StringRE re]]
-         else [Simple JString]
-       | Some v -> Fmt.(failwithf "conv_type: pattern did not have string payload: %a" pp_json v)
+           [Atomic(loc, [StringRE (loc, re)])]
+         else [Simple (loc, JString)]
+       | Some v -> Fmt.(raise_failwithf (LJ.to_loc v) "conv_type: pattern did not have string payload")
        | None -> []
       )@
       (match assoc_opt "default" l with
-         Some j  -> [Atomic[Default j]]
+         Some j  ->
+         let loc = LJ.to_loc j in
+         [Atomic(loc, [Default (loc, j |> LJ.to_json)])]
        | None -> []
       )@
       (match assoc_opt "format" l with
-         Some (`String s)  -> [Atomic[Format s]]
-       | Some v -> Fmt.(failwithf "conv_type: format did not have string payload: %a" pp_json v)
+         Some (String (loc, s))  -> [Atomic(loc, [Format (loc, s)])]
+       | Some v -> Fmt.(raise_failwithf (LJ.to_loc v) "conv_type: format did not have string payload")
        | None -> []
       )@
       (match assoc_opt "propertyNames" l with
          Some t ->
-         [Atomic [PropertyNames (conv_type0 t)]]
+         let loc = LJ.to_loc t in
+         [Atomic (loc, [PropertyNames (loc, conv_type0 t)])]
        | None -> []
       )@
       (match assoc_opt "not" l with
          Some t ->
-         [Not (conv_type0 t)]
+         let loc = LJ.to_loc t in
+         [Not (loc, conv_type0 t)]
        | None -> []
       )@
       (match assoc_opt "contentMediaType" l with
-         Some (`String s)  -> [Atomic[ContentMediaType s]]
-       | Some v -> Fmt.(failwithf "conv_type: contentMediaType did not have string payload: %a" pp_json v)
+         Some (String (loc, s))  -> [Atomic(loc, [ContentMediaType (loc, s)])]
+       | Some v -> Fmt.(raise_failwithf (LJ.to_loc v) "conv_type: contentMediaType did not have string payload")
        | None -> []
       )@
       (match assoc_opt "contentEncoding" l with
-         Some (`String s)  -> [Atomic[ContentEncoding s]]
-       | Some v -> Fmt.(failwithf "conv_type: contentEncoding did not have string payload: %a" pp_json v)
+         Some (String (loc, s))  -> [Atomic(loc, [ContentEncoding (loc, s)])]
+       | Some v -> Fmt.(raise_failwithf (LJ.to_loc v) "conv_type: contentEncoding did not have string payload")
        | None -> []
       )@
       (match assoc_opt "dependencies" l with
-         Some (`Assoc [])  -> []
-       | Some (`Assoc l)  ->
+         Some (Assoc (_, []))  -> []
+       | Some (Assoc (loc, l))  ->
          let l = List.map (fun (k, v) ->
              match v with
-               `List fl when List.for_all isString fl ->
-               let fl = List.map (function `String s -> s | _ -> assert false) fl in
-               Impl(Atomic[FieldRequired [k]], Atomic[FieldRequired fl])
-             | (`Assoc _) as j ->
-               Impl(Atomic[FieldRequired [k]], conv_type0 j)
-             | v ->  Fmt.(failwithf "conv_type: rhs of a dependency was neither array nor object: %a" pp_json v)
+               List (loc, fl) when List.for_all isString fl ->
+               let fl = List.map (function String (_, s) -> s | _ -> assert false) fl in
+               Impl(loc, Atomic(loc, [FieldRequired (loc, [k])]), Atomic(loc, [FieldRequired (loc, fl)]))
+             | (Assoc (loc, _)) as j ->
+               Impl(loc, Atomic(loc, [FieldRequired (loc, [k])]), conv_type0 j)
+             | v ->  Fmt.(raise_failwithf (LJ.to_loc v) "conv_type: rhs of a dependency was neither array nor object")
            ) l in
-         [andList l]
-       | Some v -> Fmt.(failwithf "conv_type: dependencies did not have object payload: %a" pp_json v)
+         [andList loc l]
+       | Some v -> Fmt.(raise_failwithf (LJ.to_loc v) "conv_type: dependencies did not have object payload")
        | None -> []
       )@
       (match assoc_opt "multipleOf" l with
-         Some (`Int n)  -> [Atomic[MultipleOf (float_of_int n)]]
-       | Some (`Float n)  -> [Atomic[MultipleOf n]]
-       | Some v -> Fmt.(failwithf "conv_type: multipleOf did not have number payload: %a" pp_json v)
+         Some (Int (loc, n))  -> [Atomic(loc, [MultipleOf (loc, float_of_int n)])]
+       | Some (Float (loc, n))  -> [Atomic(loc, [MultipleOf (loc, n)])]
+       | Some v -> Fmt.(raise_failwithf (LJ.to_loc v) "conv_type: multipleOf did not have number payload")
        | None -> []
       )@
       (match (assoc_opt "if" l,assoc_opt "then" l,assoc_opt "else" l) with
          (Some ifj, Some thenj, Some elsej) ->
          let ift = conv_type0 ifj in
-         [And(Impl(ift, conv_type0 thenj),
-              Impl(Not ift, conv_type0 elsej))]
+         let loc = LJ.to_loc ifj in
+         [And(loc, Impl(loc, ift, conv_type0 thenj),
+              Impl(loc, Not (loc, ift), conv_type0 elsej))]
 
        | (Some ifj, Some thenj, None) ->
          let ift = conv_type0 ifj in
-         [Impl(ift, conv_type0 thenj)]
+         let loc = LJ.to_loc ifj in
+         [Impl(loc, ift, conv_type0 thenj)]
 
-       | (Some _, None, Some _) ->
-         Fmt.(failwithf "conv_type: if-else with no then: %a" pp_json j)
+       | (Some j, None, Some _) ->
+         Fmt.(raise_failwithf (LJ.to_loc j) "conv_type: if-else with no then")
 
-       | (None, Some _, None) ->
-         Fmt.(failwithf "conv_type: then with no if: %a" pp_json j)
+       | (None, Some j, None) ->
+         Fmt.(raise_failwithf (LJ.to_loc j) "conv_type: then with no if")
 
-       | (None, None, Some _) ->
-         Fmt.(failwithf "conv_type: else with no if: %a" pp_json j)
+       | (None, None, Some j) ->
+         Fmt.(raise_failwithf (LJ.to_loc j) "conv_type: else with no if")
 
        | (None,None,None) -> []
       )
       in
       let l2 =
         (match assoc_opt "patternProperties" l with
-         Some (`Assoc l) ->
+         Some (Assoc (loc, l)) ->
          (List.map (fun (k,v) ->
               let ut = conv_type0 v in
               if k <> "" then
-                FieldRE(k,ut)
-              else OrElse ut
+                FieldRE(loc, k,ut)
+              else OrElse (loc, ut)
             ) l)
-       | Some v -> Fmt.(failwithf "conv_type: malformed patternProperties member: %a" pp_json v)
+       | Some v -> Fmt.(raise_failwithf (LJ.to_loc v) "conv_type: malformed patternProperties member")
        | None -> []
       )@
       (match assoc_opt "additionalProperties" l with
-         Some (`Bool false) -> [Sealed]
-       | Some (`Bool true) -> []
-       | Some (`Assoc _ as j) -> begin
+         Some (Bool (loc, false)) -> [Sealed loc]
+       | Some (Bool (_, true)) -> []
+       | Some (Assoc (loc, _) as j) -> begin
            match conv_type_l j with
-             ([], _) -> Fmt.(failwithf "additionalProperties %a yielded no type-constraints" pp_json j)
+             ([], _) -> Fmt.(raise_failwithf loc "additionalProperties yielded no type-constraints")
            | _ ->
-             [OrElse (conv_type0 j)]
+             [OrElse (loc, conv_type0 j)]
        end
-       | Some v -> Fmt.(failwithf "conv_type: additionalProperties did not have bool or type payload: %a" pp_json v)
+       | Some v -> Fmt.(raise_failwithf (LJ.to_loc v) "conv_type: additionalProperties did not have bool or type payload")
        | None -> []
       )@
       (match assoc_opt "additionalItems" l with
-         Some (`Bool false) -> [Sealed]
-       | Some (`Bool true) -> []
-       | Some (`Assoc _ as j) -> begin
+         Some (Bool (loc, false)) -> [Sealed loc]
+       | Some (Bool (_, true)) -> []
+       | Some (Assoc (loc, _) as j) -> begin
            match conv_type_l j with
-             ([], _) -> Fmt.(failwithf "additionalItems %a yielded no type-constraints" pp_json j)
+             ([], _) -> Fmt.(raise_failwithf loc "additionalItems yielded no type-constraints")
            | _ ->
-             [OrElse (conv_type0 j)]
+             [OrElse (loc, conv_type0 j)]
        end
-       | Some v -> Fmt.(failwithf "conv_type: additionalItems did not have bool or type payload: %a" pp_json v)
+       | Some v -> Fmt.(raise_failwithf (LJ.to_loc v) "conv_type: additionalItems did not have bool or type payload")
        | None -> []
       )@
       (match assoc_opt "unevaluatedProperties" l with
-         Some (`Bool false) -> [Sealed]
-       | Some (`Assoc _ as j) -> begin
+         Some (Bool (loc, false)) -> [Sealed loc]
+       | Some (Assoc (loc, _) as j) -> begin
            match conv_type_l j with
-             ([], _) -> Fmt.(failwithf "unevaluatedProperties %a yielded no type-constraints" pp_json j)
+             ([], _) -> Fmt.(raise_failwithf loc "unevaluatedProperties yielded no type-constraints")
            | _ ->
-             [OrElse (conv_type0 j)]
+             [OrElse (loc, conv_type0 j)]
        end
-       | Some v -> Fmt.(failwithf "conv_type: unevaluatedProperties did not have bool or type payload: %a" pp_json v)
+       | Some v -> Fmt.(raise_failwithf (LJ.to_loc v) "conv_type: unevaluatedProperties did not have bool or type payload")
        | None -> []
       )
       in
       (l1,l2)
 
-    | j -> Fmt.(failwithf "conv_type: expected an object but got@.%s@." (Yojson.Basic.pretty_to_string j))
+    | j -> Fmt.(raise_failwithf (LJ.to_loc j) "conv_type: expected an object")
 
   and wrap_seal j ut l2 =
+    let loc = LJ.to_loc j in
     let patterns = l2 |> List.filter_map (function
-          FieldRE(re,ut) -> Some(re, ut)
+          FieldRE(_, re,ut) -> Some(re, ut)
         | _ -> None
       ) in
     let orelse = match l2 |> List.filter_map (function
-          OrElse ut -> Some ut
+          OrElse (_, ut) -> Some ut
         | _ -> None
       ) with
       [] -> None
     | [ut] -> Some ut
-    | _ -> Fmt.(failwithf "conv_type: type had more than one Orelse: %s"
-                  (Yojson.Basic.pretty_to_string j)) in
-    let isSealed = List.mem Sealed l2 in
+    | _ -> Fmt.(raise_failwithf loc "conv_type: type had more than one Orelse") in
+    let hasSealed = List.exists isSealed l2 in
     let addSealed =
-      patterns <> [] || orelse <> None || isSealed in
+      patterns <> [] || orelse <> None || hasSealed in
       if addSealed then
-        Seal(ut, patterns, orelse)
+        Seal(loc, ut, patterns, orelse)
       else ut
 
   and conv_type0 ?(allow_empty=false) t =
+    let loc = LJ.to_loc t in
     match conv_type_l t with
       ([],[]) ->
       if allow_empty then begin
-        Fmt.(pf stderr "WARNING: conv_type: conversion produced no result: %s" (Yojson.Basic.pretty_to_string t)) ;
-        UtTrue
+        Fmt.(pf stderr "%s:WARNING: conv_type: conversion produced no result"
+               (Ploc.string_of_location loc)
+            ) ;
+        UtTrue loc
       end
       else
-        Fmt.(failwithf "conv_type: conversion produced no result: %s" (Yojson.Basic.pretty_to_string t))
+        Fmt.(raise_failwithf loc "conv_type: conversion produced no result")
     | ([],l2) ->
-      Fmt.(pf stderr "WARNING: conv_type: conversion produced no type, but FieldRE/Orelse : %s"
-             (Yojson.Basic.pretty_to_string t)) ;
-      wrap_seal t UtFalse l2
+      Fmt.(pf stderr "%s:WARNING: conv_type: conversion produced no type, but FieldRE/Orelse"
+             (Ploc.string_of_location loc)
+          ) ;
+      wrap_seal t (UtFalse loc) l2
 
-    | (l,[]) -> andList l
+    | (l,[]) -> andList loc l
     | (l1,l2) ->
-      let ut = andList l1 in
+      let ut = andList loc l1 in
       wrap_seal t ut l2
 
   let conv_type j = conv_type0 j
@@ -659,57 +683,59 @@ let known_keys = documentation_keys@known_useful_keys
     drec []
 
 let recognize_definition t = match t with
-  `Assoc l ->
+  Assoc (_, l) ->
   l |> List.exists (function (k, v) ->
       List.mem k known_useful_keys
     )
   | _ -> false
 
-let recognize_definitions cc (t : Yojson.Basic.t) = match t with
-    `Assoc l -> begin match (assoc_opt "definitions" l, assoc_opt "$defs" l, assoc_opt "defs" l ) with
-        (Some (`Assoc l), None, None) ->
+let recognize_definitions cc t = match t with
+    Assoc (loc, l) -> begin match (assoc_opt "definitions" l, assoc_opt "$defs" l, assoc_opt "defs" l ) with
+        (Some (Assoc (loc, l)), None, None) ->
         l |> List.iter (function (k, v) ->
             if recognize_definition v then
-              ignore(lookup_ref (Printf.sprintf "#/definitions/%s" k))
+              ignore(lookup_ref loc (Printf.sprintf "#/definitions/%s" k))
           )
-      | (None, Some (`Assoc l), None) ->
+      | (None, Some (Assoc (loc, l)), None) ->
         l |> List.iter (fun (k, v) ->
             if recognize_definition v then
-              ignore(lookup_ref (Printf.sprintf "#/$defs/%s" k))
+              ignore(lookup_ref loc (Printf.sprintf "#/$defs/%s" k))
           )
-      | (None, None, Some (`Assoc l)) ->
+      | (None, None, Some (Assoc (loc, l))) ->
         l |> List.iter (fun (k, v) ->
             if recognize_definition v then
-              ignore(lookup_ref (Printf.sprintf "#/defs/%s" k))
+              ignore(lookup_ref loc (Printf.sprintf "#/defs/%s" k))
           )
       | (None, None, None) -> ()
-      | _ -> Fmt.(failwithf "recognize_definitions: malformed %s" (Yojson.Basic.pretty_to_string t))
+      | _ -> Fmt.(raise_failwithf loc "recognize_definitions: malformed")
     end
   | _ -> ()
 
 let conv_schema cc t =
+  let loc = LJ.to_loc t in
   reset cc t ;
   recognize_definitions cc t ;
   let t = top_conv_type t in
   let defs = conv_definitions() in
   let defs = List.stable_sort Stdlib.compare defs in
-  let l = List.map (fun (id, mid) -> StImport(id, mid)) !imports in
+  let l = List.map (fun (id, mid) -> StImport(loc, id, mid)) !imports in
   let l = if defs <> [] then
       l@[
-        StModuleBinding(ID.of_string "DEFINITIONS", MeStruct [StTypes(true, defs)])
-      ; StOpen(REL (ID.of_string "DEFINITIONS"), None)
+        StModuleBinding(loc, ID.of_string "DEFINITIONS", MeStruct (loc, [StTypes(loc, true, defs)]))
+      ; StOpen(loc, REL (ID.of_string "DEFINITIONS"), None)
       ]
     else l in
   let isSealed = match t with Seal _ -> true | _ -> false in
-  l@[StTypes(false, [(ID.of_string "t", isSealed, t)])]
+  l@[StTypes(loc, false, [(ID.of_string "t", isSealed, t)])]
 
 let convert_file ?(with_predefined=false) cc s =
   let open Fpath in
   let stl =
     if has_ext "json" (v s) then
-      let j = Yojson.Basic.from_file s in
+      let j = parse_file parse_json_eoi s in
       conv_schema (CC.with_filename cc s) j
     else Fmt.(failwithf "convert_file: format not recognized: %s" s) in
   if with_predefined then
-  [StImport("lib/predefined.utj", ID.of_string "Predefined")]@stl
+    let loc = match stl with [] -> Ploc.dummy | h::t -> loc_of_struct_item h in
+  [StImport(loc, "lib/predefined.utj", ID.of_string "Predefined")]@stl
   else stl

@@ -16,14 +16,14 @@ let normalize_structure stl =
   let dt = make_dt () in
   let old_migrate_struct_item_t = dt.migrate_struct_item_t in
   let new_migrate_struct_item_t dt = function
-      StTypes(true, l) -> StTypes(true, List.stable_sort Stdlib.compare l)
+      StTypes(loc, true, l) -> StTypes(loc, true, List.stable_sort Stdlib.compare l)
     | st -> old_migrate_struct_item_t dt st in
   let dt = { dt with migrate_struct_item_t = new_migrate_struct_item_t } in
   dt.migrate_structure dt stl
 
 let success (expect, arg) =
   let msg = Fmt.(str "parsing test for code << %s >>" arg) in
-  assert_equal ~msg ~printer ~cmp expect (of_string_exn arg)
+  assert_equal ~msg ~printer ~cmp:Reloc.(wrap_cmp cmp utype_t) expect (of_string_exn arg)
 
 let fail (exnmsg, arg) =
   let msg = Fmt.(str "parsing test for code << %s >>" arg) in
@@ -31,22 +31,22 @@ let fail (exnmsg, arg) =
 
 let success_struct_item (expect, arg) =
   let msg = Fmt.(str "parsing test for code << %s >>" arg) in
-  assert_equal ~msg ~printer:struct_item_printer ~cmp:struct_item_cmp
+  assert_equal ~msg ~printer:struct_item_printer ~cmp:Reloc.(wrap_cmp struct_item_cmp struct_item_t)
     expect (struct_item_of_string_exn arg)
 
 let success_module_expr (expect, arg) =
   let msg = Fmt.(str "parsing test for code << %s >>" arg) in
-  assert_equal ~msg ~printer:module_expr_printer ~cmp:module_expr_cmp
+  assert_equal ~msg ~printer:module_expr_printer ~cmp:Reloc.(wrap_cmp module_expr_cmp module_expr_t)
     expect (module_expr_of_string_exn arg)
 
 let success_module_type (expect, arg) =
   let msg = Fmt.(str "parsing test for code << %s >>" arg) in
-  assert_equal ~msg ~printer:module_type_printer ~cmp:module_type_cmp
+  assert_equal ~msg ~printer:module_type_printer ~cmp:Reloc.(wrap_cmp module_type_cmp module_type_t)
     expect (module_type_of_string_exn arg)
 
 let success_sig_item (expect, arg) =
   let msg = Fmt.(str "parsing test for code << %s >>" arg) in
-  assert_equal ~msg ~printer:signature_printer ~cmp:signature_cmp
+  assert_equal ~msg ~printer:signature_printer ~cmp:Reloc.(wrap_cmp signature_cmp signature)
     expect (sig_item_of_string_exn arg)
 
 
@@ -58,60 +58,60 @@ let simple = "simple" >::: [
 
 let parsing = "parsing" >::: [
     "utype" >:: (fun ctxt -> List.iter success [
-        (Simple JString, "string")
-      ; ((Ref (Some (REL (ID.of_string "M")), ID.of_string "t")), "M.t")
+        (Simple (Ploc.dummy, JString), "string")
+      ; ((Ref(Ploc.dummy, (Some (REL (ID.of_string "M")), ID.of_string "t"))), "M.t")
       ; ((Atomic
-            [(Enum
-                [`List ([`Float (1.); `Float (2.)]); `Assoc ([("a", `Float (2.))]);
-                 `Bool (true)])
-            ]),
+            (Ploc.dummy, [(Enum
+                (Ploc.dummy, [`List ([`Float (1.); `Float (2.)]); `Assoc ([("a", `Float (2.))]);
+                 `Bool (true)]))
+            ])),
          {|[ enum [1,2], {"a":2}, true ; ]|})
-      ; ((Atomic [(Field ("a", (Simple JObject)))]),
+      ; ((Atomic (Ploc.dummy, [(Field (Ploc.dummy, "a", (Simple (Ploc.dummy, JObject))))])),
          {|[ "a": object ]|})
-      ; ((Atomic [(Field ("a", (Simple JObject)));FieldRequired ["a"]]),
+      ; ((Atomic (Ploc.dummy, [(Field (Ploc.dummy, "a", (Simple (Ploc.dummy, JObject))));FieldRequired (Ploc.dummy, ["a"])])),
          {|[ required "a": object ]|})
-      ; ((Atomic [(FieldRE ("foo", (Simple JObject)))]),
+      ; ((Atomic (Ploc.dummy, [(FieldRE (Ploc.dummy, "foo", (Simple (Ploc.dummy, JObject))))])),
          {|[ /foo/ : object ]|})
-      ; ((Atomic [(Field ("a", (Simple JObject)))]),
+      ; ((Atomic (Ploc.dummy, [(Field (Ploc.dummy, "a", (Simple (Ploc.dummy, JObject))))])),
          {|[ "a": object ; ]|})
-      ; ((Atomic [(Field ("a", (Simple JObject))); (Field ("b", (Simple JObject)))]),
+      ; ((Atomic (Ploc.dummy, [(Field (Ploc.dummy, "a", (Simple (Ploc.dummy, JObject)))); (Field (Ploc.dummy, "b", (Simple (Ploc.dummy, JObject))))])),
          {|[ "a": object ; "b" : object ]|})
-      ; ((Atomic [(Field ("a", (Simple JObject))); (Field ("b", (Simple JObject)))]),
+      ; ((Atomic (Ploc.dummy, [(Field (Ploc.dummy, "a", (Simple (Ploc.dummy, JObject)))); (Field (Ploc.dummy, "b", (Simple (Ploc.dummy, JObject))))])),
          {|[ "a": object ; "b" : object ;]|})
-      ; ((And ((Simple JObject),
+      ; ((And (Ploc.dummy, (Simple (Ploc.dummy, JObject)),
                (Atomic
-                  [(Field ("productid", (Ref (None, ID.of_string "integer"))));
-                   (Field ("productName", (Simple JString)));
-                   (Field ("price",
-                           (And ((Simple JNumber),
+                  (Ploc.dummy, [(Field (Ploc.dummy, "productid", (Ref(Ploc.dummy, (None, ID.of_string "integer")))));
+                   (Field (Ploc.dummy, "productName", (Simple (Ploc.dummy, JString))));
+                   (Field (Ploc.dummy, "price",
+                           (And (Ploc.dummy, (Simple (Ploc.dummy, JNumber)),
                                  (Atomic
-                                    [(NumberBound
-                                        ({ it = (Some 0.); exclusive = true },
-                                         { it = None; exclusive = false }))
-                                    ])
+                                    (Ploc.dummy, [(NumberBound
+                                        (Ploc.dummy, ({ it = (Some 0.); exclusive = true },
+                                         { it = None; exclusive = false })))
+                                    ]))
                                 ))
                           ));
-                   (Field ("tags",
-                           (And ((Simple JArray),
+                   (Field (Ploc.dummy, "tags",
+                           (And (Ploc.dummy, (Simple (Ploc.dummy, JArray)),
                                  (Atomic
-                                    [(ArrayOf (Simple JString));
+                                    (Ploc.dummy, [(ArrayOf (Ploc.dummy, Simple (Ploc.dummy, JString)));
                                      (Size
-                                        ({ it = 1; exclusive = false },
-                                         { it = None; exclusive = true }));
-                                     ArrayUnique
-                                    ])
+                                        (Ploc.dummy, ({ it = 1; exclusive = false },
+                                         { it = None; exclusive = true })));
+                                     ArrayUnique Ploc.dummy
+                                    ]))
                                 ))
                           ));
-                   (Field ("dimensions",
-                           (And ((Simple JObject),
+                   (Field (Ploc.dummy, "dimensions",
+                           (And (Ploc.dummy, (Simple (Ploc.dummy, JObject)),
                                  (Atomic
-                                    [(Field ("length", (Simple JNumber)));
-                                     (Field ("width", (Simple JNumber)));
-                                     (Field ("height", (Simple JNumber)));
-                                     (FieldRequired ["length"; "width"; "height"])])
+                                    (Ploc.dummy, [(Field (Ploc.dummy, "length", (Simple (Ploc.dummy, JNumber))));
+                                     (Field (Ploc.dummy, "width", (Simple (Ploc.dummy, JNumber))));
+                                     (Field (Ploc.dummy, "height", (Simple (Ploc.dummy, JNumber))));
+                                     (FieldRequired (Ploc.dummy, ["length"; "width"; "height"]))]))
                                 ))
                           ));
-                   (FieldRequired ["productid"; "productName"; "price"; "tags"])])
+                   (FieldRequired (Ploc.dummy, ["productid"; "productName"; "price"; "tags"]))]))
               )), {|
          object && [ "productid" : integer ;
                      "productName" : string ;
@@ -125,8 +125,8 @@ let parsing = "parsing" >::: [
       ]
       )
   ; "sealed-utype" >:: (fun ctxt -> List.iter success [
-        ((Seal ((Simple JObject), [], None)), "seal object")
-      ; ((Seal ((Simple JObject), [("^[^\\+#$\\s\\.]+$", (Simple JString))], None)),
+        ((Seal (Ploc.dummy, (Simple (Ploc.dummy, JObject)), [], None)), "seal object")
+      ; ((Seal (Ploc.dummy, (Simple (Ploc.dummy, JObject)), [("^[^\\+#$\\s\\.]+$", (Simple (Ploc.dummy, JString)))], None)),
          "seal object with /^[^\+#$\s\.]+$/ : string")
       ]
       )
@@ -136,67 +136,67 @@ let parsing = "parsing" >::: [
       ]
       )
   ; "struct_item" >:: (fun ctxt -> List.iter success_struct_item [
-      (StTypes(false,[(ID.of_string "x",false, Simple JString)]), "type x = string ;")
-    ; ((StTypes (false, [(ID.of_string "x",false, (Simple JString)); (ID.of_string "y",false, (Simple JNumber))])),
+      (StTypes(Ploc.dummy, false,[(ID.of_string "x",false, Simple (Ploc.dummy, JString))]), "type x = string ;")
+    ; ((StTypes (Ploc.dummy, false, [(ID.of_string "x",false, (Simple (Ploc.dummy, JString))); (ID.of_string "y",false, (Simple (Ploc.dummy, JNumber)))])),
        "type x = string and y = number ;")
-    ; ((StTypes (true, [(ID.of_string "x",false, (Simple JString)); (ID.of_string "y",false, (Simple JNumber))])),
+    ; ((StTypes (Ploc.dummy, true, [(ID.of_string "x",false, (Simple (Ploc.dummy, JString))); (ID.of_string "y",false, (Simple (Ploc.dummy, JNumber)))])),
        "type rec x = string and y = number ;")
-    ; ((StTypes (false, [(ID.of_string "x",false, (Simple JString)); (ID.of_string "y",false, (Simple JNumber))])),
+    ; ((StTypes (Ploc.dummy, false, [(ID.of_string "x",false, (Simple (Ploc.dummy, JString))); (ID.of_string "y",false, (Simple (Ploc.dummy, JNumber)))])),
        "type nonrec x = string and y = number ;")
-    ; ((StTypes (false,
-                 [(ID.of_string "integer",false, (And ((Simple JNumber), (Atomic [(MultipleOf 1.)]))))])),
+    ; ((StTypes (Ploc.dummy, false,
+                 [(ID.of_string "integer",false, (And (Ploc.dummy, (Simple (Ploc.dummy, JNumber)), (Atomic (Ploc.dummy, [(MultipleOf (Ploc.dummy, 1.))])))))])),
        "type integer = number && [ multipleOf 1.0 ; ] ;")
-    ; ((StOpen (DEREF (REL (ID.of_string "M"), (ID.of_string "N")), None)),
+    ; ((StOpen (Ploc.dummy, DEREF (REL (ID.of_string "M"), (ID.of_string "N")), None)),
        "open M.N;")
-    ; ((StInclude (DEREF (REL (ID.of_string "M"), (ID.of_string "N")), None)),
+    ; ((StInclude (Ploc.dummy, DEREF (REL (ID.of_string "M"), (ID.of_string "N")), None)),
        "include M.N;")
-    ; ((StModuleBinding (ID.of_string "M",
-                         (MeStruct [(StTypes (false, [(ID.of_string "t",false, (Simple JObject))]))]))),
+    ; ((StModuleBinding (Ploc.dummy, ID.of_string "M",
+                         (MeStruct (Ploc.dummy, [(StTypes (Ploc.dummy, false, [(ID.of_string "t",false, (Simple (Ploc.dummy, JObject)))]))])))),
        "module M = struct type t = object ; end;")
-    ; ((StModuleType ((ID.of_string "MTY"), (MtSig [(SiType (ID.of_string "t",false))]))),
+    ; ((StModuleType (Ploc.dummy, (ID.of_string "MTY"), (MtSig (Ploc.dummy, [(SiType (Ploc.dummy, ID.of_string "t",false))])))),
        "module type MTY = sig type t ; end;")
-    ; ((StLocal (
-        [(StImport ("https://example.com/geographical-location.schema.json",
+    ; ((StLocal (Ploc.dummy, 
+        [(StImport (Ploc.dummy, "https://example.com/geographical-location.schema.json",
                     (ID.of_string "GeoLoc")))
         ],
-        [(StTypes (false,
+        [(StTypes (Ploc.dummy, false,
                    [(ID.of_string "product",false,
-                     (And ((Simple JObject),
+                     (And (Ploc.dummy, (Simple (Ploc.dummy, JObject)),
                            (Atomic
-                              [(Field ("productid", (Ref (None, ID.of_string "integer"))));
-                               (Field ("productName", (Simple JString)));
-                               (Field ("price",
-                                       (And ((Simple JNumber),
+                              (Ploc.dummy, [(Field (Ploc.dummy, "productid", (Ref(Ploc.dummy, (None, ID.of_string "integer")))));
+                               (Field (Ploc.dummy, "productName", (Simple (Ploc.dummy, JString))));
+                               (Field (Ploc.dummy, "price",
+                                       (And (Ploc.dummy, (Simple (Ploc.dummy, JNumber)),
                                              (Atomic
-                                                [(NumberBound
-                                                    ({ it = (Some 0.); exclusive = true },
-                                                     { it = None; exclusive = false }))
-                                                ])
+                                                (Ploc.dummy, [(NumberBound
+                                                    (Ploc.dummy, ({ it = (Some 0.); exclusive = true },
+                                                     { it = None; exclusive = false })))
+                                                ]))
                                             ))
                                       ));
-                               (Field ("tags",
-                                       (And ((Simple JArray),
+                               (Field (Ploc.dummy, "tags",
+                                       (And (Ploc.dummy, (Simple (Ploc.dummy, JArray)),
                                              (Atomic
-                                                [(ArrayOf (Simple JString));
+                                                (Ploc.dummy, [(ArrayOf (Ploc.dummy, Simple (Ploc.dummy, JString)));
                                                  (Size
-                                                    ({ it = 1; exclusive = false },
-                                                     { it = None; exclusive = true }));
-                                                 ArrayUnique])
+                                                    (Ploc.dummy, ({ it = 1; exclusive = false },
+                                                     { it = None; exclusive = true })));
+                                                 ArrayUnique Ploc.dummy]))
                                             ))
                                       ));
-                               (Field ("dimensions",
-                                       (And ((Simple JObject),
+                               (Field (Ploc.dummy, "dimensions",
+                                       (And (Ploc.dummy, (Simple (Ploc.dummy, JObject)),
                                              (Atomic
-                                                [(Field ("length", (Simple JNumber)));
-                                                 (Field ("width", (Simple JNumber)));
-                                                 (Field ("height", (Simple JNumber)));
-                                                 (FieldRequired ["length"; "width"; "height"])])
+                                                (Ploc.dummy, [(Field (Ploc.dummy, "length", (Simple (Ploc.dummy, JNumber))));
+                                                 (Field (Ploc.dummy, "width", (Simple (Ploc.dummy, JNumber))));
+                                                 (Field (Ploc.dummy, "height", (Simple (Ploc.dummy, JNumber))));
+                                                 (FieldRequired (Ploc.dummy, ["length"; "width"; "height"]))]))
                                             ))
                                       ));
                                (FieldRequired
-                                  ["productid"; "productName"; "price"; "tags"]);
-                               (Field ("warehouseLocation", (Ref (Some (REL (ID.of_string "GeoLoc")), ID.of_string "latlong"))))
-                              ])
+                                  (Ploc.dummy, ["productid"; "productName"; "price"; "tags"]));
+                               (Field (Ploc.dummy, "warehouseLocation", (Ref(Ploc.dummy, (Some (REL (ID.of_string "GeoLoc")), ID.of_string "latlong")))))
+                              ]))
                           )))
                    ]
                   ))
@@ -221,55 +221,55 @@ end ;
 
       )
   ; "sealed-struct_item" >:: (fun ctxt -> List.iter success_struct_item [
-      (StTypes(false,[(ID.of_string "x",true, Simple JString)]), "type sealed x = string ;")
-    ; (StTypes(true,[(ID.of_string "x",true, Simple JString);(ID.of_string "y",false, Simple JNumber)]),
+      (StTypes(Ploc.dummy, false,[(ID.of_string "x",true, Simple (Ploc.dummy, JString))]), "type sealed x = string ;")
+    ; (StTypes(Ploc.dummy, true,[(ID.of_string "x",true, Simple (Ploc.dummy, JString));(ID.of_string "y",false, Simple (Ploc.dummy, JNumber))]),
        "type rec sealed x = string and y = number ;")
     ]
 
       )
   ; "module_type" >:: (fun ctxt -> List.iter success_module_type [
-      (MtPath (Some (REL (ID.of_string "M")), ID.of_string "N"),
+      (MtPath (Ploc.dummy, (Some (REL (ID.of_string "M")), ID.of_string "N")),
        "M.N")
-    ; ((MtSig []),
+    ; ((MtSig (Ploc.dummy, [])),
        "sig end")
-    ; ((MtFunctorType (((ID.of_string "M"), (MtSig [(SiType (ID.of_string "u",false))])), (MtSig [(SiType (ID.of_string "t",false))]))),
+    ; ((MtFunctorType (Ploc.dummy, ((ID.of_string "M"), (MtSig (Ploc.dummy, [(SiType (Ploc.dummy, ID.of_string "u",false))]))), (MtSig (Ploc.dummy, [(SiType (Ploc.dummy, ID.of_string "t",false))])))),
        "functor (M: sig type u; end) -> sig type t ; end")
     ; ((MtSig
-          [(SiType (ID.of_string "t",false)); (SiModuleBinding ((ID.of_string "M"), (MtPath (None, (ID.of_string "MTY")))));
-           (SiModuleType ((ID.of_string "MTY2"), (MtSig [(SiType (ID.of_string "u",false))])))]),
+          (Ploc.dummy, [(SiType (Ploc.dummy, ID.of_string "t",false)); (SiModuleBinding (Ploc.dummy, (ID.of_string "M"), (MtPath (Ploc.dummy, (None, (ID.of_string "MTY"))))));
+           (SiModuleType (Ploc.dummy, (ID.of_string "MTY2"), (MtSig (Ploc.dummy, [(SiType (Ploc.dummy, ID.of_string "u",false))]))))])),
        "sig type t; module M : MTY ; module type MTY2 = sig type u ; end ; end")
       ]
 
       )
   ; "module_expr" >:: (fun ctxt -> List.iter success_module_expr [
-      (MePath (DEREF (REL (ID.of_string "M"), (ID.of_string "N"))),
+      (MePath (Ploc.dummy, DEREF (REL (ID.of_string "M"), (ID.of_string "N"))),
        "M.N")
-    ; ((MeFunctorApp ((MePath (REL (ID.of_string "M"))), (MePath (REL (ID.of_string "N"))))),
+    ; ((MeFunctorApp (Ploc.dummy, (MePath (Ploc.dummy, REL (ID.of_string "M"))), (MePath (Ploc.dummy, REL (ID.of_string "N"))))),
        "M(N)")
-    ; ((MeFunctorApp ((MePath (REL (ID.of_string "M"))),
-                      (MeStruct [(StTypes (false, [(ID.of_string "t",false, (Simple JObject))]))]))),
+    ; ((MeFunctorApp (Ploc.dummy, (MePath (Ploc.dummy, REL (ID.of_string "M"))),
+                      (MeStruct (Ploc.dummy, [(StTypes (Ploc.dummy, false, [(ID.of_string "t",false, (Simple (Ploc.dummy, JObject)))]))])))),
        "M(struct type t = object ; end)")
-    ; ((MeFunctor (((ID.of_string "M1"), (MtSig [])),
-                   (MeFunctor (((ID.of_string "M2"), (MtSig [])),
-                               (MeStruct [(StTypes (false, [(ID.of_string "t",false, (Simple JObject))]))])))
+    ; ((MeFunctor (Ploc.dummy, ((ID.of_string "M1"), (MtSig (Ploc.dummy, []))),
+                   (MeFunctor (Ploc.dummy, ((ID.of_string "M2"), (MtSig (Ploc.dummy, []))),
+                               (MeStruct (Ploc.dummy, [(StTypes (Ploc.dummy, false, [(ID.of_string "t",false, (Simple (Ploc.dummy, JObject)))]))]))))
                   )),
        "functor (M1: sig end)(M2:sig end) -> struct type t = object ; end")
       ]
 
       )
   ; "sig_item" >:: (fun ctxt -> List.iter success_sig_item [
-      ([SiInclude (DEREF (REL (ID.of_string "M"), (ID.of_string "N")))],
+      ([SiInclude (Ploc.dummy, DEREF (REL (ID.of_string "M"), (ID.of_string "N")))],
        "include M.N;")
-    ; ([SiModuleBinding ((ID.of_string "M"), (MtPath (None, (ID.of_string "MTY"))))],
+    ; ([SiModuleBinding (Ploc.dummy, (ID.of_string "M"), (MtPath (Ploc.dummy, (None, (ID.of_string "MTY")))))],
        "module M : MTY;")
-    ; ([SiModuleType ((ID.of_string "MTY"), (MtSig [(SiType (ID.of_string "t",false))]))],
+    ; ([SiModuleType (Ploc.dummy, (ID.of_string "MTY"), (MtSig (Ploc.dummy, [(SiType (Ploc.dummy, ID.of_string "t",false))])))],
        "module type MTY = sig type t ; end;")
     ]
       )
   ; "sealed-sig_item" >:: (fun ctxt -> List.iter success_sig_item [
-      ([(SiType ({ prefix = "x"; index = -1 }, false))],
+      ([(SiType (Ploc.dummy, { prefix = "x"; index = -1 }, false))],
        "type x;")
-    ; ([(SiType ({ prefix = "x"; index = -1 }, true))],
+    ; ([(SiType (Ploc.dummy, { prefix = "x"; index = -1 }, true))],
        "type sealed x;")
     ]
       )
@@ -369,7 +369,7 @@ let item_printer x = "<<"^(show_struct_item_t x)^">>"
 let item_cmp = equal_struct_item_t
 
 let structure_printer x = Normal.structure_printer (normalize_structure x)
-let structure_cmp a b = structure_cmp (normalize_structure a) (normalize_structure b)
+let structure_cmp a b = Reloc.(wrap_cmp structure_cmp structure (normalize_structure a) (normalize_structure b))
 
 let success (expect, f) =
   assert_equal ~msg:f ~printer:structure_printer ~cmp:structure_cmp

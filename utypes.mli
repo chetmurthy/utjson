@@ -8,6 +8,24 @@ val fresh : t list -> t -> t
 val sort_uniq_list : t list -> t list
 end
 
+type loc = Ploc.t
+[@@deriving show { with_path = false },eq]
+
+module LJ : sig
+type t =
+    | Null of loc
+    | Bool of loc * bool
+    | Int of loc * int
+    | Float of loc * float
+    | String of loc * string
+    | Assoc of loc * (string * t) list
+    | List of loc * t list
+[@@deriving show { with_path = false },eq]
+val to_json : t -> Yojson.Basic.t
+val to_loc : t -> loc
+end
+
+
 type base_type_t =
   JNull | JString | JBool | JNumber | JArray | JObject
 [@@deriving show { with_path = false },eq]
@@ -26,25 +44,25 @@ type range_constraint_t =
 [@@deriving show { with_path = false },eq]
 
 type atomic_utype_t =
-    Field of string * utype_t
-  | FieldRE of string * utype_t
-  | FieldRequired of string list
-  | ArrayOf of utype_t
-  | ArrayTuple of utype_t list
-  | ArrayUnique
-  | ArrayIndex of int * utype_t
-  | Size of size_constraint_t
-  | StringRE of string
-  | NumberBound of range_constraint_t
-  | Sealed
-  | OrElse of utype_t
-  | MultipleOf of float
-  | Enum of Yojson.Basic.t list
-  | Default of Yojson.Basic.t
-  | Format of string
-  | PropertyNames of utype_t
-  | ContentMediaType of string
-  | ContentEncoding of string
+    Field of loc * string * utype_t
+  | FieldRE of loc * string * utype_t
+  | FieldRequired of loc * string list
+  | ArrayOf of loc * utype_t
+  | ArrayTuple of loc * utype_t list
+  | ArrayUnique of loc
+  | ArrayIndex of loc * int * utype_t
+  | Size of loc * size_constraint_t
+  | StringRE of loc * string
+  | NumberBound of loc * range_constraint_t
+  | Sealed of loc
+  | OrElse of loc * utype_t
+  | MultipleOf of loc * float
+  | Enum of loc * Yojson.Basic.t list
+  | Default of loc * Yojson.Basic.t
+  | Format of loc * string
+  | PropertyNames of loc * utype_t
+  | ContentMediaType of loc * string
+  | ContentEncoding of loc * string
 
 and module_path_t =
     REL of ID.t
@@ -52,58 +70,67 @@ and module_path_t =
   | DEREF of module_path_t * ID.t
 
 and utype_t =
-    UtTrue
-  | UtFalse
-  | Simple of base_type_t
-  | And of utype_t * utype_t
-  | Or of utype_t * utype_t
-  | Xor of utype_t * utype_t
-  | Impl of utype_t * utype_t
-  | Not of utype_t
-  | Atomic of atomic_utype_t list
-  | Ref of module_path_t option * ID.t
-  | Seal of utype_t * (string * utype_t) list * utype_t option
+    UtTrue of loc
+  | UtFalse of loc
+  | Simple of loc * base_type_t
+  | And of loc * utype_t * utype_t
+  | Or of loc * utype_t * utype_t
+  | Xor of loc * utype_t * utype_t
+  | Impl of loc * utype_t * utype_t
+  | Not of loc * utype_t
+  | Atomic of loc * atomic_utype_t list
+  | Ref of loc * (module_path_t option * ID.t)
+  | Seal of loc * utype_t * (string * utype_t) list * utype_t option
 
 [@@deriving show { with_path = false },eq]
 
 type struct_item_t =
-    StTypes of bool * (ID.t * bool * utype_t) list
-  | StModuleBinding of ID.t * module_expr_t
-  | StImport of string * ID.t
-  | StLocal of structure * structure
-  | StOpen of module_path_t * module_type_t option
-  | StInclude of module_path_t * module_type_t option
-  | StModuleType of ID.t * module_type_t
+    StTypes of loc * bool * (ID.t * bool * utype_t) list
+  | StModuleBinding of loc * ID.t * module_expr_t
+  | StImport of loc * string * ID.t
+  | StLocal of loc * structure * structure
+  | StOpen of loc * module_path_t * module_type_t option
+  | StInclude of loc * module_path_t * module_type_t option
+  | StModuleType of loc * ID.t * module_type_t
 
 and structure = struct_item_t list
 
 and module_expr_t =
-    MeStruct of structure
-  | MeFunctorApp of module_expr_t * module_expr_t
-  | MePath of module_path_t
-  | MeFunctor of (ID.t * module_type_t) * module_expr_t
-  | MeCast of module_expr_t * module_type_t
+    MeStruct of loc * structure
+  | MeFunctorApp of loc * module_expr_t * module_expr_t
+  | MePath of loc * module_path_t
+  | MeFunctor of loc * (ID.t * module_type_t) * module_expr_t
+  | MeCast of loc * module_expr_t * module_type_t
 
 and module_type_t =
-    MtSig of signature
-  | MtFunctorType of (ID.t * module_type_t) * module_type_t
-  | MtPath of module_path_t option * ID.t
+    MtSig of loc * signature
+  | MtFunctorType of loc * (ID.t * module_type_t) * module_type_t
+  | MtPath of loc * (module_path_t option * ID.t)
 
 and signature = sig_item_t list
 
 and sig_item_t =
-    SiType of ID.t * bool
-  | SiModuleBinding of ID.t * module_type_t
-  | SiModuleType of ID.t * module_type_t
-  | SiInclude of module_path_t
+    SiType of loc * ID.t * bool
+  | SiModuleBinding of loc * ID.t * module_type_t
+  | SiModuleType of loc * ID.t * module_type_t
+  | SiInclude of loc * module_path_t
 
 and top_ref_t = module_path_t option * ID.t
 
 and top_binding_t =
-  top_ref_t * utype_t
+  loc * top_ref_t * utype_t
 
 and top_bindings = top_binding_t list
 [@@deriving show { with_path = false },eq]
+
+val loc_of_utype : utype_t -> loc
+val loc_of_atomic_utype : atomic_utype_t -> loc
+val loc_of_module_type : module_type_t -> loc
+val loc_of_module_expr : module_expr_t -> loc
+val loc_of_struct_item : struct_item_t -> loc
+val loc_of_structure : structure -> loc
+val loc_of_sig_item : sig_item_t -> loc
+val loc_of_signature : signature -> loc
 
 type token =
     Lident of string

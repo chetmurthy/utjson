@@ -9,16 +9,16 @@ module UnfoldTop = struct
 
   let unfold tdl ut =
     let rec unrec stk ut = match ut with
-        UtTrue -> ut
-      | UtFalse -> ut
+        UtTrue _ -> ut
+      | UtFalse _ -> ut
       | Simple _ -> ut
-  | And (ut1, ut2) -> And(unrec stk ut1, unrec stk ut2)
-  | Or (ut1, ut2) -> Or(unrec stk ut1, unrec stk ut2)
-  | Xor(ut1, ut2) -> Xor(unrec stk ut1, unrec stk ut2)
-  | Impl(ut1, ut2) -> Impl(unrec stk ut1, unrec stk ut2)
-  | Not ut -> Not(unrec stk ut)
-  | Atomic _ -> ut
-  | Ref (mpopt, tid) ->
+      | And (loc, ut1, ut2) -> And(loc, unrec stk ut1, unrec stk ut2)
+      | Or (loc, ut1, ut2) -> Or(loc, unrec stk ut1, unrec stk ut2)
+      | Xor(loc, ut1, ut2) -> Xor(loc, unrec stk ut1, unrec stk ut2)
+      | Impl(loc, ut1, ut2) -> Impl(loc, unrec stk ut1, unrec stk ut2)
+      | Not (loc, ut) -> Not(loc, unrec stk ut)
+      | Atomic _ -> ut
+      | Ref (loc, (mpopt, tid)) ->
     if List.mem (mpopt, tid) stk then ut
     else match List.assoc (mpopt, tid) tdl with
         v -> unrec ((mpopt, tid)::stk) v

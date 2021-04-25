@@ -23,9 +23,9 @@ let successf (expect_sil_s, expect_stl_s, stl_s) =
   let expect_sil = Option.map signature_of_string_exn expect_sil_s in
   let (_, (res_stl, res_sil)) = tc_structure TEnv.mt stl in
   (match expect_sil with None -> () | Some expect_sil ->
-      assert_equal ~printer:Normal.signature_printer ~cmp:signature_cmp expect_sil res_sil) ;
+      assert_equal ~printer:Normal.signature_printer ~cmp:Reloc.(wrap_cmp signature_cmp signature) expect_sil res_sil) ;
   (match expect_stl with None -> () | Some expect_stl ->
-      assert_equal ~printer:Normal.structure_printer ~cmp:structure_cmp expect_stl res_stl)
+      assert_equal ~printer:Normal.structure_printer ~cmp:Reloc.(wrap_cmp structure_cmp structure) expect_stl res_stl)
 
 let success_test (expect_sil_s, expect_stl_s, stl_s) =
   stl_s >:: (fun ctxt ->

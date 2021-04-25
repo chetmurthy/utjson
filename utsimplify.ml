@@ -29,23 +29,23 @@ module CoalesceAtomics = struct
 
 let list_of_ands ut =
   let rec lrec = function
-      And(a,b) -> (lrec a)@(lrec b)
+      And(_, a,b) -> (lrec a)@(lrec b)
     | ut -> [ut]
   in lrec ut
 
-let and_of_list l =
+let and_of_list loc l =
   assert (l <> []) ;
   let (last, l) = sep_last l in
-  List.fold_right (fun ut l -> And(ut, l)) l last
+  List.fold_right (fun ut l -> And(loc, ut, l)) l last
 
 let simplify1 ut = match ut with
-    And(UtFalse, _) -> UtFalse
-  | And(_, UtFalse) -> UtFalse
-  | And(UtTrue, ut) -> ut
-  | And(ut, UtTrue) -> ut
-  | And(Atomic l1, And(Atomic l2, ut)) -> And(Atomic (l1@l2), ut)
-  | And(Atomic l1, Atomic l2) -> Atomic (l1@l2)
-  | And(And(ut1,ut2), ut3) -> And(ut1, And(ut2, ut3))
+    And(_, UtFalse loc, _) -> UtFalse loc
+  | And(_, _, UtFalse loc) -> UtFalse loc
+  | And(_, UtTrue _, ut) -> ut
+  | And(_, ut, UtTrue _) -> ut
+  | And(loc, Atomic (loc2, l1), And(_, Atomic (_, l2), ut)) -> And(loc, Atomic (loc2, l1@l2), ut)
+  | And(_, Atomic (loc, l1), Atomic (_, l2)) -> Atomic (loc, l1@l2)
+  | And(loc, And(_, ut1,ut2), ut3) -> And(loc, ut1, And(loc_of_utype ut2, ut2, ut3))
   | _ -> ut
 
 let simplify ut = fix simplify1 ut
@@ -54,7 +54,8 @@ let exec stl =
   let dt = make_dt () in
   let old_migrate_utype_t = dt.migrate_utype_t in
   let new_migrate_utype_t dt ut =
-    let ut = ut |> list_of_ands |> List.stable_sort Stdlib.compare |> and_of_list in
+    let loc = loc_of_utype ut in
+    let ut = ut |> list_of_ands |> List.stable_sort Reloc.(wrap_cmp Stdlib.compare utype_t) |> and_of_list loc in
     let ut = simplify ut in
     let ut = old_migrate_utype_t dt ut in
     simplify ut in
@@ -80,18 +81,18 @@ Then do another CoalesceAtomics pass.
 module S2SuppressSuperfluousBaseTypes = struct
 
 let rec simplify1 bt_opt ut = match (bt_opt, ut) with
-    (Some bt0, And(Simple bt1, ut)) ->
+    (Some bt0, And(loc, Simple (_, bt1), ut)) ->
     if bt0 = bt1 then simplify1 bt_opt ut
-    else UtFalse
-  | (Some bt0, Simple bt1) ->
-    if bt0 = bt1 then Simple bt0
-    else UtFalse
-  | (None, And(Simple bt, ut)) ->
-    And(Simple bt, simplify1 (Some bt) ut)
-  | (_, And(ut1, ut2)) -> And(simplify1 bt_opt ut1, simplify1 bt_opt ut2)
-  | (_, Or(ut1, ut2)) -> Or(simplify1 bt_opt ut1, simplify1 bt_opt ut2)
-  | (_, Xor(ut1, ut2)) -> Xor(simplify1 bt_opt ut1, simplify1 bt_opt ut2)
-  | (_, Not ut) -> Not(simplify1 bt_opt ut)
+    else UtFalse loc
+  | (Some bt0, Simple (loc, bt1)) ->
+    if bt0 = bt1 then Simple (loc, bt0)
+    else UtFalse loc
+  | (None, And(loc, Simple (loc2, bt), ut)) ->
+    And(loc, Simple (loc2, bt), simplify1 (Some bt) ut)
+  | (_, And(loc, ut1, ut2)) -> And(loc, simplify1 bt_opt ut1, simplify1 bt_opt ut2)
+  | (_, Or(loc, ut1, ut2)) -> Or(loc, simplify1 bt_opt ut1, simplify1 bt_opt ut2)
+  | (_, Xor(loc, ut1, ut2)) -> Xor(loc, simplify1 bt_opt ut1, simplify1 bt_opt ut2)
+  | (_, Not (loc, ut)) -> Not(loc, simplify1 bt_opt ut)
   | _ -> ut
 
 let simplify x = fix (simplify1 None) x

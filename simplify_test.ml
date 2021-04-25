@@ -13,6 +13,8 @@ open Uttypecheck
 open Utextract
 open Utsimplify
 
+let structure_cmp = Reloc.(wrap_cmp structure_cmp structure)
+
 let simple = "simple" >::: [
     "simple" >:: (fun ctxt ->
         ()
@@ -28,8 +30,8 @@ type nonrec t = object && [
     "productName": string;
     "price": number && [ bounds (0.0,max]; ];
     "tags": array && [
-        unique;
         of string;
+        unique;
         size [1,max];
 ];
     "dimensions": object && [

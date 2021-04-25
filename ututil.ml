@@ -3,6 +3,10 @@
 let failwithf fmt =
   Fmt.kstrf failwith fmt
 
+let raise_failwith loc s = Ploc.raise loc (Failure s)
+let raise_failwithf loc fmt =
+  Fmt.kstrf (raise_failwith loc) fmt
+
 module Stack = struct
 let push l x = (l := x :: !l)
 let pop l =

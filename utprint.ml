@@ -60,83 +60,83 @@ and print_module_path pc = fun [
     ]
 
 and pr_module_expr pc = fun [
-    MeFunctorApp me1 me2 ->  pprintf pc "%p(%p)" print_module_expr me1 print_module_expr me2
-  | MeCast me mt -> pprintf pc "%p : %p" print_module_expr me print_module_type mt
+    MeFunctorApp _ me1 me2 ->  pprintf pc "%p(%p)" print_module_expr me1 print_module_expr me2
+  | MeCast _ me mt -> pprintf pc "%p : %p" print_module_expr me print_module_type mt
   | me -> pr_module_expr_simple pc me
   ]
 and pr_module_expr_simple pc = fun [
-    MeStruct l -> pprintf pc "struct@;%p@;end" print_structure l
-  | MePath p -> print_module_path pc p
-  | MeFunctor (id, mty) me ->  pprintf pc "functor (%s:%p) -> %p" (ID.to_string id) print_module_type mty print_module_expr me
+    MeStruct _ l -> pprintf pc "struct@;%p@;end" print_structure l
+  | MePath _ p -> print_module_path pc p
+  | MeFunctor _ (id, mty) me ->  pprintf pc "functor (%s:%p) -> %p" (ID.to_string id) print_module_type mty print_module_expr me
   | me -> pprintf pc "(%p)" print_module_expr me
   ]
 
 and pr_module_type pc = fun [
-    MtSig l -> pprintf pc "sig@;%p@;end" print_signature l
-  | MtFunctorType (id, mty1) mty2 -> pprintf pc "functor (%s:%p) -> %p" (ID.to_string id) print_module_type mty1 print_module_type mty2
-  | MtPath (Some p) id -> pprintf pc "%p.%s" print_module_path p (ID.to_string id)
-  | MtPath None id -> pprintf pc "%s" (ID.to_string id)
+    MtSig _ l -> pprintf pc "sig@;%p@;end" print_signature l
+  | MtFunctorType _ (id, mty1) mty2 -> pprintf pc "functor (%s:%p) -> %p" (ID.to_string id) print_module_type mty1 print_module_type mty2
+  | MtPath _ (Some p, id) -> pprintf pc "%p.%s" print_module_path p (ID.to_string id)
+  | MtPath _ (None, id) -> pprintf pc "%s" (ID.to_string id)
   ]
 and pr_sig_item pc = fun [
-    SiType s sealed -> pprintf pc "type %s%s;" (if sealed then "sealed " else "") (ID.to_string s)
-  | SiModuleBinding s mty -> 
+    SiType _ s sealed -> pprintf pc "type %s%s;" (if sealed then "sealed " else "") (ID.to_string s)
+  | SiModuleBinding _ s mty -> 
     pprintf pc "module %s : %p;" (ID.to_string s) print_module_type mty
-  | SiModuleType s mty ->
+  | SiModuleType _ s mty ->
     pprintf pc "module type %s = %p;" (ID.to_string s) print_module_type mty
-  | SiInclude p ->
+  | SiInclude _ p ->
     pprintf pc "include %p;" print_module_path p
   ]
 and pr_struct_item pc = fun [
-    StTypes recflag l ->
+    StTypes _ recflag l ->
     pprintf pc "type%s %p;" (if recflag then " rec" else " nonrec")
       (Prtools.vlist2
          (fun pc (s, sealed,t) -> pprintf pc "%s%s = %p" (if sealed then "sealed " else "") (ID.to_string s) print_utype t)
          (fun pc (s, sealed, t) -> pprintf pc "and %s%s = %p" (if sealed then "sealed " else "") (ID.to_string s) print_utype t)
       ) l
-  | StModuleBinding id mexp ->
+  | StModuleBinding _ id mexp ->
     pprintf pc "module %s = %p;" (ID.to_string id) print_module_expr mexp
-  | StModuleType id mty ->
+  | StModuleType _ id mty ->
     pprintf pc "module type %s = %p;" (ID.to_string id) print_module_type mty
-  | StImport url id ->
+  | StImport _ url id ->
     pprintf pc "import %p as %s;" qstring url (ID.to_string id)
-  | StLocal l1 l2 ->
+  | StLocal _ l1 l2 ->
     pprintf pc "local %p in %p end;" 
       (plist_with "" print_struct_item 0) l1
       (plist_with "" print_struct_item 0) l2
-  | StOpen p None ->
+  | StOpen _ p None ->
     pprintf pc "open %p;" print_module_path p
-  | StOpen p (Some ty) ->
+  | StOpen _ p (Some ty) ->
     pprintf pc "open %p : %p;" print_module_path p print_module_type ty
-  | StInclude p None ->
+  | StInclude _ p None ->
     pprintf pc "include %p;" print_module_path p
-  | StInclude p (Some ty) ->
+  | StInclude _ p (Some ty) ->
     pprintf pc "include %p : %p;" print_module_path p print_module_type ty
   ]
 and pr_utype pc x = pr_utype_or pc x
 
 and pr_utype_or pc = fun [
-      Or x y -> pprintf pc "%p || %p" pr_utype_xor x pr_utype_or y
+      Or _ x y -> pprintf pc "%p || %p" pr_utype_xor x pr_utype_or y
     | x -> pr_utype_xor pc x
     ]
 and pr_utype_xor pc = fun [
-      Xor x y -> pprintf pc "%p xor %p" pr_utype_and x pr_utype_xor y
+      Xor _ x y -> pprintf pc "%p xor %p" pr_utype_and x pr_utype_xor y
     | x -> pr_utype_and pc x
     ]
 and pr_utype_and pc = fun [
-      And x y -> pprintf pc "%p && %p" pr_utype_impl x pr_utype_and y
+      And _ x y -> pprintf pc "%p && %p" pr_utype_impl x pr_utype_and y
     | x -> pr_utype_impl pc x
     ]
 and pr_utype_impl pc = fun [
-      Impl x y -> pprintf pc "%p => %p" pr_utype_not x pr_utype_impl y
+      Impl _ x y -> pprintf pc "%p => %p" pr_utype_not x pr_utype_impl y
     | x -> pr_utype_not pc x
     ]
 and pr_utype_not pc = fun [
-      Not x -> pprintf pc "not %p" pr_utype_seal x
+      Not _ x -> pprintf pc "not %p" pr_utype_seal x
     | x -> pr_utype_seal pc x
     ]
 and pr_utype_seal pc = fun [
-      Seal x [] None -> pprintf pc "seal %p" pr_utype_simple x
-    | Seal x l orelse -> pprintf pc "seal %p with %p" pr_utype_simple x pr_seal_extras (l,orelse)
+      Seal _ x [] None -> pprintf pc "seal %p" pr_utype_simple x
+    | Seal _ x l orelse -> pprintf pc "seal %p with %p" pr_utype_simple x pr_seal_extras (l,orelse)
     | x -> pr_utype_simple pc x
     ]
 and pr_seal_extras pc = fun [
@@ -145,12 +145,12 @@ and pr_seal_extras pc = fun [
   | ([(re,t)::l],orelse) -> pprintf pc "/%s/ : %p, %p" (Escape.regexp re) pr_utype_simple t pr_seal_extras (l,orelse)
   ]
 and pr_utype_simple pc = fun [
-      Simple x -> pprintf pc "%p" print_base_type x
-    | UtTrue -> pprintf pc "true"
-    | UtFalse -> pprintf pc "false"
-    | Atomic l -> pprintf pc "[@[<2>@;%p@;]@]" (Prtools.vlist print_atomic) l
-    | Ref None id -> pprintf pc "%p" print_id id
-    | Ref (Some p) id -> pprintf pc "%p.%p" print_module_path p print_id id
+      Simple _ x -> pprintf pc "%p" print_base_type x
+    | UtTrue _ -> pprintf pc "true"
+    | UtFalse _ -> pprintf pc "false"
+    | Atomic _ l -> pprintf pc "[@[<2>@;%p@;]@]" (Prtools.vlist print_atomic) l
+    | Ref _ (None, id) -> pprintf pc "%p" print_id id
+    | Ref _ (Some p, id) -> pprintf pc "%p.%p" print_module_path p print_id id
     | x -> pprintf pc "(%p)" print_utype x
     ]
 and pr_base_type pc  = fun [
@@ -162,30 +162,30 @@ and pr_base_type pc  = fun [
   | JObject -> pprintf pc "object"
   ]
 and pr_atomic pc = fun [
-    Field s t -> pprintf pc "%p: %p;" qstring s print_utype t
-  | FieldRE re t -> pprintf pc "/%s/ : %p;" (Escape.regexp re) print_utype t
-  | FieldRequired l -> pprintf pc "required %p;" (plist_with ", " qstring 0) l
-  | ArrayOf t -> pprintf pc "of %p;" print_utype t
-  | ArrayTuple l -> pprintf pc "%p;" (plist_with " * " print_utype 0) l
-  | ArrayUnique -> pprintf pc "unique;"
-  | ArrayIndex n t -> pprintf pc "%d: %p" n print_utype t
-  | Size sc -> pprintf pc "size %p;" print_size_constraint sc
-  | StringRE re -> pprintf pc "/%s/" (Escape.regexp re)
-  | NumberBound rc -> pprintf pc "bounds %p;" print_range_constraint rc
-  | Sealed -> pprintf pc "sealed;"
-  | OrElse t -> pprintf pc "orelse %p;" print_utype t
-  | Enum l -> pprintf pc "enum %p;" (plist_with "," print_json 0) l
-  | Default j -> pprintf pc "default %p;" print_json j
-  | Format s -> pprintf pc "format %p;" qstring s
-  | PropertyNames t -> pprintf pc "propertyNames %p;" print_utype t
-  | ContentMediaType s -> pprintf pc "contentMediaType %p;" qstring s
-  | ContentEncoding s -> pprintf pc "contentEncoding %p;" qstring s
-  | MultipleOf n ->  pprintf pc "multipleOf %s;" (string_of_jsonfloat n)
+    Field _ s t -> pprintf pc "%p: %p;" qstring s print_utype t
+  | FieldRE _ re t -> pprintf pc "/%s/ : %p;" (Escape.regexp re) print_utype t
+  | FieldRequired _ l -> pprintf pc "required %p;" (plist_with ", " qstring 0) l
+  | ArrayOf _ t -> pprintf pc "of %p;" print_utype t
+  | ArrayTuple _ l -> pprintf pc "%p;" (plist_with " * " print_utype 0) l
+  | ArrayUnique _ -> pprintf pc "unique;"
+  | ArrayIndex _ n t -> pprintf pc "%d: %p" n print_utype t
+  | Size _ sc -> pprintf pc "size %p;" print_size_constraint sc
+  | StringRE _ re -> pprintf pc "/%s/" (Escape.regexp re)
+  | NumberBound _ rc -> pprintf pc "bounds %p;" print_range_constraint rc
+  | Sealed _ -> pprintf pc "sealed;"
+  | OrElse _ t -> pprintf pc "orelse %p;" print_utype t
+  | Enum _ l -> pprintf pc "enum %p;" (plist_with "," print_json 0) l
+  | Default _ j -> pprintf pc "default %p;" print_json j
+  | Format _ s -> pprintf pc "format %p;" qstring s
+  | PropertyNames _ t -> pprintf pc "propertyNames %p;" print_utype t
+  | ContentMediaType _ s -> pprintf pc "contentMediaType %p;" qstring s
+  | ContentEncoding _ s -> pprintf pc "contentEncoding %p;" qstring s
+  | MultipleOf _ n ->  pprintf pc "multipleOf %s;" (string_of_jsonfloat n)
   ]
 
 and pr_top_binding pc = fun [
-      ((None, id), ut) -> pprintf pc "%s = %p;" (ID.to_string id) print_utype ut
-    | ((Some mp, id), ut) -> pprintf pc "%p.%s = %p;" print_module_path mp (ID.to_string id) print_utype ut
+      (_, (None, id), ut) -> pprintf pc "%s = %p;" (ID.to_string id) print_utype ut
+    | (_, (Some mp, id), ut) -> pprintf pc "%p.%s = %p;" print_module_path mp (ID.to_string id) print_utype ut
     ]
 
 and pr_top_bindings pc l =

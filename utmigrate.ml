@@ -10,7 +10,8 @@ let migration_error feature =
 let _migrate_list subrw0 __dt__ l =
   l |> List.rev_map (subrw0 __dt__) |> List.rev
 
-type base_type_t = [%import: Utypes.base_type_t]
+type loc = [%import: Utypes.loc]
+and base_type_t = [%import: Utypes.base_type_t]
 and 'a bound_t = [%import: 'a Utypes.Bound.t]
 and id_t = [%import: Utypes.ID.t]
 and size_constraint_t = [%import: Utypes.size_constraint_t
@@ -40,6 +41,11 @@ and signature = [%import: Utypes.signature]
 and sig_item_t = [%import: Utypes.sig_item_t
   [@with ID.t := id_t]
 ]
+and top_ref_t = [%import: Utypes.top_ref_t
+  [@with ID.t := id_t]
+]
+and top_binding_t = [%import: Utypes.top_binding_t]
+and top_bindings = [%import: Utypes.top_bindings]
 [@@deriving migrate
     { optional = true
     ; dispatch_type = dispatch_table_t
@@ -64,6 +70,9 @@ and sig_item_t = [%import: Utypes.sig_item_t
           ; module_type_t
           ; signature
           ; sig_item_t
+          ; top_ref_t
+          ; top_binding_t
+          ; top_bindings
           ]
         }
       ]
@@ -84,6 +93,11 @@ and sig_item_t = [%import: Utypes.sig_item_t
         ; dsttype = [%typ: 'b option]
         ; subs = [ ([%typ: 'a], [%typ: 'b]) ]
         ; code = (fun subrw __dt__ x -> Option.map (subrw __dt__) x)
+        }
+      ; migrate_loc = {
+          srctype = [%typ: loc]
+        ; dsttype = [%typ: Utypes.loc]
+        ; code = fun __dt__ x -> x
         }
       }
     }]

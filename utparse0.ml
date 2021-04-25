@@ -66,6 +66,9 @@ value lexer = {Plexing.tok_func = lexer;
 
 value g = Grammar.gcreate lexer;
 
+value (json : Grammar.Entry.e LJ.t) = Grammar.Entry.create g "json";
+value (json_eoi : Grammar.Entry.e LJ.t) = Grammar.Entry.create g "json_eoi";
+
 value (utype : Grammar.Entry.e utype_t) = Grammar.Entry.create g "utype";
 value (utype_eoi : Grammar.Entry.e utype_t) = Grammar.Entry.create g "utype_eoi";
 
@@ -98,6 +101,7 @@ value (top_bindings_eoi : Grammar.Entry.e (list top_binding_t)) = Grammar.Entry.
 
 EXTEND
   GLOBAL:
+    json json_eoi
     utype utype_eoi
     structure structure_eoi
     struct_item struct_item_eoi
@@ -143,57 +147,57 @@ EXTEND
     ;
 
     atomic_utype: [ [
-        "required" ; id = STRING ; "," ; l = LIST0 STRING SEP "," -> [FieldRequired [id::l]]
-      | "required" ; id = STRING -> [FieldRequired [id]]
-      | "required" ; id = STRING ; ":" ; t = utype -> [Field id t;FieldRequired [id]]
-      | id = STRING ; ":" ; t = utype -> [Field id t]
-      | re = REGEXP ; ":" ; t = utype -> [FieldRE re t]
-      | re = REGEXP -> [StringRE re]
-      | "of" ; t = utype -> [ArrayOf t]
-      | l = LIST1 utype SEP "*" -> [ArrayTuple l]
-      | "unique" -> [ArrayUnique]
-      | n=INT ; ":" ; t=utype -> [ArrayIndex (int_of_string n) t]
-      | "size" ; s=size_constraint -> [Size s]
-      | "bounds" ; s=range_constraint -> [NumberBound s]
-      | "sealed" -> [Sealed]
-      | "orelse" ; t=utype -> [OrElse t]
-      | "multipleOf" ; n = FLOAT -> [MultipleOf (float_of_string n)]
-      | "enum" ; l = LIST1 json SEP "," -> [Enum (List.map canon_json l)]
-      | "default" ; j=json -> [Default j]
-      | "format" ; s=STRING -> [Format s]
-      | "propertyNames" ; t = utype -> [PropertyNames t]
-      | "contentMediaType" ; s=STRING -> [ContentMediaType s]
-      | "contentEncoding" ; s=STRING -> [ContentEncoding s]
+        "required" ; id = STRING ; "," ; l = LIST0 STRING SEP "," -> [FieldRequired loc [id::l]]
+      | "required" ; id = STRING -> [FieldRequired loc [id]]
+      | "required" ; id = STRING ; ":" ; t = utype -> [Field loc id t;FieldRequired loc [id]]
+      | id = STRING ; ":" ; t = utype -> [Field loc id t]
+      | re = REGEXP ; ":" ; t = utype -> [FieldRE loc re t]
+      | re = REGEXP -> [StringRE loc re]
+      | "of" ; t = utype -> [ArrayOf loc t]
+      | l = LIST1 utype SEP "*" -> [ArrayTuple loc l]
+      | "unique" -> [ArrayUnique loc]
+      | n=INT ; ":" ; t=utype -> [ArrayIndex loc (int_of_string n) t]
+      | "size" ; s=size_constraint -> [Size loc s]
+      | "bounds" ; s=range_constraint -> [NumberBound loc s]
+      | "sealed" -> [Sealed loc]
+      | "orelse" ; t=utype -> [OrElse loc t]
+      | "multipleOf" ; n = FLOAT -> [MultipleOf loc (float_of_string n)]
+      | "enum" ; l = LIST1 json SEP "," -> [Enum loc (l |> List.map LJ.to_json |> List.map canon_json)]
+      | "default" ; j=json -> [Default loc (LJ.to_json j)]
+      | "format" ; s=STRING -> [Format loc s]
+      | "propertyNames" ; t = utype -> [PropertyNames loc t]
+      | "contentMediaType" ; s=STRING -> [ContentMediaType loc s]
+      | "contentEncoding" ; s=STRING -> [ContentEncoding loc s]
       ] ]
     ;
 
     utype: [
       "||" RIGHTA [
-        t1 = utype ; "||" ; t2 = utype -> Or t1 t2
+        t1 = utype ; "||" ; t2 = utype -> Or loc t1 t2
       ]
     | "xor" RIGHTA [
-        t1 = utype ; "xor" ; t2 = utype -> Xor t1 t2
+        t1 = utype ; "xor" ; t2 = utype -> Xor loc t1 t2
       ]
     | "&&" RIGHTA [
-        t1 = utype ; "&&" ; t2 = utype -> And t1 t2
+        t1 = utype ; "&&" ; t2 = utype -> And loc t1 t2
       ]
     | "=>" RIGHTA [
-        t1 = utype ; "=>" ; t2 = utype -> Impl t1 t2
+        t1 = utype ; "=>" ; t2 = utype -> Impl loc t1 t2
       ]
     | "not" [
-        "not" ; t = utype -> Not t
+        "not" ; t = utype -> Not loc t
       ]
     | "seal" [
-        "seal" ; t = utype LEVEL "simple" -> Seal t [] None
-      | "seal" ; t = utype LEVEL "simple" ; "with" ; (l,orelse) = seal_extras -> Seal t l orelse
+        "seal" ; t = utype LEVEL "simple" -> Seal loc t [] None
+      | "seal" ; t = utype LEVEL "simple" ; "with" ; (l,orelse) = seal_extras -> Seal loc t l orelse
       ]
     | "simple" [
-        b = base_type -> Simple b
-      | "true" -> UtTrue
-      | "false" -> UtFalse
-      | (mpopt, tid) = tid_path -> Ref mpopt tid
-      | "[" ; h = atomic_utype ; ";" ; l = atomic_utype_semi_list ; "]" -> Atomic (h@l)
-      | "[" ; h = atomic_utype ; "]" -> Atomic h
+        b = base_type -> Simple loc b
+      | "true" -> UtTrue loc
+      | "false" -> UtFalse loc
+      | (mpopt, tid) = tid_path -> Ref loc (mpopt, tid)
+      | "[" ; h = atomic_utype ; ";" ; l = atomic_utype_semi_list ; "]" -> Atomic loc (h@l)
+      | "[" ; h = atomic_utype ; "]" -> Atomic loc h
       | "(" ; t = utype ; ")" -> t
       ]
     ]
@@ -216,14 +220,14 @@ EXTEND
     ;
 
     module_type: [ [
-        "sig" ; l = signature ; "end" -> MtSig l
+        "sig" ; l = signature ; "end" -> MtSig loc l
       | "functor" ; l = LIST1 module_param ; "->" ; m=module_type ->
-        List.fold_right (fun (s,mty) rhs -> MtFunctorType (s,mty) rhs) l m
+        List.fold_right (fun (s,mty) rhs -> MtFunctorType loc (s,mty) rhs) l m
       | p = module_path ->
         match p with [
           TOP _ -> Fmt.(failwithf "module_type: cannot be a TOP module-id")
-        | REL h -> MtPath None h
-        | DEREF p last -> MtPath (Some p) last
+        | REL h -> MtPath loc (None, h)
+        | DEREF p last -> MtPath loc (Some p, last)
         ]
       ] ]
     ;
@@ -249,14 +253,14 @@ EXTEND
 
     module_expr: [
       "top" LEFTA [
-        m1 = module_expr ; "(" ; m2 = module_expr ; ")" -> MeFunctorApp m1 m2
-      | m1 = module_expr ; ":" ; mt = module_type -> MeCast m1 mt
+        m1 = module_expr ; "(" ; m2 = module_expr ; ")" -> MeFunctorApp loc m1 m2
+      | m1 = module_expr ; ":" ; mt = module_type -> MeCast loc m1 mt
       ]
     | "simple" [
-        "struct" ; l = structure ; "end" -> MeStruct l
+        "struct" ; l = structure ; "end" -> MeStruct loc l
       | "functor" ; l = LIST1 module_param ; "->" ; m=module_expr ->
-        List.fold_right (fun (s,mty) rhs -> MeFunctor (s,mty) rhs) l m
-      | p = module_path -> MePath p
+        List.fold_right (fun (s,mty) rhs -> MeFunctor loc (s,mty) rhs) l m
+      | p = module_path -> MePath loc p
       | "(" ; me = module_expr ; ")" -> me
       ]
     ]
@@ -267,25 +271,25 @@ EXTEND
     ;
 
     struct_item: [ [
-        "module" ; uid=mid ; "=" ; e = module_expr ; ";" -> StModuleBinding uid e
-      | "module" ; "type" ; uid=mid ; "=" ; e = module_type ; ";" -> StModuleType uid e
-      | "local" ; l1 = structure ; "in" ; l2 = structure ; "end" ; ";" -> StLocal l1 l2
+        "module" ; uid=mid ; "=" ; e = module_expr ; ";" -> StModuleBinding loc uid e
+      | "module" ; "type" ; uid=mid ; "=" ; e = module_type ; ";" -> StModuleType loc uid e
+      | "local" ; l1 = structure ; "in" ; l2 = structure ; "end" ; ";" -> StLocal loc l1 l2
       | "type" ; rflag = [ "rec" -> True | "nonrec" -> False | -> False ] ;
         l = LIST1 [ (id,sealed) = [ id = LIDENT -> (id, False) | "sealed" ; id = LIDENT -> (id, True) ] ; "=" ; t = utype -> (ID.of_string id, sealed, t) ] SEP "and" ;
-        ";" -> StTypes rflag l
-      | "import" ; s=STRING ; "as"; uid=mid ; ";" -> StImport s uid
-      | "open" ; p = module_path ; ";" -> StOpen p None
-      | "open" ; p = module_path ; ":" ; t = module_type ; ";" -> StOpen p (Some t)
-      | "include" ; p = module_path ; ";" -> StInclude p None
-      | "include" ; p = module_path ; ":" ; t = module_type ; ";" -> StInclude p (Some t)
+        ";" -> StTypes loc rflag l
+      | "import" ; s=STRING ; "as"; uid=mid ; ";" -> StImport loc s uid
+      | "open" ; p = module_path ; ";" -> StOpen loc p None
+      | "open" ; p = module_path ; ":" ; t = module_type ; ";" -> StOpen loc p (Some t)
+      | "include" ; p = module_path ; ";" -> StInclude loc p None
+      | "include" ; p = module_path ; ":" ; t = module_type ; ";" -> StInclude loc p (Some t)
       ] ]
     ;
     sig_item: [ [
         "type" ; l = LIST1 [ id = LIDENT -> (id, False) | "sealed" ; id = LIDENT -> (id, True) ] SEP "," ; ";" ->
-        l |> List.map (fun (s,sealed) -> SiType (ID.of_string s) sealed)
-      | "module" ; uid = mid ; ":" ; mty=module_type ; ";" -> [SiModuleBinding uid mty]
-      | "module" ; "type" ; uid = mid ; "=" ; mty=module_type ; ";" -> [SiModuleType uid mty]
-      | "include" ; p = module_path ; ";" -> [SiInclude p]
+        l |> List.map (fun (s,sealed) -> SiType loc (ID.of_string s) sealed)
+      | "module" ; uid = mid ; ":" ; mty=module_type ; ";" -> [SiModuleBinding loc uid mty]
+      | "module" ; "type" ; uid = mid ; "=" ; mty=module_type ; ";" -> [SiModuleType loc uid mty]
+      | "include" ; p = module_path ; ";" -> [SiInclude loc p]
       ] ]
     ;
 
@@ -303,18 +307,18 @@ EXTEND
   json:
     [ [ s = scalar -> s
 
-      | "[" ; l = LIST0 json SEP "," ; "]" -> `List l
-      | "{" ; l = LIST0 [ s = STRING ; ":" ; v=json -> (s,v) ] SEP "," ; "}" -> `Assoc l
+      | "[" ; l = LIST0 json SEP "," ; "]" -> List loc l
+      | "{" ; l = LIST0 [ s = STRING ; ":" ; v=json -> (s,v) ] SEP "," ; "}" -> Assoc loc l
     ] ]
   ;
 
   scalar:
-    [ [ n = INT -> `Int (int_of_string n)
-      | n = FLOAT -> `Float (float_of_string n)
-      | s = STRING -> `String s
-      | "null" -> `Null
-      | "true" -> `Bool True
-      | "false" -> `Bool False
+    [ [ n = INT -> Int loc (int_of_string n)
+      | n = FLOAT -> Float loc (float_of_string n)
+      | s = STRING -> String loc s
+      | "null" -> Null loc
+      | "true" -> Bool loc True
+      | "false" -> Bool loc False
     ] ]
   ;
 
@@ -325,7 +329,7 @@ EXTEND
     ] ]
   ;
   top_binding: [ [
-      r = top_ref ; "=" ; ut = utype ; ";" -> (r, ut)
+      r = top_ref ; "=" ; ut = utype ; ";" -> (loc, r, ut)
     ] ]
   ;
   top_bindings: [ [
@@ -334,6 +338,7 @@ EXTEND
   ;
 
 
+  json_eoi : [ [ e = json ; EOI -> e ] ] ;
   utype_eoi : [ [ e = utype ; EOI -> e ] ] ;
   structure_eoi : [ [ e = structure ; EOI -> e ] ] ;
   struct_item_eoi : [ [ e = struct_item ; EOI -> e ] ] ;
@@ -345,6 +350,9 @@ EXTEND
   top_binding_eoi : [ [ e = top_binding ; EOI -> e ] ] ;
   top_bindings_eoi : [ [ e = top_bindings ; EOI -> e ] ] ;
 END;
+
+value parse_json = Grammar.Entry.parse json ;
+value parse_json_eoi = Grammar.Entry.parse json_eoi ;
 
 value parse_utype = Grammar.Entry.parse utype ;
 value parse_utype_eoi = Grammar.Entry.parse utype_eoi ;

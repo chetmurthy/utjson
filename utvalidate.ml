@@ -18,12 +18,12 @@ module REC = struct
 end
 module RECache = REC
 
-let lookup_tid tdl (mpopt, id as tid) =
-  begin match List.assoc tid tdl with
-      t -> t
-    | exception Not_found ->
-      let ut = Ref (mpopt, id) in
-      Fmt.(failwithf "Utvalidate.lookup_tid: reference %s not found" (Normal.printer ut))
+let lookup_tid loc tdl (mpopt, id as tid) =
+  begin match tdl |> List.find_map (fun (_, tid', ut) -> if tid=tid' then Some ut else None) with
+      Some t -> t
+    | None ->
+      let ut = Ref (loc, (mpopt, id)) in
+      Fmt.(raise_failwithf loc "Utvalidate.lookup_tid: reference %s not found" (Normal.printer ut))
   end
 
 module Ctxt = struct
@@ -192,41 +192,41 @@ let lifted_forall f l =
       end
   in frec l
 
-let tdl = ref []
+let tdl = ref ([] : top_bindings)
 
 let rec utype1 path (j : Yojson.Basic.t) (ctxt : Ctxt.t) t =
   utype path (j : Yojson.Basic.t) (ctxt : Ctxt.t) t
 
 and utype path (j : Yojson.Basic.t) (ctxt : Ctxt.t) t = match t with
-      UtTrue -> Ok ctxt
-    | UtFalse -> Error [path, t]
-    | Simple bt -> if base_type j bt then Ok ctxt else Error [path ,t]
-    | And (ut1,ut2) -> begin match utype path j ctxt ut1 with
+      UtTrue _ -> Ok ctxt
+    | UtFalse _ -> Error [path, t]
+    | Simple (_, bt) -> if base_type j bt then Ok ctxt else Error [path ,t]
+    | And (_, ut1,ut2) -> begin match utype path j ctxt ut1 with
           Ok ctxt -> utype path j ctxt ut2
         | Error _ as rv -> rv
       end
-    | Or (ut1,ut2) -> begin match utype path j ctxt ut1 with
+    | Or (_, ut1,ut2) -> begin match utype path j ctxt ut1 with
           Error _ -> utype path j ctxt ut2
         | Ok _ as rv -> rv
       end
-    | Xor (ut1,ut2) -> begin match (utype1 path j ctxt ut1, utype1 path j ctxt ut2) with
+    | Xor (_, ut1,ut2) -> begin match (utype1 path j ctxt ut1, utype1 path j ctxt ut2) with
           (Ok ctxt, Error _) -> Ok ctxt
         | (Error _, Ok ctxt) -> Ok ctxt
         | (Error e1, Error e2) -> Error (e1@e2)
         | (Ok _, Ok _) -> Error [path, t]
       end
-    | Impl (ut1,ut2) -> begin match utype path j ctxt ut1 with
+    | Impl (_, ut1,ut2) -> begin match utype path j ctxt ut1 with
           Ok ctxt -> utype path j ctxt ut2
         | Error _ -> Ok ctxt
       end
-    | Not ut -> begin match utype path j ctxt ut with
+    | Not (_, ut) -> begin match utype path j ctxt ut with
           Error _ -> Ok ctxt
         | Ok _ -> Error [path,t]
       end
-    | Atomic l -> atomic_type_list path j ctxt l
-    | Ref (mpopt, id) ->
-      utype path j ctxt (lookup_tid !tdl (mpopt, id))
-    | Seal(ut, patterns, orelse) -> enter_sealed_type path j ctxt (ut, patterns, orelse)
+    | Atomic (_, l) -> atomic_type_list path j ctxt l
+    | Ref (loc, (mpopt, id)) ->
+      utype path j ctxt (lookup_tid loc !tdl (mpopt, id))
+    | Seal(loc, ut, patterns, orelse) -> enter_sealed_type loc path j ctxt (ut, patterns, orelse)
 
   and base_type j bt = match (bt, j) with
       ((JNull, `Null)
@@ -237,7 +237,7 @@ and utype path (j : Yojson.Basic.t) (ctxt : Ctxt.t) t = match t with
       | (JObject, `Assoc _)) -> true
       | _ -> false
         
-  and enter_sealed_type path j ctxt (ut, patterns, orelse) =
+  and enter_sealed_type loc path j ctxt (ut, patterns, orelse) =
     match j with
       `Assoc l -> begin
         match (utype path j (Ctxt.start_assoc2 ()) ut, patterns, orelse) with
@@ -247,7 +247,7 @@ and utype path (j : Yojson.Basic.t) (ctxt : Ctxt.t) t = match t with
           Ok ctxt
 
         | (Ok (Ctxt.Assoc2 a), patterns, orelse) ->
-          finish_assoc2 path l ctxt (a,patterns,orelse)
+          finish_assoc2 loc path l ctxt (a,patterns,orelse)
         | (Ok _, _, _) -> assert false
       end
 
@@ -255,7 +255,7 @@ and utype path (j : Yojson.Basic.t) (ctxt : Ctxt.t) t = match t with
         assert (patterns = []) ;
         match (utype path j (Ctxt.start_array2 ()) ut, orelse) with
           (Error l, _) -> Error l
-        | (Ok (Ctxt.Array2 a), _) -> finish_array2 path l ctxt (a, orelse)
+        | (Ok (Ctxt.Array2 a), _) -> finish_array2 loc path l ctxt (a, orelse)
         | (Ok _, _) -> assert false
           
       end
@@ -265,7 +265,7 @@ and utype path (j : Yojson.Basic.t) (ctxt : Ctxt.t) t = match t with
         | Ok _ -> Ok ctxt
       end
 
-  and enter_utype path j ut =
+  and enter_utype loc path j ut =
     match j with
       `Assoc l -> begin
         match utype path j (Ctxt.start_assoc ()) ut with
@@ -274,14 +274,14 @@ and utype path (j : Yojson.Basic.t) (ctxt : Ctxt.t) t = match t with
           Ok ()
 
         | Ok (Ctxt.Assoc a) ->
-          finish_assoc path l a
+          finish_assoc loc path l a
         | Ok _ -> assert false
       end
 
     | `List l -> begin
         match utype path j (Ctxt.start_array ()) ut with
           Error l -> Error l
-        | Ok (Ctxt.Array a) -> finish_array path l a 
+        | Ok (Ctxt.Array a) -> finish_array loc path l a 
         | Ok _ -> assert false
           
       end
@@ -291,58 +291,58 @@ and utype path (j : Yojson.Basic.t) (ctxt : Ctxt.t) t = match t with
         | Ok _ -> Ok ()
       end
 
-  and finish_array path l = function
+  and finish_array loc path l = function
       { tuple = None } -> Ok ()
     | { tuple = Some n } when n = List.length l -> Ok ()
     | { tuple = Some n ; sealed=false ; orelse = Some ut } ->
       let l = nthtail l n in
       l |> List.mapi (fun i x -> (i+n, x))
       |> lifted_forall (fun (i,j) ->
-          enter_utype ((string_of_int i)::path) j ut)
+          enter_utype loc ((string_of_int i)::path) j ut)
 
     | { tuple = Some n ; sealed=false ; orelse = None } ->
       Ok ()
     | { tuple = Some n ; sealed=true ; orelse = None } ->
-      Error [path, UtFalse]
+      Error [path, UtFalse loc]
 
-  and finish_array2 path l ctxt = function
+  and finish_array2 loc path l ctxt = function
       ({ tuple = None }, _) -> Ok ctxt
     | ({ tuple = Some n }, _) when n = List.length l -> Ok ctxt
     | ({ tuple = Some n }, Some ut) ->
       let l = nthtail l n in
       l |> List.mapi (fun i x -> (i+n, x))
       |> lifted_forall (fun (i,j) ->
-          enter_utype ((string_of_int i)::path) j ut)
+          enter_utype loc ((string_of_int i)::path) j ut)
       |> (function Ok () -> Ok ctxt | Error l -> Error l)
 
     | ({ tuple = Some n }, None) ->
-      Error [path, UtFalse]
+      Error [path, UtFalse loc]
 
-  and finish_assoc path l = function
+  and finish_assoc loc path l = function
       { validated_keys ; sealed ; patterns ; orelse } ->
       assert ((orelse = None) || not sealed) ;
       l |> lifted_forall (fun (k, j) ->
           if List.mem k validated_keys then Ok()
           else match patterns |> List.find_map (fun (restr, ut) ->
               if Pcre.pmatch ~rex:(REC.get restr) k then Some ut else None) with
-            Some ut -> enter_utype (k::path) j ut
+            Some ut -> enter_utype loc (k::path) j ut
           | None ->
             match orelse with
-              None -> if not sealed then Ok() else Error [path, UtFalse]
-            | Some ut -> enter_utype (k::path) j ut
+              None -> if not sealed then Ok() else Error [path, UtFalse loc]
+            | Some ut -> enter_utype loc (k::path) j ut
         )
 
-  and finish_assoc2 path l ctxt = function
+  and finish_assoc2 loc path l ctxt = function
       ({ validated_keys }, patterns, orelse) ->
       l |> lifted_forall (fun (k, j) ->
           if List.mem k validated_keys then Ok ()
           else match patterns |> List.find_map (fun (restr, ut) ->
               if Pcre.pmatch ~rex:(REC.get restr) k then Some ut else None) with
-            Some ut -> enter_utype (k::path) j ut
+            Some ut -> enter_utype loc (k::path) j ut
           | None ->
             match orelse with
-              None -> Error [path, UtFalse]
-            | Some ut -> enter_utype (k::path) j ut
+              None -> Error [path, UtFalse loc]
+            | Some ut -> enter_utype loc (k::path) j ut
         )
       |> (function Ok () -> Ok ctxt | Error l -> Error l)
 
@@ -353,48 +353,48 @@ and utype path (j : Yojson.Basic.t) (ctxt : Ctxt.t) t = match t with
       ) (Ok ctxt) l
 
   and atomic_type path j ctxt t = match (j, t) with
-      (`Assoc l, Field (fname, ut)) -> begin match List.assoc fname l with
-          v -> begin match enter_utype (fname::path) v ut with
+      (`Assoc l, Field (_, fname, ut)) -> begin match List.assoc fname l with
+          v -> begin match enter_utype (loc_of_atomic_utype t) (fname::path) v ut with
               Ok () ->  Ctxt.add_field ctxt fname
             | Error l -> Error l
           end
         | exception Not_found -> Ok ctxt
       end
-    | (`Assoc l, FieldRequired fl) ->
+    | (`Assoc l, FieldRequired (loc, fl)) ->
       if fl |> List.for_all (fun fname -> List.mem_assoc fname l) then
         Ok ctxt
-      else Error[path,Atomic[t]]
+      else Error[path,Atomic(loc, [t])]
 
-    | (`Assoc _, FieldRE(re, ut)) ->
+    | (`Assoc _, FieldRE(_, re, ut)) ->
       Ctxt.add_pattern ctxt (re, ut)
 
-    | (`Assoc _, Sealed) ->
+    | (`Assoc _, Sealed _) ->
       Ctxt.set_sealed ctxt
 
-    | (`List _, Sealed) ->
+    | (`List _, Sealed _) ->
       Ctxt.set_sealed ctxt
 
-    | (`Assoc _, OrElse ut) -> Ctxt.set_orelse ctxt ut
-    | (`List _, OrElse ut) -> Ctxt.set_orelse ctxt ut
+    | (`Assoc _, OrElse (_, ut)) -> Ctxt.set_orelse ctxt ut
+    | (`List _, OrElse (_, ut)) -> Ctxt.set_orelse ctxt ut
 
-    | (`Assoc l, PropertyNames ut) ->
-      begin match l |> lifted_forall (fun (k,_) -> enter_utype (k::path) (`String k) ut) with
+    | (`Assoc l, PropertyNames (loc, ut)) ->
+      begin match l |> lifted_forall (fun (k,_) -> enter_utype loc (k::path) (`String k) ut) with
           Ok () -> Ok ctxt
-        | Error l -> Error [path,Atomic[t]]
+        | Error l -> Error [path,Atomic(loc, [t])]
       end
 
-    | (`List l, ArrayOf ut) ->
+    | (`List l, ArrayOf (loc, ut)) ->
       begin match l
                   |> List.mapi (fun i x -> (i,x))
-                  |> lifted_forall (fun (i,j) -> enter_utype ((string_of_int i)::path) j ut) with
+                  |> lifted_forall (fun (i,j) -> enter_utype loc ((string_of_int i)::path) j ut) with
         Ok () -> Ok ctxt
       | Error l -> Error l
       end
 
-  | (`List l, ArrayTuple utl) ->
+  | (`List l, ArrayTuple (loc, utl)) ->
     let utlen = List.length utl in
     if List.length l < utlen then
-      Error [path, Atomic[t]]
+      Error [path, Atomic(loc, [t])]
     else
       let l =
       if List.length l > utlen then
@@ -403,53 +403,53 @@ and utype path (j : Yojson.Basic.t) (ctxt : Ctxt.t) t = match t with
       let pairs = List.map2 (fun a b -> (a,b)) l utl in
       let numbered_pairs = List.mapi (fun i x -> (i,x)) pairs in
       begin match numbered_pairs |> lifted_forall (fun (i, (j, ut)) ->
-          enter_utype ((string_of_int i)::path) j ut) with
+          enter_utype loc ((string_of_int i)::path) j ut) with
         Ok () ->
         Ctxt.set_tuple ctxt utlen
       | Error l -> Error l
       end
 
-    | (`List l, ArrayUnique) ->
+    | (`List l, ArrayUnique loc) ->
       if List.length (List.sort_uniq Stdlib.compare l) = List.length l then
-        Ok ctxt else Error [path,Atomic[t]]
+        Ok ctxt else Error [path,Atomic(loc, [t])]
 
 (*
   | ArrayIndex of int * utype_t
 *)
-    | (`List l, Size range) ->
-      if inrange (List.length l) range then Ok ctxt else Error[path,Atomic[t]]
+    | (`List l, Size (loc, range)) ->
+      if inrange (List.length l) range then Ok ctxt else Error[path,Atomic(loc, [t])]
 
-    | (`String s, Size range) ->
-      if inrange (String.length s) range then Ok ctxt else Error[path,Atomic[t]]
+    | (`String s, Size(loc, range)) ->
+      if inrange (String.length s) range then Ok ctxt else Error[path,Atomic(loc, [t])]
 
-    | (`Assoc l, Size range) ->
-      if inrange (List.length l) range then Ok ctxt else Error[path,Atomic[t]]
+    | (`Assoc l, Size (loc, range)) ->
+      if inrange (List.length l) range then Ok ctxt else Error[path,Atomic(loc, [t])]
 
-    | (`String s, StringRE restr) ->
-      if Pcre.pmatch ~rex:(REC.get restr) s then Ok ctxt else Error[path,Atomic[t]]
+    | (`String s, StringRE (loc, restr)) ->
+      if Pcre.pmatch ~rex:(REC.get restr) s then Ok ctxt else Error[path,Atomic(loc, [t])]
 
-  | (`Int f, NumberBound range) ->
-    if float_numberBounds (float_of_int f) range then Ok ctxt else Error[path,Atomic[t]]
+  | (`Int f, NumberBound (loc, range)) ->
+    if float_numberBounds (float_of_int f) range then Ok ctxt else Error[path,Atomic(loc, [t])]
 
-  | (`Float f, NumberBound range) ->
-    if float_numberBounds f range then Ok ctxt else Error[path,Atomic[t]]
+  | (`Float f, NumberBound (loc, range)) ->
+    if float_numberBounds f range then Ok ctxt else Error[path,Atomic(loc, [t])]
 
-  | (`Int f, MultipleOf n) ->
-    if int_multipleOf f n then Ok ctxt else Error [path, Atomic[t]]
+  | (`Int f, MultipleOf (loc, n)) ->
+    if int_multipleOf f n then Ok ctxt else Error [path, Atomic(loc, [t])]
 
-  | (`Float f, MultipleOf n) ->
-    if float_multipleOf f n then Ok ctxt else Error [path, Atomic[t]]
+  | (`Float f, MultipleOf (loc, n)) ->
+    if float_multipleOf f n then Ok ctxt else Error [path, Atomic(loc, [t])]
 
-  | (j, Enum jl) ->
-    if List.mem (canon_json j) jl then Ok ctxt else Error[path,Atomic[t]]
+  | (j, Enum (loc, jl)) ->
+    if List.mem (canon_json j) jl then Ok ctxt else Error[path,Atomic(loc, [t])]
 
   | (_, Default _) -> Ok ctxt
 
-  | (`String s, Format fmt) ->
-    if s = "" || check_format s fmt then Ok ctxt else Error [path, Atomic[t]]
+  | (`String s, Format (loc, fmt)) ->
+    if s = "" || check_format s fmt then Ok ctxt else Error [path, Atomic(loc, [t])]
 
-  | (`String s, ContentMediaType fmt) ->
-    if check_media_type s fmt then Ok ctxt else Error [path, Atomic[t]]
+  | (`String s, ContentMediaType (loc, fmt)) ->
+    if check_media_type s fmt then Ok ctxt else Error [path, Atomic(loc, [t])]
 
 (*
   | ContentEncoding of string
@@ -461,7 +461,7 @@ and utype path (j : Yojson.Basic.t) (ctxt : Ctxt.t) t = match t with
 
 let validate new_tdl j ut =
   tdl := new_tdl ;
-  match enter_utype [] j ut with
+  match enter_utype (loc_of_utype ut) [] j ut with
     Ok () -> true
   | Error l ->
     let pp1 pps (path, ut) = Fmt.(pf pps "%s: %s" (String.concat "/" (List.rev path)) (Normal.printer ut)) in

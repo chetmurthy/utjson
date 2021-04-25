@@ -39,8 +39,6 @@ open Yojson.Basic ;;
 
 #load "ututil.cmo";;
 open Ututil ;;
-#load "uttestutil.cmo";;
-open Uttestutil ;;
 #load "utypes.cmo";;
 open Utypes ;;
 #load "utlexing.cmo";;
@@ -48,6 +46,8 @@ open Utlexing ;;
 #load "utmigrate.cmo";;
 open Utmigrate ;;
 #load "utparse0.cmo";;
+#load "uttestutil.cmo";;
+open Uttestutil ;;
 open Utparse0 ;;
 #load "utprint.cmo";;
 open Utprint ;;
@@ -79,8 +79,11 @@ let top_module_path x = top Normal.module_path_printer x ;;
 
 let top_yojson j = Fmt.(pf stdout "%s" (Yojson.Basic.pretty_to_string j)) ;;
 #install_printer top_yojson ;;
-let top_json (j : Utconv.json) = top_yojson j ;;
+let top_json (j : Yojson.Basic.t) = top_yojson j ;;
 #install_printer top_json ;;
+
+let top_loc_json j = top_yojson (LJ.to_json j) ;;
+#install_printer top_loc_json ;;
 
 #load "utconv.cmo";;
 open Utconv ;;
@@ -117,14 +120,14 @@ open Eval_test ;;
 #trace ElimCastCast.exec ;;
 #trace S10ReduceFunctorApp.exec ;;
 *)
-(*
+
 #load "simplify_test.cmo";;
 open Simplify_test ;;
-*)
 
+(*
 #load "validate_test.cmo";;
 open Validate_test ;;
-
+*)
 (*
 #load "schemastore_test.cmo";;
 open Schemastore_test ;;

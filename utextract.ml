@@ -109,14 +109,14 @@ let all_tids stl =
   let old_migrate_struct_item_t = dt.migrate_struct_item_t in
   let old_migrate_sig_item_t = dt.migrate_sig_item_t in
   let new_migrate_utype_t dt ut = match ut with
-      Ref(_, tid) -> add_tid tid ; ut
+      Ref(_, (_, tid)) -> add_tid tid ; ut
     | _ -> old_migrate_utype_t dt ut in
   let new_migrate_struct_item_t dt st = match st with
-      StTypes (_, l) -> l |> List.iter (fun (tid, _, _) ->  add_tid tid) ;
+      StTypes (_, _, l) -> l |> List.iter (fun (tid, _, _) ->  add_tid tid) ;
       old_migrate_struct_item_t dt st
     | _ -> old_migrate_struct_item_t dt st in
   let new_migrate_sig_item_t dt si = match si with
-      SiType (tid, _) -> add_tid tid ; si
+      SiType (_, tid, _) -> add_tid tid ; si
     | _ -> old_migrate_sig_item_t dt si in
   let dt = { dt with
              migrate_utype_t = new_migrate_utype_t ;
@@ -140,25 +140,25 @@ let all_mids stl =
     | DEREF(mp, mid) -> add_mid mid ;
       old_migrate_module_path_t dt mp in
   let new_migrate_struct_item_t dt st = match st with
-      StModuleBinding (mid, _) -> add_mid mid ;
+      StModuleBinding (_, mid, _) -> add_mid mid ;
       old_migrate_struct_item_t dt st
-    | StImport (_, mid) -> add_mid mid ;
+    | StImport (_, _, mid) -> add_mid mid ;
       old_migrate_struct_item_t dt st
-    | StModuleType (mid, _) ->  add_mid mid ;
+    | StModuleType (_, mid, _) ->  add_mid mid ;
       old_migrate_struct_item_t dt st
     | _ -> old_migrate_struct_item_t dt st in
   let new_migrate_sig_item_t dt si = match si with
-      SiModuleBinding (mid, _) -> add_mid mid ;
+      SiModuleBinding (loc, mid, _) -> add_mid mid ;
       old_migrate_sig_item_t dt si
-    | SiModuleType (mid, _) -> add_mid mid ;
+    | SiModuleType (loc, mid, _) -> add_mid mid ;
       old_migrate_sig_item_t dt si
     | _ -> old_migrate_sig_item_t dt si in
   let new_migrate_module_expr_t dt me = match me with
-      MeFunctor ((mid, _), _) -> add_mid mid ;
+      MeFunctor (_, (mid, _), _) -> add_mid mid ;
       old_migrate_module_expr_t dt me
     | _ -> old_migrate_module_expr_t dt me in
   let new_migrate_module_type_t dt mt = match mt with
-      MtFunctorType ((mid, _), _) -> add_mid mid ;
+      MtFunctorType (_, (mid, _), _) -> add_mid mid ;
       old_migrate_module_type_t dt mt
     | _ -> old_migrate_module_type_t dt mt in
   let dt = { dt with
@@ -188,7 +188,7 @@ module ElimEmptyLocal = struct
     let new_migrate_structure dt stl =
       let stl = old_migrate_structure dt stl in
       stl |> List.concat_map (function
-            StLocal([], l) -> l
+            StLocal(_, [], l) -> l
           | st -> [st]) in
     let dt = { dt with migrate_structure = new_migrate_structure } in
     dt.migrate_structure dt stl
@@ -199,7 +199,7 @@ module ElimCastCast = struct
     let dt = make_dt () in
     let old_migrate_module_expr_t = dt.migrate_module_expr_t in
     let new_migrate_module_expr_t dt me = match old_migrate_module_expr_t dt me with
-        MeCast(MeCast(me, _), mt) -> MeCast(me, mt)
+        MeCast(loc1, MeCast(loc2, me, _), mt) -> MeCast(Ploc.encl loc1 loc2, me, mt)
       | me -> me in
     let dt = { dt with migrate_module_expr_t = new_migrate_module_expr_t } in
     dt.migrate_structure dt stl
@@ -211,9 +211,9 @@ module S1ElimImport = struct
     let dt = make_dt () in
     let old_migrate_struct_item_t = dt.migrate_struct_item_t in
     let new_migrate_struct_item_t dt st = match st with
-      | StImport(fname, mid) ->
+      | StImport(loc, fname, mid) ->
         let stl = load_file fname in
-        let st = StModuleBinding (mid, MeStruct stl) in
+        let st = StModuleBinding (loc, mid, MeStruct(loc_of_structure stl, stl)) in
         old_migrate_struct_item_t dt st
       | _ -> old_migrate_struct_item_t dt st in
     let dt = { dt with migrate_struct_item_t = new_migrate_struct_item_t } in
@@ -227,12 +227,12 @@ module S2ElimLocal = struct
     let dt = make_dt () in
     let old_migrate_struct_item_t = dt.migrate_struct_item_t in
     let new_migrate_struct_item_t dt st = match st with
-        StLocal ([], _) -> st
-      | StLocal ((_::_ as stl1), stl2) ->
+        StLocal (_, [], _) -> st
+      | StLocal (loc, (_::_ as stl1), stl2) ->
         let mid = Fresh.fresh mids (ID.of_string "LOCAL") in
-        let st = StLocal([],
-                         [StModuleBinding(mid, MeStruct stl1);
-                          StInclude(REL mid, None)]
+        let st = StLocal(loc, [],
+                         [StModuleBinding(loc, mid, MeStruct(loc_of_structure stl1, stl1));
+                          StInclude(loc, REL mid, None)]
                          @stl2) in
         old_migrate_struct_item_t dt st
       | _ -> old_migrate_struct_item_t dt st in
@@ -246,30 +246,31 @@ module S3NameFunctorAppSubterms = struct
   let name_functor_args mids me =
     let rec namerec acc me = match me with
         MeStruct _ -> (acc,me)
-      | MeFunctorApp(me1, me2) ->
+      | MeFunctorApp(loc, me1, me2) ->
         let (acc, me1) = termrec acc me1 in
         let (acc, me2) = termrec acc me2 in
-        (acc, MeFunctorApp(me1, me2))
+        (acc, MeFunctorApp(loc, me1, me2))
       | MePath _ -> (acc, me)
       | MeFunctor _ -> (acc, me)
-      | MeCast (me, mt) ->
+      | MeCast (loc, me, mt) ->
         let (acc, me) = namerec acc me in
-        (acc, MeCast (me, mt))
+        (acc, MeCast (loc, me, mt))
     and termrec acc me = match me with
         (MeStruct _
         | MeFunctor _) ->
+        let loc = loc_of_module_expr me in
         let mid = Fresh.fresh mids (ID.of_string "NAMED") in
-        let acc = (StModuleBinding(mid, me))::acc in
-        (acc, MePath(REL mid))
-      | MeFunctorApp (me1, me2) ->
+        let acc = (StModuleBinding(loc, mid, me))::acc in
+        (acc, MePath(loc, REL mid))
+      | MeFunctorApp (loc, me1, me2) ->
         let (acc, me1) = termrec acc me1 in
         let (acc, me2) = termrec acc me2 in
-        (acc, MeFunctorApp (me1, me2))
+        (acc, MeFunctorApp (loc, me1, me2))
 
       | MePath _ -> (acc, me)
-      | MeCast (me, mt) ->
+      | MeCast (loc, me, mt) ->
         let (acc, me) = termrec acc me in
-        (acc, MeCast (me, mt)) in
+        (acc, MeCast (loc, me, mt)) in
 
     let (acc, me) = namerec [] me in
     (List.rev acc, me)
@@ -279,13 +280,13 @@ module S3NameFunctorAppSubterms = struct
     let dt = make_dt () in
     let old_migrate_struct_item_t = dt.migrate_struct_item_t in
     let new_migrate_struct_item_t dt st = match st with
-      StModuleBinding(mid, me) ->
+      StModuleBinding(loc, mid, me) ->
       let me = dt.migrate_module_expr_t dt me in
       let (new_stl, new_me) = name_functor_args mids me in
       if [] = new_stl then
-        StModuleBinding(mid, new_me)
+        StModuleBinding(loc, mid, new_me)
       else
-        StLocal([], new_stl@[StModuleBinding(mid, new_me)])
+        StLocal(loc, [], new_stl@[StModuleBinding(loc, mid, new_me)])
       | _ -> old_migrate_struct_item_t dt st in
     let dt = { dt with migrate_struct_item_t = new_migrate_struct_item_t } in
     dt.migrate_structure dt stl
@@ -309,22 +310,22 @@ let exec stl =
   let dt = make_dt () in
   let old_migrate_struct_item_t = dt.migrate_struct_item_t in
   let new_migrate_struct_item_t dt st = match st with
-      StInclude (mp, None) ->
-      Fmt.(failwithf "S3ElimInclude.exec: found unadorned StInclude (was typecheck already run?): %a"
+      StInclude (loc, mp, None) ->
+      Fmt.(raise_failwithf loc "S3ElimInclude.exec: found unadorned StInclude (was typecheck already run?): %a"
              pp_struct_item_t st)
-    | StInclude (mp, Some (MtSig l as mty)) ->
+    | StInclude (loc, mp, Some (MtSig (_, l) as mty)) ->
       let stl = l |> List.map (function
-            SiType (tid, sealed) ->
-            StTypes(false, [(tid, sealed, Ref(Some mp, tid))])
-          | SiModuleBinding(mid, mty) ->
-            StModuleBinding(mid, MeCast(MePath(DEREF(mp, mid)), mty))
-          | SiModuleType(mid, mty) ->
-            StModuleType(mid, mty)
-          | SiInclude _ ->
-            Fmt.(failwithf "S3ElimInclude.exec: include with malformed module-type: %a" pp_struct_item_t st)) in
-      StLocal([], stl)
-    | StInclude (mp, Some _) ->
-      Fmt.(failwithf "S3ElimInclude.exec: internal error with StInclude: %a"
+            SiType (loc, tid, sealed) ->
+            StTypes(loc, false, [(tid, sealed, Ref(loc, (Some mp, tid)))])
+          | SiModuleBinding(loc, mid, mty) ->
+            StModuleBinding(loc, mid, MeCast(loc, MePath(loc, DEREF(mp, mid)), mty))
+          | SiModuleType(loc, mid, mty) ->
+            StModuleType(loc, mid, mty)
+          | SiInclude (loc, _) ->
+            Fmt.(raise_failwithf loc "S3ElimInclude.exec: include with malformed module-type: %a" pp_struct_item_t st)) in
+      StLocal(loc, [], stl)
+    | StInclude (loc, mp, Some _) ->
+      Fmt.(raise_failwithf loc "S3ElimInclude.exec: internal error with StInclude: %a"
              pp_struct_item_t st)
     | _ -> old_migrate_struct_item_t dt st in
   let dt = { dt with migrate_struct_item_t = new_migrate_struct_item_t } in
@@ -370,7 +371,7 @@ let utype_uses ut =
   let old_migrate_utype_t = dt.migrate_utype_t in
   let old_migrate_module_path_t = dt.migrate_module_path_t in
   let new_migrate_utype_t dt ut = match ut with
-      Ref (None, tid) -> add_tid tid ; ut
+      Ref (_, (None, tid)) -> add_tid tid ; ut
     | _ -> old_migrate_utype_t dt ut in
   let new_migrate_module_path_t dt mp = match mp with
     REL mid -> add_mid mid ; mp
@@ -382,26 +383,26 @@ let utype_uses ut =
   Env.sort_uniq !names
 
 let rec me_uses me = match me with
-    MeStruct stl ->
+    MeStruct (_, stl) ->
     let ue = List.fold_left (fun ue st ->
         let st_ue = st_uses_exports st in
         UE.override_right ue st_ue
       ) (UE.mk()) stl in
     ue.UE.uses
 
-  | MeFunctorApp (me1, me2) ->
+  | MeFunctorApp (_, me1, me2) ->
     let uses_me1 = me_uses me1 in
     let uses_me2 = me_uses me2 in
     Env.merge uses_me1 uses_me2
 
-  | MePath mp -> mp_uses mp
+  | MePath (_, mp) -> mp_uses mp
 
-  | MeFunctor ((mid, argmty), me) ->
+  | MeFunctor (_, (mid, argmty), me) ->
     assert FMV.(closed module_type argmty) ;
     let uses_me = me_uses me in
     Env.sub uses_me (Env.mk ~m:[mid,()] ())
 
-  | MeCast(me, mty) ->
+  | MeCast(_, me, mty) ->
     assert FMV.(closed module_type mty) ;
     me_uses me
 
@@ -411,7 +412,7 @@ and mp_uses = function
   | DEREF(mp, _) -> mp_uses mp
 
 and st_uses_exports st = match st with
-    StTypes (recflag, l) ->
+    StTypes (_, recflag, l) ->
     let uses =
       l
       |> List.map (fun (_, _, ut) -> utype_uses ut)
@@ -421,15 +422,15 @@ and st_uses_exports st = match st with
       else uses in
     UE.mk ~uses ~exports:(Env.mk ~t:(List.map (fun (id, _, _) -> (id, ())) l) ()) ()
 
-  | StModuleBinding (mid, me) ->
+  | StModuleBinding (_, mid, me) ->
     let uses = me_uses me in
     UE.mk ~uses ~exports:(Env.mk ~m:[mid,()] ()) ()
 
-  | StModuleType (mid, mty) ->
+  | StModuleType (_, mid, mty) ->
     assert FMV.(closed module_type mty) ;
     UE.mk ~exports:(Env.mk ~m:[mid,()] ()) ()
 
-  | StOpen (mp, Some (MtSig sil as mty)) ->
+  | StOpen (_, mp, Some (MtSig (_, sil) as mty)) ->
     assert FMV.(closed module_type mty) ;
     let uses = mp_uses mp in
     let exports = sil_exports sil in
@@ -440,21 +441,21 @@ and st_uses_exports st = match st with
     | StInclude _
     | StOpen _
     ) ->
-    Fmt.(failwithf "S7RenameOverridden.st_uses_exports: struct-item should have been eliminated: %s"
+    Fmt.(raise_failwithf (loc_of_struct_item st) "S7RenameOverridden.st_uses_exports: struct-item should have been eliminated: %s"
            (struct_item_to_string st))
 
 and sil_exports sil =
   List.fold_left (fun n -> function
-        SiType (tid, _) -> Env.add_t n (tid,())
-      | SiModuleBinding (mid, mty) ->
+        SiType (_, tid, _) -> Env.add_t n (tid,())
+      | SiModuleBinding (_, mid, mty) ->
         assert FMV.(closed module_type mty) ;
         Env.add_m n (mid,())
 
-  | SiModuleType (mid, mty) ->
-    assert FMV.(closed module_type mty) ;
-    Env.add_m n (mid,())
-  | SiInclude _ as si ->
-    Fmt.(failwithf "sil_exports: internal error, unexpected %a" pp_sig_item_t si)
+      | SiModuleType (_, mid, mty) ->
+        assert FMV.(closed module_type mty) ;
+        Env.add_m n (mid,())
+      | SiInclude (loc, _) as si ->
+        Fmt.(raise_failwithf loc "sil_exports: internal error, unexpected %a" pp_sig_item_t si)
     ) (Env.mk ()) sil
 
 let stl_uses_exports stl =
@@ -498,8 +499,8 @@ let rename_ut env ut =
   let dt = make_dt () in
   let old_migrate_utype_t = dt.migrate_utype_t in
   let new_migrate_utype_t dt ut = match ut with
-      Ref (None, tid) -> begin match Env.lookup_t env tid with
-          Some tid' -> Ref(None, tid')
+      Ref (loc, (None, tid)) -> begin match Env.lookup_t env tid with
+          Some tid' -> Ref(loc, (None, tid'))
         | None -> ut
       end
     | _ -> old_migrate_utype_t dt ut in
@@ -519,37 +520,37 @@ let rename_mp env mp =
   dt.migrate_module_path_t dt mp
 
 let rec rename_st env st = match st with
-    StTypes(false, l) ->
-    StTypes(false, l |> List.map (fun (id, sealed, ut) -> (id, sealed, rename_ut env ut)))
-  | StTypes(true, l) ->
+    StTypes(loc, false, l) ->
+    StTypes(loc, false, l |> List.map (fun (id, sealed, ut) -> (id, sealed, rename_ut env ut)))
+  | StTypes(loc, true, l) ->
     let env = Env.(sub env (mk ~t:(List.map (fun (id, _, _) -> (id, ())) l) ())) in
-    StTypes(true, l |> List.map (fun (id, sealed, ut) -> (id, sealed, rename_ut env ut)))
-  | StModuleBinding(mid, me) ->
+    StTypes(loc, true, l |> List.map (fun (id, sealed, ut) -> (id, sealed, rename_ut env ut)))
+  | StModuleBinding(loc, mid, me) ->
     let env = Env.(sub env (mk ~m:[mid,()] ())) in
-    StModuleBinding(mid, rename_me env me)
-  | StModuleType (mid, mty) ->
+    StModuleBinding(loc, mid, rename_me env me)
+  | StModuleType (_, mid, mty) ->
     assert FMV.(closed module_type mty) ;
     st
-  | StOpen (mp, Some mty) ->
-    StOpen (rename_mp env mp, Some mty)
+  | StOpen (loc, mp, Some mty) ->
+    StOpen (loc, rename_mp env mp, Some mty)
 
   | (StInclude _
-    | StOpen (_, None)
+    | StOpen (_, _, None)
     | StImport _
     | StLocal _
-    ) -> Fmt.(failwithf "rename_st: forbidden struct_item: %a" pp_struct_item_t st)
+    ) -> Fmt.(raise_failwithf (loc_of_struct_item st) "rename_st: forbidden struct_item: %a" pp_struct_item_t st)
 
 and rename_me env me = match me with
-    MeStruct l -> MeStruct (rename_structure env l)
-  | MeFunctorApp (me1, me2) -> MeFunctorApp (rename_me env me1, rename_me env me2)
-  | MePath mp -> MePath (rename_mp env mp)
-  | MeFunctor ((mid, mty), me) ->
+    MeStruct (loc, l) -> MeStruct (loc, rename_structure env l)
+  | MeFunctorApp (loc, me1, me2) -> MeFunctorApp (loc, rename_me env me1, rename_me env me2)
+  | MePath (loc, mp) -> MePath (loc, rename_mp env mp)
+  | MeFunctor (loc, (mid, mty), me) ->
     assert FMV.(closed module_type mty) ;
     let env' = Env.(sub env (mk ~m:[mid,()] ())) in
-    MeFunctor ((mid, mty), rename_me env' me)
-  | MeCast (me, mt) ->
+    MeFunctor (loc, (mid, mty), rename_me env' me)
+  | MeCast (loc, me, mt) ->
     assert FMV.(closed module_type mt) ;
-    MeCast (rename_me env me, mt)
+    MeCast (loc, rename_me env me, mt)
 
 and rename_structure env l =
   let (_, acc) = List.fold_left (fun (env, acc) st ->
@@ -561,15 +562,15 @@ and rename_structure env l =
   List.rev acc
 
 let rebind_st allnames exports_and_overridden (env, st) = match st with
-    StTypes(false, l) ->
+    StTypes(loc, false, l) ->
     let (env, revacc) = List.fold_left (fun (env, revacc) (tid, sealed, ut) ->
         if Env.has_t exports_and_overridden tid then
           let tid' = Fresh.fresh allnames tid in
           (Env.add_t env (tid, tid'), (tid', sealed, ut)::revacc)
         else (env, (tid, sealed, ut)::revacc)
       ) (env, []) l in
-    (env, StTypes(false, List.rev revacc))
-  | StTypes(true, l) ->
+    (env, StTypes(loc, false, List.rev revacc))
+  | StTypes(loc, true, l) ->
     let torebind = Env.(intersect exports_and_overridden (mk ~t:(l |> List.map (fun (tid, _, _) -> (tid, ()))) ())) in
     let renv =
       torebind
@@ -582,24 +583,24 @@ let rebind_st allnames exports_and_overridden (env, st) = match st with
           | None -> tid in
         let ut = rename_ut renv ut in
         (tid, sealed, ut)) in
-    (Env.merge renv env, StTypes(true, l))
+    (Env.merge renv env, StTypes(loc, true, l))
 
-  | StModuleBinding(mid, me) ->
+  | StModuleBinding(loc, mid, me) ->
     assert Env.(has_m exports_and_overridden mid) ;
     let mid' = Fresh.fresh allnames mid in
-    (Env.(add_m env (mid, mid')), StModuleBinding(mid', me))
+    (Env.(add_m env (mid, mid')), StModuleBinding(loc, mid', me))
 
-  | StModuleType (_, mty) ->
+  | StModuleType (_, _, mty) ->
     assert FMV.(closed module_type mty) ;
     (env, st)
 
-  | StOpen (mp, Some _) -> (env, st)
+  | StOpen (_, mp, Some _) -> (env, st)
 
   | (StInclude _
-    | StOpen (_, None)
+    | StOpen (_, _, None)
     | StImport _
     | StLocal _
-    ) -> Fmt.(failwithf "rebind_st: forbidden struct_item: %a" pp_struct_item_t st)
+    ) -> Fmt.(raise_failwithf (loc_of_struct_item st) "rebind_st: forbidden struct_item: %a" pp_struct_item_t st)
 
 let rename_members allnames stl_ue_accum =
   let rename1 (renenv, acc) ((st, ue), rhs_export_accum) =
@@ -653,83 +654,83 @@ let subst_ut env ut =
   let dt = make_dt () in
   let old_migrate_utype_t = dt.migrate_utype_t in
   let new_migrate_utype_t dt ut = match ut with
-      Ref(None, tid) -> begin match Env.(lookup_t env tid) with
+      Ref(_, (None, tid)) -> begin match Env.(lookup_t env tid) with
           None -> ut
         | Some ut -> ut
       end
-    | Ref(Some mp, tid) -> Ref(Some (abs_mp env mp), tid)
+    | Ref(loc, (Some mp, tid)) -> Ref(loc, (Some (abs_mp env mp), tid))
 
     | _ -> old_migrate_utype_t dt ut in
   let dt = { dt with migrate_utype_t = new_migrate_utype_t } in
   dt.migrate_utype_t dt ut
 
 let rec abs_me prefix env me = match me with
-    MeStruct l ->
+    MeStruct (loc, l) ->
     let (_, l) = abs_stl prefix env l in
-    MeStruct l
+    MeStruct (loc, l)
 
-  | MeFunctorApp(me1, me2) ->
-    MeFunctorApp(abs_me prefix env me1, abs_me prefix env me2)
+  | MeFunctorApp(loc, me1, me2) ->
+    MeFunctorApp(loc, abs_me prefix env me1, abs_me prefix env me2)
 
-  | MePath mp -> MePath(abs_mp env mp)
+  | MePath (loc, mp) -> MePath(loc, abs_mp env mp)
 
-  | MeFunctor((mid, mty), me) ->
+  | MeFunctor(loc, (mid, mty), me) ->
     let env = Env.(add_m env (mid, REL mid)) in
-    MeFunctor((mid, mty), abs_me None env me)
+    MeFunctor(loc, (mid, mty), abs_me None env me)
 
-  | MeCast(me, mt) ->
-    MeCast(abs_me prefix env me, mt)
+  | MeCast(loc, me, mt) ->
+    MeCast(loc, abs_me prefix env me, mt)
 
 and abs_st prefix env st = match (prefix, st) with
-    (Some mpopt, StTypes(false, l)) ->
+    (Some mpopt, StTypes(loc, false, l)) ->
     let l = l |> List.map (fun (tid, sealed, ut) ->
         (tid, sealed, subst_ut env ut)) in
-    let env' = Env.mk ~t:(l |> List.map (fun (tid, _, _) -> (tid, Ref (mpopt, tid)))) () in 
+    let env' = Env.mk ~t:(l |> List.map (fun (tid, _, _) -> (tid, Ref (loc, (mpopt, tid))))) () in 
     let env = Env.(merge env' env) in
-    (env, StTypes(false, l))
-  | (Some mpopt, StTypes(true, l)) ->
-    let env' = Env.mk ~t:(l |> List.map (fun (tid, _, _) -> (tid, Ref (mpopt, tid)))) () in 
+    (env, StTypes(loc, false, l))
+  | (Some mpopt, StTypes(loc, true, l)) ->
+    let env' = Env.mk ~t:(l |> List.map (fun (tid, _, _) -> (tid, Ref (loc, (mpopt, tid))))) () in 
     let env = Env.(merge env' env) in
     let l = l |> List.map (fun (tid, sealed, ut) ->
         (tid, sealed, subst_ut env ut)) in
-    (env, StTypes(false, l))
+    (env, StTypes(loc, false, l))
 
-  | (None, StTypes(recflag, l)) ->
+  | (None, StTypes(loc, recflag, l)) ->
     let env' = Env.(sub_tids env (List.map (fun (x, _, _) -> x) l)) in
     let l = l |> List.map (fun (tid, sealed, ut) ->
         (tid, sealed, subst_ut env' ut)) in
-    (env', StTypes(recflag, l))
+    (env', StTypes(loc, recflag, l))
 
-  | (None, StModuleBinding(mid, me)) ->
+  | (None, StModuleBinding(loc, mid, me)) ->
     let me = abs_me None env me in
     let env = Env.(sub_mids env [mid]) in
-    (env, StModuleBinding(mid, me))
+    (env, StModuleBinding(loc, mid, me))
 
-  | (Some mpopt, StModuleBinding(mid, me)) ->
+  | (Some mpopt, StModuleBinding(loc, mid, me)) ->
     let prefixmp = match mpopt with None -> TOP mid | Some mp -> DEREF(mp, mid) in
     let me = abs_me (Some (Some prefixmp)) env me in
     let env = Env.(add_m env (mid, prefixmp)) in
-    (env, StModuleBinding(mid, me))
+    (env, StModuleBinding(loc, mid, me))
 
-  | (_, StOpen (mp, Some (MtSig l))) ->
+  | (_, StOpen (loc, mp, Some (MtSig (loc2, l)))) ->
     let mp = abs_mp env mp in
     let env = List.fold_left (fun env -> function
-          SiType (tid, _) ->
-          Env.(add_t env (tid, Ref(Some mp, tid)))
-        | SiModuleBinding(mid, _) ->
+          SiType (loc, tid, _) ->
+          Env.(add_t env (tid, Ref(loc, (Some mp, tid))))
+        | SiModuleBinding(_, mid, _) ->
           Env.(add_m env (mid, DEREF(mp, mid)))
         | SiModuleType _ -> env
         | SiInclude _ as si -> 
-          Fmt.(failwithf "S8Absolute.abs_st: forbidden sig_item %a" pp_sig_item_t si)
+          Fmt.(raise_failwithf (loc_of_sig_item si) "S8Absolute.abs_st: forbidden sig_item %a" pp_sig_item_t si)
       ) env l in
-    let st = StOpen (mp, Some (MtSig l)) in
+    let st = StOpen (loc, mp, Some (MtSig (loc2, l))) in
     (env, st)
 
-  | (_, StModuleType (_, _)) -> (env, st)
-  | (_, (StOpen(_, None)
+  | (_, StModuleType (_, _, _)) -> (env, st)
+  | (_, (StOpen(_, _, None)
         | StImport _
         | StLocal _
-        | StInclude _)) -> Fmt.(failwithf "S8Absolute.abs_st: forbidden struct_item %a" pp_struct_item_t st)
+        | StInclude _)) -> Fmt.(raise_failwithf (loc_of_struct_item st) "S8Absolute.abs_st: forbidden struct_item %a" pp_struct_item_t st)
 
 and abs_stl prefix env stl =
   let (env, revacc) = List.fold_left (fun (env, revacc) st ->
@@ -749,22 +750,22 @@ let rec find_functor = function
     ([], _) -> Fmt.(failwithf "find_functor: path was empty")
   | ([h], l) ->
     l |> List.find_map (function
-          StModuleBinding (mid, (MeFunctor _ as me)) when mid = h -> Some me
-        | StModuleBinding (mid, MeCast(MeFunctor _ as me, _)) when mid = h -> Some me
+          StModuleBinding (_, mid, (MeFunctor _ as me)) when mid = h -> Some me
+        | StModuleBinding (_, mid, MeCast(_, (MeFunctor _ as me), _)) when mid = h -> Some me
         | _ -> None)
   | (h::t, l) ->
     l |> List.find_map (function
-          StModuleBinding (mid, MeStruct l) when mid = h -> find_functor (t, l)
-        | StModuleBinding (mid, MeCast(MeStruct l, _)) when mid = h -> find_functor (t, l)
+          StModuleBinding (_, mid, MeStruct (_, l)) when mid = h -> find_functor (t, l)
+        | StModuleBinding (_, mid, MeCast(_, MeStruct (_, l), _)) when mid = h -> find_functor (t, l)
         | _ -> None)
 
 let unpack_functor_app me =
   let rec unrec argacc = function
-      MePath mp -> (mp, argacc)
-    | MeCast(me, _) -> unrec argacc me
-    | MeFunctorApp(me1, MePath mp) -> unrec (mp::argacc) me1
-    | MeFunctorApp(me1, MeCast(me2, _)) ->
-      unrec argacc (MeFunctorApp(me1, me2))
+      MePath (_, mp) -> (mp, argacc)
+    | MeCast(_, me, _) -> unrec argacc me
+    | MeFunctorApp(_, me1, MePath (_, mp)) -> unrec (mp::argacc) me1
+    | MeFunctorApp(loc, me1, MeCast(_, me2, _)) ->
+      unrec argacc (MeFunctorApp(loc, me1, me2))
     | _ -> Fmt.(failwithf "unpack_functor_app: unexpected %a" pp_module_expr_t me) in
   unrec [] me
 
@@ -777,18 +778,18 @@ let mp_to_list mp =
 
 let unpack_functor me =
   let rec unrec acc = function
-      MeCast(me, _) -> unrec acc me
-    | MeFunctor((mid, mty), me) ->
+      MeCast(_, me, _) -> unrec acc me
+    | MeFunctor(_, (mid, mty), me) ->
       unrec ((mid, mty)::acc) me
-    | MeStruct l -> (List.rev acc, l)
-    | _ -> Fmt.(failwithf "unpack_functor: unexpected module_expr %a" pp_module_expr_t me)
+    | MeStruct (_, l) -> (List.rev acc, l)
+    | me -> Fmt.(raise_failwithf (loc_of_module_expr me) "unpack_functor: unexpected module_expr %a" pp_module_expr_t me)
   in unrec [] me
 
 let rec reduce_stl prefixmp top stl =
   List.map (reduce_st prefixmp top) stl
 
 and reduce_me prefixmp top me = match me with
-  | MeCast(MeFunctorApp _ as me, MtSig _) ->
+  | MeCast(_, (MeFunctorApp _ as me), MtSig _) ->
     let (fmp, argmps) = unpack_functor_app me in
     let fexp = match find_functor (mp_to_list fmp, top) with
         None -> Fmt.(failwithf "reduce_me: could not find functor at module path %a" pp_module_path_t fmp)
@@ -798,19 +799,19 @@ and reduce_me prefixmp top me = match me with
       Fmt.(failwithf "formal/actual length mismatch in %a" pp_module_expr_t me) ;
     let env = Env.mk ~m:(List.map2 (fun (mid, mty) argmp -> (mid, argmp)) formals argmps) () in
     let (_, stl) = S8Absolute.abs_stl (Some prefixmp) env stl in
-    MeStruct stl
+    MeStruct (loc_of_structure stl, stl)
 
-  | MeCast(me, mt) ->
-    MeCast(reduce_me prefixmp top me, mt)
-  | MeStruct l -> MeStruct (List.map (reduce_st prefixmp top) l)
+  | MeCast(loc, me, mt) ->
+    MeCast(loc, reduce_me prefixmp top me, mt)
+  | MeStruct (loc, l) -> MeStruct (loc, List.map (reduce_st prefixmp top) l)
   | (MeFunctor _
     | MeFunctorApp _
     | MePath _) -> me
 
 and reduce_st prefixmp top st = match st with
-  | StModuleBinding (mid, me) ->
+  | StModuleBinding (loc, mid, me) ->
     let prefixmp = match prefixmp with None -> TOP mid | Some mp -> DEREF(mp, mid) in
-    StModuleBinding (mid, reduce_me (Some prefixmp) top me)
+    StModuleBinding (loc, mid, reduce_me (Some prefixmp) top me)
   | st -> st
 
 let rec fix f x =
@@ -830,14 +831,14 @@ let exec stl =
   let old_migrate_structure = dt.migrate_structure in
   let old_migrate_module_expr_t = dt.migrate_module_expr_t in
   let new_migrate_module_expr_t dt me = match me with
-      MeCast(me, _) -> dt.migrate_module_expr_t dt me
+      MeCast(_, me, _) -> dt.migrate_module_expr_t dt me
     | _ -> old_migrate_module_expr_t dt me in
 
   let new_migrate_structure dt stl =
     let stl = old_migrate_structure dt stl in
     List.fold_right (fun st acc ->
         match st with
-  | StModuleBinding(_, MeStruct _) -> st::acc
+  | StModuleBinding(_, _, MeStruct _) -> st::acc
   | StTypes _ -> st::acc
   | _ -> acc
       ) stl [] in
@@ -857,27 +858,27 @@ where the module_path_t, if present, is an absolute module-path.
 
 module FinalExtract = struct
 
-let check_closed l =
+let check_closed (l : top_bindings) =
   let dt = make_dt () in
   let old_migrate_utype_t = dt.migrate_utype_t in
-  let defined = List.map fst l in
+  let defined = List.map (fun (_, tid, _) -> tid) l in
   let new_migrate_utype_t dt ut = match ut with
-      Ref (mpopt, id) ->
+      Ref (_, (mpopt, id)) ->
       if not (List.mem (mpopt, id) defined) then
         Fmt.(failwithf "FinalExtract.check_closed: reference %s not defined in extracted list" (Normal.printer ut)) ;
       ut
     | _ -> old_migrate_utype_t dt ut in
   let dt = { dt with migrate_utype_t = new_migrate_utype_t } in
-  l |> List.iter (fun (_, ut) -> ignore(dt.migrate_utype_t dt ut))
+  l |> List.iter (fun (_, _, ut) -> ignore(dt.migrate_utype_t dt ut))
 
 let rec extract_stl mpopt acc stl =
   List.fold_left (extract_st mpopt) acc stl
 
 and extract_st mpopt acc = function
-    StTypes(_, l) ->
-    List.fold_left (fun acc (id, _, ut) -> ((mpopt, id), ut)::acc) acc l
+    StTypes(loc, _, l) ->
+    List.fold_left (fun acc (id, _, ut) -> (loc, (mpopt, id), ut)::acc) acc l
 
-  | StModuleBinding(mid, MeStruct l) ->
+  | StModuleBinding(_, mid, MeStruct (_, l)) ->
     let mpopt = match mpopt with None -> Some(TOP mid) | Some mp -> Some(DEREF(mp, mid)) in
     extract_stl mpopt acc l
 

@@ -12,6 +12,8 @@ open Utconv
 open Uttypecheck
 open Utextract
 
+let structure_cmp = Reloc.(wrap_cmp structure_cmp structure)
+
 let simple = "simple" >::: [
     "simple" >:: (fun ctxt ->
         ()
@@ -482,7 +484,7 @@ module Predefined = struct
 
 let test_finalf (expect, f) =
   let filepath = ["schema-golden/schema-overrides"] in
-  assert_equal ~msg:f ~printer:Normal.top_bindings_printer ~cmp:top_bindings_cmp
+  assert_equal ~msg:f ~printer:Normal.top_bindings_printer ~cmp:Reloc.(wrap_cmp top_bindings_cmp top_bindings)
     (expect |> top_bindings_of_string_exn)
     (FinalExtract.exec (full_extract (convert_file ~with_predefined:true (CC.mk ~filepath ()) f)))
 

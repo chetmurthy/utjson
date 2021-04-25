@@ -92,10 +92,12 @@ typing_test.cmx : \
     utconv.cmx
 utconv.cmo : \
     utypes.cmi \
-    ututil.cmo
+    ututil.cmo \
+    utparse0.cmo
 utconv.cmx : \
     utypes.cmx \
-    ututil.cmx
+    ututil.cmx \
+    utparse0.cmx
 utextract.cmo : \
     utypes.cmi \
     ututil.cmo \
@@ -177,12 +179,14 @@ utvalidate.cmo : \
     ututil.cmo \
     uttypecheck.cmo \
     utmigrate.cmo \
+    utlexing.cmo \
     utio.cmo
 utvalidate.cmx : \
     utypes.cmx \
     ututil.cmx \
     uttypecheck.cmx \
     utmigrate.cmx \
+    utlexing.cmx \
     utio.cmx
 validate_test.cmo : \
     utypes.cmi \
