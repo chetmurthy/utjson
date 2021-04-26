@@ -1,0 +1,78 @@
+
+type base_type_t = Utypes.base_type_t ;
+type env_t = Utypes.Env.t bool unit unit ;
+module Bound = Utypes.Bound ;
+type size_constraint_t = Utypes.size_constraint_t ;
+type range_constraint_t = Utypes.range_constraint_t ;
+type module_path_t = Utypes.module_path_t ;
+
+module REC = struct
+type loc = Ploc.t ;
+
+ATTRIBUTE_GRAMMAR
+  DEBUG True ;
+  MODULE AG ;
+  ATTRIBUTION_MODEL Attributed {
+    attributed_module_name = AT
+  } ;
+  PRIMITIVES loc, base_type_t, size_constraint_t, range_constraint_t ;
+  AXIOM utype_t ;
+
+ATTRIBUTE sealed : bool ;
+
+ATTRIBUTES
+  env : env_t ;
+END ;
+
+RULE UtTrue : utype_t := loc
+COMPUTE
+  $[0].sealed := False ;
+END ;
+
+(*
+  | UtFalse of loc
+  | Simple of loc * base_type_t
+  | And of loc * utype_t * utype_t
+  | Or of loc * utype_t * utype_t
+  | Xor of loc * utype_t * utype_t
+  | Impl of loc * utype_t * utype_t
+  | Not of loc * utype_t
+  | Atomic of loc * atomic_utype_t list
+  | Ref of loc * (module_path_t option * ID.t)
+  | Seal of loc * utype_t * (string * utype_t) list * utype_t option
+*)
+
+RULE Field : atomic_utype_t := loc and string and utype_t
+COMPUTE
+  $[0].sealed := False ;
+END ;
+(*
+  | FieldRE of loc * string * utype_t
+  | FieldRequired of loc * string list
+  | ArrayOf of loc * utype_t
+  | ArrayTuple of loc * utype_t list
+  | ArrayUnique of loc
+  | ArrayIndex of loc * int * utype_t
+  | Size of loc * size_constraint_t
+  | StringRE of loc * string
+  | NumberBound of loc * range_constraint_t
+  | Sealed of loc
+  | OrElse of loc * utype_t
+  | MultipleOf of loc * float
+  | Enum of loc * Yojson.Basic.t list
+  | Default of loc * Yojson.Basic.t
+  | Format of loc * string
+  | PropertyNames of loc * utype_t
+  | ContentMediaType of loc * string
+  | ContentEncoding of loc * string
+*)
+END ;
+
+end ;
+
+(*
+;;; Local Variables: ***
+;;; mode:tuareg ***
+;;; End: ***
+
+*)
