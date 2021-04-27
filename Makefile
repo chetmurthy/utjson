@@ -8,8 +8,8 @@ IMPORT_PACKAGES = pa_ppx_migrate,pa_ppx.import
 IMPORT_OCAMLCFLAGS = -ppopt -pa_import-I -ppopt . -ppopt -pa_passthru-debug
 
 
-OBJ=ututil.cmo utypes.cmo utlexing.cmo utmigrate.cmo utparse0.cmo utprint.cmo \
-    utio.cmo utconv.cmo uttypecheck.cmo utypes2.cmo utextract.cmo utsimplify.cmo utpostprocess.cmo utvalidate.cmo
+OBJ=ututil.cmo utypes.cmo utypes2.cmo utlexing.cmo utmigrate.cmo utparse0.cmo utprint.cmo \
+    utio.cmo utconv.cmo uttypecheck.cmo utextract.cmo utsimplify.cmo utpostprocess.cmo utvalidate.cmo
 OML=ututil.ml uttestutil.ml utio.ml utconv.ml uttypecheck.ml utextract.ml utsimplify.ml utpostprocess.ml utvalidate.ml \
     syntax_test.ml schemastore_test.ml typing_test.ml extract_test.ml simplify_test.ml validate_test.ml utjtool.ml
 IMPORT_OML=utypes.ml utmigrate.ml
