@@ -8,11 +8,11 @@ IMPORT_PACKAGES = pa_ppx_migrate,pa_ppx.import
 IMPORT_OCAMLCFLAGS = -ppopt -pa_import-I -ppopt . -ppopt -pa_passthru-debug
 
 
-OBJ=ututil.cmo utypes.cmo utypes2.cmo utlexing.cmo utmigrate.cmo utparse0.cmo utprint.cmo \
+OBJ=ututil.cmo utypes.cmo utypes2.cmo utlexing.cmo utmigrate.cmo utmigrate2.cmo utparse0.cmo utprint.cmo \
     utio.cmo utconv.cmo uttypecheck.cmo utextract.cmo utsimplify.cmo utpostprocess.cmo utvalidate.cmo
 OML=ututil.ml uttestutil.ml utio.ml utconv.ml uttypecheck.ml utextract.ml utsimplify.ml utpostprocess.ml utvalidate.ml \
     syntax_test.ml schemastore_test.ml typing_test.ml extract_test.ml simplify_test.ml validate_test.ml utjtool.ml
-IMPORT_OML=utypes.ml utmigrate.ml
+IMPORT_OML=utypes.ml utmigrate.ml utmigrate2.ml
 LEXML=utlexing.ml
 RML=utparse0.ml utprint.ml
 
@@ -78,6 +78,13 @@ utypes2.cmo: utypes2.ag
 	$(OCAMLFIND) ocamlc $(DEBUG) $(WARNERR) $(OCAMLCFLAGS) -package $(PACKAGES),pa_ppx_ag.parser -linkpkg -linkall -syntax camlp5r -c -ppopt -impl -impl $<
 
 utmigrate.cmo: utmigrate.ml
+	$(NOT_OCAMLFIND) preprocess $(OCAMLCFLAGS) $(IMPORT_OCAMLCFLAGS) -package $(PACKAGES),$(IMPORT_PACKAGES),camlp5.pr_o -syntax camlp5o $< > $<.ppo.ml
+	$(OCAMLFIND) ocamlc $(DEBUG) $(OCAMLCFLAGS) $(IMPORT_OCAMLCFLAGS) -package $(PACKAGES),$(IMPORT_PACKAGES) -syntax camlp5o -c $<.ppo.ml
+	$(OCAMLFIND) ocamlc $(DEBUG) $(OCAMLCFLAGS) $(IMPORT_OCAMLCFLAGS) -package $(PACKAGES),$(IMPORT_PACKAGES) -syntax camlp5o -c $<
+
+utmigrate2.cmo: utmigrate2.ml
+	$(NOT_OCAMLFIND) preprocess $(OCAMLCFLAGS) $(IMPORT_OCAMLCFLAGS) -package $(PACKAGES),$(IMPORT_PACKAGES),camlp5.pr_o -syntax camlp5o $< > $<.ppo.ml
+	$(OCAMLFIND) ocamlc $(DEBUG) $(OCAMLCFLAGS) $(IMPORT_OCAMLCFLAGS) -package $(PACKAGES),$(IMPORT_PACKAGES) -syntax camlp5o -c $<.ppo.ml
 	$(OCAMLFIND) ocamlc $(DEBUG) $(OCAMLCFLAGS) $(IMPORT_OCAMLCFLAGS) -package $(PACKAGES),$(IMPORT_PACKAGES) -syntax camlp5o -c $<
 
 utypes.cmo: utypes.ml

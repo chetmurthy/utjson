@@ -9,7 +9,7 @@ open Utprint
 open Utio
 open Utio.Debug
 open Utconv
-open Utmigrate
+open Utmigrate.Self
 open Uttypecheck
 
 let normalize_structure stl =

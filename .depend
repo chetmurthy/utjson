@@ -216,6 +216,10 @@ utmigrate.cmo : \
     utypes.cmi
 utmigrate.cmx : \
     utypes.cmx
+utmigrate2.cmo : \
+    utypes.cmi
+utmigrate2.cmx : \
+    utypes.cmx
 utypes.cmo : \
     ututil.cmo \
     utypes.cmi

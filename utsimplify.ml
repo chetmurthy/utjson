@@ -26,6 +26,7 @@ let rec fix f x =
   if x = x' then x else fix f x'
 
 module CoalesceAtomics = struct
+  open Utmigrate.Self
 
 let list_of_ands ut =
   let rec lrec = function
@@ -79,6 +80,7 @@ Then do another CoalesceAtomics pass.
 *)
 
 module S2SuppressSuperfluousBaseTypes = struct
+  open Utmigrate.Self
 
 let rec simplify1 bt_opt ut = match (bt_opt, ut) with
     (Some bt0, And(loc, Simple (_, bt1), ut)) ->

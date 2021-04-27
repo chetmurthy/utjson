@@ -1,4 +1,6 @@
 
+module Self = struct
+
 module SRC = Utypes
 module DST = Utypes
 
@@ -102,3 +104,4 @@ and top_bindings = [%import: Utypes.top_bindings]
         }
       }
     }]
+end

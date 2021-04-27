@@ -3,10 +3,11 @@ open Pa_ppx_utils.Std
 
 open Ututil
 open Utypes
-open Utmigrate
 open Utio
 
 module Reloc = struct
+  open Utmigrate.Self
+
   let wrap_cmp ?(reloc=(fun _ -> Ploc.dummy)) f relocf a b = f (relocf reloc a) (relocf reloc b)
   open Utmigrate
 

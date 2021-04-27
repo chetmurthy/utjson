@@ -100,6 +100,7 @@ module-exprs are:
 (** Typecheck and expand import <uri> as M to module M = struct <contents of uri> end *)
 
 module Util = struct
+  open Utmigrate.Self
 
 let all_tids stl =
   let dt = make_dt () in
@@ -182,6 +183,7 @@ end
 end
 
 module ElimEmptyLocal = struct
+  open Utmigrate.Self
   let exec stl =
     let dt = make_dt () in
     let old_migrate_structure = dt.migrate_structure in
@@ -195,6 +197,7 @@ module ElimEmptyLocal = struct
 end
 
 module ElimCastCast = struct
+  open Utmigrate.Self
   let exec stl =
     let dt = make_dt () in
     let old_migrate_module_expr_t = dt.migrate_module_expr_t in
@@ -206,6 +209,7 @@ module ElimCastCast = struct
 end
 
 module S1ElimImport = struct
+  open Utmigrate.Self
   open Util
   let exec stl =
     let dt = make_dt () in
@@ -221,6 +225,7 @@ module S1ElimImport = struct
 end
 
 module S2ElimLocal = struct
+  open Utmigrate.Self
   open Util
   let exec stl =
     let mids = Fresh.mk stl in
@@ -241,6 +246,7 @@ module S2ElimLocal = struct
 end
 
 module S3NameFunctorAppSubterms = struct
+  open Utmigrate.Self
   open Util
 
   let name_functor_args mids me =
@@ -305,6 +311,7 @@ end
     struct-items copying entry-by-entry. *)
 
 module S5ElimInclude = struct
+  open Utmigrate.Self
 
 let exec stl =
   let dt = make_dt () in
@@ -362,6 +369,7 @@ module UE = struct
 end
 
 module UseExport = UE
+  open Utmigrate.Self
 
 let utype_uses ut =
   let dt = make_dt () in
@@ -633,6 +641,7 @@ let exec stl =
 end
 
 module S8Absolute = struct
+  open Utmigrate.Self
 
 type abs_env_t = (utype_t, module_path_t, unit) Env.t
 [@@deriving show { with_path = false },eq]
@@ -825,6 +834,7 @@ let exec stl =
 end
 
 module S11NukeFunctorsSigs = struct
+  open Utmigrate.Self
 
 let exec stl =
   let dt = make_dt () in
@@ -857,6 +867,7 @@ where the module_path_t, if present, is an absolute module-path.
 *)
 
 module FinalExtract = struct
+  open Utmigrate.Self
 
 let check_closed (l : top_bindings) =
   let dt = make_dt () in
