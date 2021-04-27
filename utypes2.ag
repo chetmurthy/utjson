@@ -21,7 +21,7 @@ ATTRIBUTE_GRAMMAR
     attributed_module_name = AT
   } ;
   PRIMITIVES loc, base_type_t, size_constraint_t, range_constraint_t, ref_t, string_list, size_constraint_t,
-  range_constraint_t, yojson, yojson_list, id_t ;
+  range_constraint_t, yojson, yojson_list, id_t, module_path_t ;
   AXIOM utype_t ;
 
 ATTRIBUTES
@@ -33,9 +33,12 @@ ATTRIBUTES
   it_re_utype_t_list : list (string * Utypes.utype_t) ;
   it_utype_t_option : option Utypes.utype_t ;
   it_struct_item_t : Utypes.struct_item_t ;
+  it_sig_item_t : Utypes.sig_item_t ;
   it_utype_t_binding_list : list (id_t * bool * Utypes.utype_t) ;
   it_structure : list Utypes.struct_item_t ;
+  it_signature : list Utypes.sig_item_t ;
   it_module_expr_t : Utypes.module_expr_t ;
+  it_module_type_t : Utypes.module_type_t ;
 END ;
 
 RULE UtTrue : utype_t := loc
@@ -258,13 +261,20 @@ COMPUTE
   $[0].it_struct_item_t := Utypes.StLocal $[1] $[2].it_structure $[3].it_structure ;
 END ;
 
-(*
-  | StOpen of loc * module_path_t * module_type_t option
-  | StInclude of loc * module_path_t * module_type_t option
-  | StModuleType of loc * ID.t * module_type_t
+RULE StOpen : struct_item_t := loc and module_path_t
+COMPUTE
+  $[0].it_struct_item_t := Utypes.StOpen $[1] $[2] None ;
+END ;
 
-and structure = struct_item_t list
-*)
+RULE StInclude : struct_item_t := loc and module_path_t
+COMPUTE
+  $[0].it_struct_item_t := Utypes.StInclude $[1] $[2] None ;
+END ;
+
+RULE StModuleType : struct_item_t := loc and id_t and module_type_t
+COMPUTE
+  $[0].it_struct_item_t := Utypes.StModuleType $[1] $[2] $[3].it_module_type_t ;
+END ;
 
 RULE StructureNil : structure
 COMPUTE
@@ -276,39 +286,75 @@ COMPUTE
   $[0].it_structure := [ $[1].it_struct_item_t :: $[2].it_structure ] ;
 END ;
 
+RULE SignatureNil : signature
+COMPUTE
+  $[0].it_signature := [] ;
+END ;
+
+RULE SignatureCons : signature := sig_item_t and signature
+COMPUTE
+  $[0].it_signature := [ $[1].it_sig_item_t :: $[2].it_signature ] ;
+END ;
+
 RULE MeStruct : module_expr_t := loc and structure
 COMPUTE
   $[0].it_module_expr_t := Utypes.MeStruct $[1] $[2].it_structure ;
 END ;
 
+RULE MeFunctorApp : module_expr_t := loc and module_expr_t and module_expr_t
+COMPUTE
+  $[0].it_module_expr_t := Utypes.MeFunctorApp $[1] $[2].it_module_expr_t $[3].it_module_expr_t ;
+END ;
 
-(*
-and module_expr_t =
-    MeStruct of loc * structure
-  | MeFunctorApp of loc * module_expr_t * module_expr_t
-  | MePath of loc * module_path_t
-  | MeFunctor of loc * (ID.t * module_type_t) * module_expr_t
-  | MeCast of loc * module_expr_t * module_type_t
+RULE MePath : module_expr_t := loc and module_path_t
+COMPUTE
+  $[0].it_module_expr_t := Utypes.MePath $[1] $[2] ;
+END ;
 
-and module_type_t =
-    MtSig of loc * signature
-  | MtFunctorType of loc * (ID.t * module_type_t) * module_type_t
-  | MtPath of loc * ref_t
+RULE MeFunctor : module_expr_t := loc and id_t and module_type_t and module_expr_t
+COMPUTE
+  $[0].it_module_expr_t := Utypes.MeFunctor $[1] ($[2], $[3].it_module_type_t) $[4].it_module_expr_t ;
+END ;
 
-and signature = sig_item_t list
+RULE MeCast : module_expr_t := loc and module_expr_t and module_type_t
+COMPUTE
+  $[0].it_module_expr_t := Utypes.MeCast $[1] $[2].it_module_expr_t $[3].it_module_type_t ;
+END ;
 
-and sig_item_t =
-    SiType of loc * ID.t * bool
-  | SiModuleBinding of loc * ID.t * module_type_t
-  | SiModuleType of loc * ID.t * module_type_t
-  | SiInclude of loc * module_path_t
+RULE MtSig : module_type_t := loc and signature
+COMPUTE
+  $[0].it_module_type_t := Utypes.MtSig $[1] $[2].it_signature ;
+END ;
 
-and top_binding_t =
-  loc * ref_t * utype_t
+RULE MtFunctorType : module_type_t := loc and id_t and module_type_t and module_type_t
+COMPUTE
+  $[0].it_module_type_t := Utypes.MtFunctorType $[1] ($[2], $[3].it_module_type_t) $[4].it_module_type_t ;
+END ;
 
-and top_bindings = top_binding_t list
-[@@deriving show { with_path = false },eq]
-*)
+RULE MtPath : module_type_t := loc and ref_t
+COMPUTE
+  $[0].it_module_type_t := Utypes.MtPath $[1] $[2] ;
+END ;
+
+RULE SiType : sig_item_t := loc and id_t and bool
+COMPUTE
+  $[0].it_sig_item_t := Utypes.SiType $[1] $[2] $[3] ;
+END ;
+
+RULE SiModuleBinding : sig_item_t := loc and id_t and module_type_t
+COMPUTE
+  $[0].it_sig_item_t := Utypes.SiModuleBinding $[1] $[2] $[3].it_module_type_t ;
+END ;
+
+RULE SiModuleType : sig_item_t := loc and id_t and module_type_t
+COMPUTE
+  $[0].it_sig_item_t := Utypes.SiModuleType $[1] $[2] $[3].it_module_type_t ;
+END ;
+
+RULE SiInclude : sig_item_t := loc and module_path_t
+COMPUTE
+  $[0].it_sig_item_t := Utypes.SiInclude $[1] $[2] ;
+END ;
 
 END ;
 
