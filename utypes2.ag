@@ -9,6 +9,7 @@ type ref_t = Utypes.ref_t ;
 type string_list = list string ;
 type yojson = Yojson.Basic.t ;
 type yojson_list = list Yojson.Basic.t ;
+type id_t = Utypes.ID.t ;
 
 module REC = struct
 type loc = Ploc.t ;
@@ -20,7 +21,7 @@ ATTRIBUTE_GRAMMAR
     attributed_module_name = AT
   } ;
   PRIMITIVES loc, base_type_t, size_constraint_t, range_constraint_t, ref_t, string_list, size_constraint_t,
-  range_constraint_t, yojson, yojson_list ;
+  range_constraint_t, yojson, yojson_list, id_t ;
   AXIOM utype_t ;
 
 ATTRIBUTES
@@ -31,6 +32,10 @@ ATTRIBUTES
   it_atomic_utype_t_list : list Utypes.atomic_utype_t ;
   it_re_utype_t_list : list (string * Utypes.utype_t) ;
   it_utype_t_option : option Utypes.utype_t ;
+  it_struct_item_t : Utypes.struct_item_t ;
+  it_utype_t_binding_list : list (id_t * bool * Utypes.utype_t) ;
+  it_structure : list Utypes.struct_item_t ;
+  it_module_expr_t : Utypes.module_expr_t ;
 END ;
 
 RULE UtTrue : utype_t := loc
@@ -222,6 +227,88 @@ RULE ContentEncoding : atomic_utype_t := loc and string
 COMPUTE
   $[0].it_atomic_utype_t := Utypes.ContentEncoding $[1] $[2] ;
 END ;
+
+RULE UTTypeBindSingleton : utype_t_binding_list := id_t and bool and utype_t
+COMPUTE
+  $[0].it_utype_t_binding_list := [($[1], $[2], $[3].it_utype_t)] ;
+END ;
+
+RULE UTTypeBindCons : utype_t_binding_list := id_t and bool and utype_t and utype_t_binding_list
+COMPUTE
+  $[0].it_utype_t_binding_list := [ ($[1], $[2], $[3].it_utype_t) :: $[4].it_utype_t_binding_list ] ;
+END ;
+
+RULE StTypes : struct_item_t := loc and bool and utype_t_binding_list
+COMPUTE
+  $[0].it_struct_item_t := Utypes.StTypes $[1] $[2] $[3].it_utype_t_binding_list ;
+END ;
+
+RULE StModuleBinding : struct_item_t := loc and id_t and module_expr_t
+COMPUTE
+  $[0].it_struct_item_t := Utypes.StModuleBinding $[1] $[2] $[3].it_module_expr_t ;
+END ;
+
+RULE StImport : struct_item_t := loc and string and id_t
+COMPUTE
+  $[0].it_struct_item_t := Utypes.StImport $[1] $[2] $[3] ;
+END ;
+
+RULE StLocal : struct_item_t := loc and structure and structure
+COMPUTE
+  $[0].it_struct_item_t := Utypes.StLocal $[1] $[2].it_structure $[3].it_structure ;
+END ;
+
+(*
+  | StOpen of loc * module_path_t * module_type_t option
+  | StInclude of loc * module_path_t * module_type_t option
+  | StModuleType of loc * ID.t * module_type_t
+
+and structure = struct_item_t list
+*)
+
+RULE StructureNil : structure
+COMPUTE
+  $[0].it_structure := [] ;
+END ;
+
+RULE StructureCons : structure := struct_item_t and structure
+COMPUTE
+  $[0].it_structure := [ $[1].it_struct_item_t :: $[2].it_structure ] ;
+END ;
+
+RULE MeStruct : module_expr_t := loc and structure
+COMPUTE
+  $[0].it_module_expr_t := Utypes.MeStruct $[1] $[2].it_structure ;
+END ;
+
+
+(*
+and module_expr_t =
+    MeStruct of loc * structure
+  | MeFunctorApp of loc * module_expr_t * module_expr_t
+  | MePath of loc * module_path_t
+  | MeFunctor of loc * (ID.t * module_type_t) * module_expr_t
+  | MeCast of loc * module_expr_t * module_type_t
+
+and module_type_t =
+    MtSig of loc * signature
+  | MtFunctorType of loc * (ID.t * module_type_t) * module_type_t
+  | MtPath of loc * ref_t
+
+and signature = sig_item_t list
+
+and sig_item_t =
+    SiType of loc * ID.t * bool
+  | SiModuleBinding of loc * ID.t * module_type_t
+  | SiModuleType of loc * ID.t * module_type_t
+  | SiInclude of loc * module_path_t
+
+and top_binding_t =
+  loc * ref_t * utype_t
+
+and top_bindings = top_binding_t list
+[@@deriving show { with_path = false },eq]
+*)
 
 END ;
 
