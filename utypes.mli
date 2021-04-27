@@ -69,6 +69,8 @@ and module_path_t =
   | TOP of ID.t
   | DEREF of module_path_t * ID.t
 
+and ref_t = module_path_t option * ID.t
+
 and utype_t =
     UtTrue of loc
   | UtFalse of loc
@@ -79,7 +81,7 @@ and utype_t =
   | Impl of loc * utype_t * utype_t
   | Not of loc * utype_t
   | Atomic of loc * atomic_utype_t list
-  | Ref of loc * (module_path_t option * ID.t)
+  | Ref of loc * ref_t
   | Seal of loc * utype_t * (string * utype_t) list * utype_t option
 
 [@@deriving show { with_path = false },eq]
@@ -105,7 +107,7 @@ and module_expr_t =
 and module_type_t =
     MtSig of loc * signature
   | MtFunctorType of loc * (ID.t * module_type_t) * module_type_t
-  | MtPath of loc * (module_path_t option * ID.t)
+  | MtPath of loc * ref_t
 
 and signature = sig_item_t list
 
@@ -115,10 +117,8 @@ and sig_item_t =
   | SiModuleType of loc * ID.t * module_type_t
   | SiInclude of loc * module_path_t
 
-and top_ref_t = module_path_t option * ID.t
-
 and top_binding_t =
-  loc * top_ref_t * utype_t
+  loc * ref_t * utype_t
 
 and top_bindings = top_binding_t list
 [@@deriving show { with_path = false },eq]

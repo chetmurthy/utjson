@@ -90,8 +90,8 @@ value (module_expr_eoi : Grammar.Entry.e module_expr_t) = Grammar.Entry.create g
 value (module_type : Grammar.Entry.e module_type_t) = Grammar.Entry.create g "module_type";
 value (module_type_eoi : Grammar.Entry.e module_type_t) = Grammar.Entry.create g "module_type_eoi";
 
-value (top_ref : Grammar.Entry.e top_ref_t) = Grammar.Entry.create g "top_ref";
-value (top_ref_eoi : Grammar.Entry.e top_ref_t) = Grammar.Entry.create g "top_ref_eoi";
+value (ref_t : Grammar.Entry.e ref_t) = Grammar.Entry.create g "ref_t";
+value (ref_t_eoi : Grammar.Entry.e ref_t) = Grammar.Entry.create g "ref_t_eoi";
 
 value (top_binding : Grammar.Entry.e top_binding_t) = Grammar.Entry.create g "top_binding";
 value (top_binding_eoi : Grammar.Entry.e top_binding_t) = Grammar.Entry.create g "top_binding_eoi";
@@ -109,7 +109,7 @@ EXTEND
     sig_item sig_item_eoi
     module_expr module_expr_eoi
     module_type module_type_eoi
-    top_ref top_ref_eoi
+    ref_t ref_t_eoi
     top_binding top_binding_eoi
     top_bindings top_bindings_eoi
     ;
@@ -322,14 +322,14 @@ EXTEND
     ] ]
   ;
 
-  top_ref: [ [
+  ref_: [ [
       id = LIDENT -> (None, ID.of_string id)
     | "." ; l = LIST1 [ s = mid ; "." -> s ] ; id = LIDENT ->
       (Some (make_module_path True l), ID.of_string id)
     ] ]
   ;
   top_binding: [ [
-      r = top_ref ; "=" ; ut = utype ; ";" -> (loc, r, ut)
+      r = ref_ ; "=" ; ut = utype ; ";" -> (loc, r, ut)
     ] ]
   ;
   top_bindings: [ [
@@ -346,7 +346,7 @@ EXTEND
   sig_item_eoi : [ [ e = sig_item ; EOI -> e ] ] ;
   module_expr_eoi : [ [ e = module_expr ; EOI -> e ] ] ;
   module_type_eoi : [ [ e = module_type ; EOI -> e ] ] ;
-  top_ref_eoi : [ [ e = top_ref ; EOI -> e ] ] ;
+  ref_t_eoi : [ [ e = ref_t ; EOI -> e ] ] ;
   top_binding_eoi : [ [ e = top_binding ; EOI -> e ] ] ;
   top_bindings_eoi : [ [ e = top_bindings ; EOI -> e ] ] ;
 END;
@@ -375,8 +375,8 @@ value parse_module_expr_eoi = Grammar.Entry.parse module_expr_eoi ;
 value parse_module_type = Grammar.Entry.parse module_type ;
 value parse_module_type_eoi = Grammar.Entry.parse module_type_eoi ;
 
-value parse_top_ref = Grammar.Entry.parse top_ref ;
-value parse_top_ref_eoi = Grammar.Entry.parse top_ref_eoi ;
+value parse_ref_t = Grammar.Entry.parse ref_t ;
+value parse_ref_t_eoi = Grammar.Entry.parse ref_t_eoi ;
 
 value parse_top_binding = Grammar.Entry.parse top_binding ;
 value parse_top_binding_eoi = Grammar.Entry.parse top_binding_eoi ;

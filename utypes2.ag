@@ -5,6 +5,10 @@ module Bound = Utypes.Bound ;
 type size_constraint_t = Utypes.size_constraint_t ;
 type range_constraint_t = Utypes.range_constraint_t ;
 type module_path_t = Utypes.module_path_t ;
+type ref_t = Utypes.ref_t ;
+type string_list = list string ;
+type yojson = Yojson.Basic.t ;
+type yojson_list = list Yojson.Basic.t ;
 
 module REC = struct
 type loc = Ploc.t ;
@@ -15,57 +19,210 @@ ATTRIBUTE_GRAMMAR
   ATTRIBUTION_MODEL Attributed {
     attributed_module_name = AT
   } ;
-  PRIMITIVES loc, base_type_t, size_constraint_t, range_constraint_t ;
+  PRIMITIVES loc, base_type_t, size_constraint_t, range_constraint_t, ref_t, string_list, size_constraint_t,
+  range_constraint_t, yojson, yojson_list ;
   AXIOM utype_t ;
-
-ATTRIBUTE sealed : bool ;
 
 ATTRIBUTES
   env : env_t ;
+  it_utype_t : Utypes.utype_t ;
+  it_utype_t_list : list Utypes.utype_t ;
+  it_atomic_utype_t : Utypes.atomic_utype_t ;
+  it_atomic_utype_t_list : list Utypes.atomic_utype_t ;
+  it_re_utype_t_list : list (string * Utypes.utype_t) ;
+  it_utype_t_option : option Utypes.utype_t ;
 END ;
 
 RULE UtTrue : utype_t := loc
 COMPUTE
-  $[0].sealed := False ;
+  $[0].it_utype_t := Utypes.UtTrue $[1] ;
 END ;
 
-(*
-  | UtFalse of loc
-  | Simple of loc * base_type_t
-  | And of loc * utype_t * utype_t
-  | Or of loc * utype_t * utype_t
-  | Xor of loc * utype_t * utype_t
-  | Impl of loc * utype_t * utype_t
-  | Not of loc * utype_t
-  | Atomic of loc * atomic_utype_t list
-  | Ref of loc * (module_path_t option * ID.t)
-  | Seal of loc * utype_t * (string * utype_t) list * utype_t option
-*)
+RULE UtFalse : utype_t := loc
+COMPUTE
+  $[0].it_utype_t := Utypes.UtFalse $[1] ;
+END ;
+
+RULE Simple : utype_t := loc and base_type_t
+COMPUTE
+  $[0].it_utype_t := Utypes.Simple $[1] $[2] ;
+END ;
+
+RULE And : utype_t := loc and utype_t and utype_t
+COMPUTE
+  $[0].it_utype_t := Utypes.And $[1] $[2].it_utype_t $[3].it_utype_t ;
+END ;
+
+RULE Or : utype_t := loc and utype_t and utype_t
+COMPUTE
+  $[0].it_utype_t := Utypes.Or $[1] $[2].it_utype_t $[3].it_utype_t ;
+END ;
+
+RULE Xor : utype_t := loc and utype_t and utype_t
+COMPUTE
+  $[0].it_utype_t := Utypes.Xor $[1] $[2].it_utype_t $[3].it_utype_t ;
+END ;
+
+RULE Impl : utype_t := loc and utype_t and utype_t
+COMPUTE
+  $[0].it_utype_t := Utypes.Impl $[1] $[2].it_utype_t $[3].it_utype_t ;
+END ;
+
+RULE Not : utype_t := loc and utype_t
+COMPUTE
+  $[0].it_utype_t := Utypes.Not $[1] $[2].it_utype_t ;
+END ;
+
+RULE AtomicSingleton : atomic_utype_t_list := atomic_utype_t
+COMPUTE
+  $[0].it_atomic_utype_t_list := [ $[1].it_atomic_utype_t ] ;
+END ;
+
+RULE AtomicCons : atomic_utype_t_list := atomic_utype_t and atomic_utype_t_list
+COMPUTE
+  $[0].it_atomic_utype_t_list := [ $[1].it_atomic_utype_t :: $[2].it_atomic_utype_t_list ] ;
+END ;
+
+RULE Atomic : utype_t := loc and atomic_utype_t_list
+COMPUTE
+  $[0].it_utype_t := Utypes.Atomic $[1] $[2].it_atomic_utype_t_list ;
+END ;
+
+RULE Ref : utype_t := loc and ref_t
+COMPUTE
+  $[0].it_utype_t := Utypes.Ref $[1] $[2] ;
+END ;
+
+RULE UtOption_None : utype_t_option
+COMPUTE
+  $[0].it_utype_t_option := None ;
+END ;
+
+RULE UtOption_Some : utype_t_option := utype_t
+COMPUTE
+  $[0].it_utype_t_option := Some $[1].it_utype_t ;
+END ;
+
+RULE REUT_Singleton : re_utype_t_list := string and utype_t
+COMPUTE
+  $[0].it_re_utype_t_list := [($[1], $[2].it_utype_t)] ;
+END ;
+
+RULE REUT_Cons : re_utype_t_list := string and utype_t and re_utype_t_list
+COMPUTE
+  $[0].it_re_utype_t_list := [ ($[1], $[2].it_utype_t):: $[3].it_re_utype_t_list ] ;
+END ;
+
+RULE Seal : utype_t := loc and utype_t and re_utype_t_list and utype_t_option
+COMPUTE
+  $[0].it_utype_t := Utypes.Seal $[1] $[2].it_utype_t $[3].it_re_utype_t_list $[4].it_utype_t_option ;
+END ;
 
 RULE Field : atomic_utype_t := loc and string and utype_t
 COMPUTE
-  $[0].sealed := False ;
+  $[0].it_atomic_utype_t := Utypes.Field $[1] $[2] $[3].it_utype_t ;
 END ;
-(*
-  | FieldRE of loc * string * utype_t
-  | FieldRequired of loc * string list
-  | ArrayOf of loc * utype_t
-  | ArrayTuple of loc * utype_t list
-  | ArrayUnique of loc
-  | ArrayIndex of loc * int * utype_t
-  | Size of loc * size_constraint_t
-  | StringRE of loc * string
-  | NumberBound of loc * range_constraint_t
-  | Sealed of loc
-  | OrElse of loc * utype_t
-  | MultipleOf of loc * float
-  | Enum of loc * Yojson.Basic.t list
-  | Default of loc * Yojson.Basic.t
-  | Format of loc * string
-  | PropertyNames of loc * utype_t
-  | ContentMediaType of loc * string
-  | ContentEncoding of loc * string
-*)
+
+RULE FieldRE : atomic_utype_t := loc and string and utype_t
+COMPUTE
+  $[0].it_atomic_utype_t := Utypes.FieldRE $[1] $[2] $[3].it_utype_t ;
+END ;
+
+RULE FieldRequired : atomic_utype_t := loc and string_list
+COMPUTE
+  $[0].it_atomic_utype_t := Utypes.FieldRequired $[1] $[2] ;
+END ;
+
+RULE ArrayOf : atomic_utype_t := loc and utype_t
+COMPUTE
+  $[0].it_atomic_utype_t := Utypes.ArrayOf $[1] $[2].it_utype_t ;
+END ;
+
+RULE UtSingleton : utype_t_list := utype_t
+COMPUTE
+  $[0].it_utype_t_list := [ $[1].it_utype_t ] ;
+END ;
+
+RULE UtCons : utype_t_list := utype_t and utype_t_list
+COMPUTE
+  $[0].it_utype_t_list := [ $[1].it_utype_t :: $[2].it_utype_t_list ] ;
+END ;
+
+RULE ArrayTuple : atomic_utype_t := loc and utype_t_list
+COMPUTE
+  $[0].it_atomic_utype_t := Utypes.ArrayTuple $[1] $[2].it_utype_t_list ;
+END ;
+
+RULE ArrayUnique : atomic_utype_t := loc
+COMPUTE
+  $[0].it_atomic_utype_t := Utypes.ArrayUnique $[1] ;
+END ;
+
+RULE ArrayIndex : atomic_utype_t := loc and int and utype_t
+COMPUTE
+  $[0].it_atomic_utype_t := Utypes.ArrayIndex $[1] $[2] $[3].it_utype_t ;
+END ;
+
+RULE Size : atomic_utype_t := loc and size_constraint_t
+COMPUTE
+  $[0].it_atomic_utype_t := Utypes.Size $[1] $[2] ;
+END ;
+
+RULE StringRE : atomic_utype_t := loc and string
+COMPUTE
+  $[0].it_atomic_utype_t := Utypes.StringRE $[1] $[2] ;
+END ;
+
+RULE NumberBound : atomic_utype_t := loc and range_constraint_t
+COMPUTE
+  $[0].it_atomic_utype_t := Utypes.NumberBound $[1] $[2] ;
+END ;
+
+RULE Sealed : atomic_utype_t := loc
+COMPUTE
+  $[0].it_atomic_utype_t := Utypes.Sealed $[1] ;
+END ;
+
+RULE OrElse : atomic_utype_t := loc and utype_t
+COMPUTE
+  $[0].it_atomic_utype_t := Utypes.OrElse $[1] $[2].it_utype_t ;
+END ;
+
+RULE MultipleOf : atomic_utype_t := loc and float
+COMPUTE
+  $[0].it_atomic_utype_t := Utypes.MultipleOf $[1] $[2] ;
+END ;
+
+RULE Enum : atomic_utype_t := loc and yojson_list
+COMPUTE
+  $[0].it_atomic_utype_t := Utypes.Enum $[1] $[2] ;
+END ;
+
+RULE Default : atomic_utype_t := loc and yojson
+COMPUTE
+  $[0].it_atomic_utype_t := Utypes.Default $[1] $[2] ;
+END ;
+
+RULE Format : atomic_utype_t := loc and string
+COMPUTE
+  $[0].it_atomic_utype_t := Utypes.Format $[1] $[2] ;
+END ;
+
+RULE PropertyNames : atomic_utype_t := loc and utype_t
+COMPUTE
+  $[0].it_atomic_utype_t := Utypes.PropertyNames $[1] $[2].it_utype_t ;
+END ;
+
+RULE ContentMediaType : atomic_utype_t := loc and string
+COMPUTE
+  $[0].it_atomic_utype_t := Utypes.ContentMediaType $[1] $[2] ;
+END ;
+
+RULE ContentEncoding : atomic_utype_t := loc and string
+COMPUTE
+  $[0].it_atomic_utype_t := Utypes.ContentEncoding $[1] $[2] ;
+END ;
+
 END ;
 
 end ;

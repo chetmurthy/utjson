@@ -30,6 +30,9 @@ and struct_item_t = [%import: Utypes.struct_item_t
 and module_path_t = [%import: Utypes.module_path_t
   [@with ID.t := id_t]
 ]
+and ref_t = [%import: Utypes.ref_t
+  [@with ID.t := id_t]
+]
 and structure = [%import: Utypes.structure]
 and module_expr_t = [%import: Utypes.module_expr_t
   [@with ID.t := id_t]
@@ -41,9 +44,7 @@ and signature = [%import: Utypes.signature]
 and sig_item_t = [%import: Utypes.sig_item_t
   [@with ID.t := id_t]
 ]
-and top_ref_t = [%import: Utypes.top_ref_t
-  [@with ID.t := id_t]
-]
+
 and top_binding_t = [%import: Utypes.top_binding_t]
 and top_bindings = [%import: Utypes.top_bindings]
 [@@deriving migrate
@@ -70,7 +71,7 @@ and top_bindings = [%import: Utypes.top_bindings]
           ; module_type_t
           ; signature
           ; sig_item_t
-          ; top_ref_t
+          ; ref_t
           ; top_binding_t
           ; top_bindings
           ]

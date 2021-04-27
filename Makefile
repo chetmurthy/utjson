@@ -75,7 +75,7 @@ utypes2.cmo: utypes2.ag
 	$(NOT_OCAMLFIND) preprocess $(OCAMLCFLAGS) -package $(PACKAGES),,pa_ppx_ag.parser,camlp5.pr_r -syntax camlp5r -ppopt -impl $< > utypes2_ppo.ml
 	$(OCAMLFIND) ocamlc $(DEBUG) $(WARNERR) $(OCAMLCFLAGS) -package $(PACKAGES),pa_ppx_ag.parser -syntax camlp5r -c utypes2_ppo.ml
 	$(OCAMLFIND) ocamlc $(DEBUG) $(WARNERR) $(OCAMLCFLAGS) -package $(PACKAGES),pa_ppx_ag.parser -syntax camlp5r -c -ppopt -impl -impl $<
-	$(OCAMLFIND) ocamlc $(DEBUG) $(WARNERR) $(OCAMLCFLAGS) -package $(PACKAGES),pa_ppx_ag.parser -linkpkg -linkall -syntax camlp5r -ppopt -impl -impl $< -o $@
+	$(OCAMLFIND) ocamlc $(DEBUG) $(WARNERR) $(OCAMLCFLAGS) -package $(PACKAGES),pa_ppx_ag.parser -linkpkg -linkall -syntax camlp5r -c -ppopt -impl -impl $<
 
 utmigrate.cmo: utmigrate.ml
 	$(OCAMLFIND) ocamlc $(DEBUG) $(OCAMLCFLAGS) $(IMPORT_OCAMLCFLAGS) -package $(PACKAGES),$(IMPORT_PACKAGES) -syntax camlp5o -c $<
