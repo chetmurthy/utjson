@@ -17,8 +17,26 @@ let simple = "simple" >::: [
       )
   ]
 
+let to_ag stl =
+  let dt_to_ag = Utmigrate2.ToAG.make_dt () in
+  dt_to_ag.migrate_structure dt_to_ag stl
+
+let from_ag stl =
+  let dt_from_ag = Utmigrate2.FromAG.make_dt () in
+  dt_from_ag.migrate_structure dt_from_ag stl
+
+let evaluate stl =
+  Utypes2.REC.AG.Ordered.evaluate stl
+
 let successf (expect_sil_s, expect_stl_s, stl_s) =
   let stl = structure_of_string_exn stl_s in
+  let a_stl = to_ag stl in
+  let stl' = evaluate a_stl in
+  let stl'' = from_ag a_stl in
+  assert_equal ~msg:"evaluate failed"
+    ~printer:Normal.structure_printer ~cmp:Reloc.(wrap_cmp structure_cmp structure) stl stl' ;
+  assert_equal ~msg:"roundtrip failed"
+    ~printer:Normal.structure_printer ~cmp:Reloc.(wrap_cmp structure_cmp structure) stl stl'' ;
   let expect_stl = Option.map structure_of_string_exn expect_stl_s in
   let expect_sil = Option.map signature_of_string_exn expect_sil_s in
   let (_, (res_stl, res_sil)) = tc_structure TEnv.mt stl in

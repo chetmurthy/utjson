@@ -14,9 +14,11 @@
 #require "emile";;
 #require "uri";;
 #require "ptime";;
+#require "ocamlgraph";;
 #require "pa_ppx.testutils" ;;
 #require "pa_ppx.base" ;;
 #require "pa_ppx.runtime" ;;
+#require "pa_ppx_ag.runtime" ;;
 
 let lexbuf_contents lb =
   let open Lexing in
@@ -41,6 +43,8 @@ open Yojson.Basic ;;
 open Ututil ;;
 #load "utypes.cmo";;
 open Utypes ;;
+#load "utypes2.cmo";;
+open Utypes2 ;;
 #load "utlexing.cmo";;
 open Utlexing ;;
 #load "utmigrate.cmo";;

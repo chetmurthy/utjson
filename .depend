@@ -80,6 +80,7 @@ typing_test.cmo : \
     uttestutil.cmo \
     utprint.cmo \
     utparse0.cmo \
+    utmigrate2.cmo \
     utio.cmo \
     utconv.cmo
 typing_test.cmx : \
@@ -88,6 +89,7 @@ typing_test.cmx : \
     uttestutil.cmx \
     utprint.cmx \
     utparse0.cmx \
+    utmigrate2.cmx \
     utio.cmx \
     utconv.cmx
 utconv.cmo : \

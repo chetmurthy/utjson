@@ -38,7 +38,7 @@ test:: all
 	./typing_test
 	./extract_test
 	./simplify_test
-#	./validate_test
+	./validate_test || true
 	make -f Schema-Makefile all
 	./schemastore_test || true
 

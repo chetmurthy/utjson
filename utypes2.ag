@@ -22,7 +22,7 @@ ATTRIBUTE_GRAMMAR
   } ;
   PRIMITIVES loc, base_type_t, size_constraint_t, range_constraint_t, ref_t, string_list, size_constraint_t,
   range_constraint_t, yojson, yojson_list, id_t, module_path_t ;
-  AXIOM utype_t ;
+  AXIOM structure ;
 
 ATTRIBUTES
   env : env_t ;
