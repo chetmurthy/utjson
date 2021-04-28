@@ -77,12 +77,12 @@ utypes2.cmo: utypes2.ag
 	$(OCAMLFIND) ocamlc $(DEBUG) $(WARNERR) $(OCAMLCFLAGS) -package $(PACKAGES),pa_ppx_ag.parser -syntax camlp5r -c -ppopt -impl -impl $<
 	$(OCAMLFIND) ocamlc $(DEBUG) $(WARNERR) $(OCAMLCFLAGS) -package $(PACKAGES),pa_ppx_ag.parser -linkpkg -linkall -syntax camlp5r -c -ppopt -impl -impl $<
 
-utmigrate.cmo: utmigrate.ml
+utmigrate2.cmo: utmigrate2.ml
 	$(NOT_OCAMLFIND) preprocess $(OCAMLCFLAGS) $(IMPORT_OCAMLCFLAGS) -package $(PACKAGES),$(IMPORT_PACKAGES),camlp5.pr_o -syntax camlp5o $< > $<.ppo.ml
 	$(OCAMLFIND) ocamlc $(DEBUG) $(OCAMLCFLAGS) $(IMPORT_OCAMLCFLAGS) -package $(PACKAGES),$(IMPORT_PACKAGES) -syntax camlp5o -c $<.ppo.ml
 	$(OCAMLFIND) ocamlc $(DEBUG) $(OCAMLCFLAGS) $(IMPORT_OCAMLCFLAGS) -package $(PACKAGES),$(IMPORT_PACKAGES) -syntax camlp5o -c $<
 
-utmigrate2.cmo: utmigrate2.ml
+utmigrate.cmo: utmigrate.ml
 	$(NOT_OCAMLFIND) preprocess $(OCAMLCFLAGS) $(IMPORT_OCAMLCFLAGS) -package $(PACKAGES),$(IMPORT_PACKAGES),camlp5.pr_o -syntax camlp5o $< > $<.ppo.ml
 	$(OCAMLFIND) ocamlc $(DEBUG) $(OCAMLCFLAGS) $(IMPORT_OCAMLCFLAGS) -package $(PACKAGES),$(IMPORT_PACKAGES) -syntax camlp5o -c $<.ppo.ml
 	$(OCAMLFIND) ocamlc $(DEBUG) $(OCAMLCFLAGS) $(IMPORT_OCAMLCFLAGS) -package $(PACKAGES),$(IMPORT_PACKAGES) -syntax camlp5o -c $<
@@ -111,7 +111,7 @@ clean:
 	rm -rf *test *.cm* *.o _build *.log *.cache utjtool utj-generated *ppo.ml
 
 
-depend::
+depend:: utypes.cmo utypes2.cmo
 	$(OCAMLFIND) ocamldep $(OCAMLCFLAGS) -package $(PACKAGES) -syntax camlp5o \
 		$(OML) \
 		 > .depend.NEW
