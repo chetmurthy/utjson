@@ -1,6 +1,61 @@
 
+module Reloc = struct
+  open Utmigrate.Self ;
+
+  value wrap_cmp ?{reloc=(fun _ -> Ploc.dummy)} f relocf a b = f (relocf reloc a) (relocf reloc b) ;
+  open Utmigrate ;
+
+  value structure reloc x =
+    let dt = make_dt () in
+    let new_migrate_loc dt loc = reloc loc in
+    let dt = { (dt) with migrate_loc = new_migrate_loc } in
+    dt.migrate_structure dt x ;
+
+  value module_expr_t reloc x =
+    let dt = make_dt () in
+    let new_migrate_loc dt loc = reloc loc in
+    let dt = { (dt) with migrate_loc = new_migrate_loc } in
+    dt.migrate_module_expr_t dt x ;
+
+  value module_type_t reloc x =
+    let dt = make_dt () in
+    let new_migrate_loc dt loc = reloc loc in
+    let dt = { (dt) with migrate_loc = new_migrate_loc } in
+    dt.migrate_module_type_t dt x ;
+
+  value utype_t reloc x =
+    let dt = make_dt () in
+    let new_migrate_loc dt loc = reloc loc in
+    let dt = { (dt) with migrate_loc = new_migrate_loc } in
+    dt.migrate_utype_t dt x ;
+
+  value struct_item_t reloc x =
+    let dt = make_dt () in
+    let new_migrate_loc dt loc = reloc loc in
+    let dt = { (dt) with migrate_loc = new_migrate_loc } in
+    dt.migrate_struct_item_t dt x ;
+
+  value sig_item_t reloc x =
+    let dt = make_dt () in
+    let new_migrate_loc dt loc = reloc loc in
+    let dt = { (dt) with migrate_loc = new_migrate_loc } in
+    dt.migrate_sig_item_t dt x ;
+
+  value signature reloc x =
+    let dt = make_dt () in
+    let new_migrate_loc dt loc = reloc loc in
+    let dt = { (dt) with migrate_loc = new_migrate_loc } in
+    dt.migrate_signature dt x ;
+
+  value top_bindings reloc x =
+    let dt = make_dt () in
+    let new_migrate_loc dt loc = reloc loc in
+    let dt = { (dt) with migrate_loc = new_migrate_loc } in
+    dt.migrate_top_bindings dt x ;
+end ;
+
 type base_type_t = Utypes.base_type_t ;
-type env_t = Utypes.Env.t bool unit unit ;
+type env_t = Utypes.Env.t bool Utypes.module_type_t Utypes.module_type_t ;
 module Bound = Utypes.Bound ;
 type size_constraint_t = Utypes.size_constraint_t ;
 type range_constraint_t = Utypes.range_constraint_t ;
@@ -22,10 +77,14 @@ ATTRIBUTE_GRAMMAR
   } ;
   PRIMITIVES loc, base_type_t, size_constraint_t, range_constraint_t, ref_t, string_list, size_constraint_t,
   range_constraint_t, yojson, yojson_list, id_t, module_path_t ;
-  AXIOM structure ;
+  AXIOM top ;
 
 ATTRIBUTES
-  env : env_t ;
+  inh_env : env_t ;
+  syn_env : env_t ;
+  pre_env : env_t ;
+  post_env : env_t ;
+  subenv : env_t ;
   it_utype_t : Utypes.utype_t ;
   it_utype_t_list : list Utypes.utype_t ;
   it_atomic_utype_t : Utypes.atomic_utype_t ;
@@ -34,11 +93,31 @@ ATTRIBUTES
   it_utype_t_option : option Utypes.utype_t ;
   it_struct_item_t : Utypes.struct_item_t ;
   it_sig_item_t : Utypes.sig_item_t ;
+  it_utype_t_binding : (id_t * bool * Utypes.utype_t) ;
   it_utype_t_binding_list : list (id_t * bool * Utypes.utype_t) ;
   it_structure : list Utypes.struct_item_t ;
   it_signature : list Utypes.sig_item_t ;
   it_module_expr_t : Utypes.module_expr_t ;
   it_module_type_t : Utypes.module_type_t ;
+  inf_sealed : bool ;
+  decl_binding : (id_t * bool) ;
+  decl_bindings : list (id_t * bool) ;
+  inf_binding : (id_t * bool) ;
+  inf_bindings : list (id_t * bool) ;
+  inf_module_type_t : Utypes.module_type_t ;
+  inf_module_expr_t : Utypes.module_expr_t ;
+  inf_utype_t : Utypes.utype_t ;
+  inf_atomic_utype_t : Utypes.atomic_utype_t ;
+  inf_structure : Utypes.structure ;
+  inf_signature : Utypes.signature ;
+  inf_struct_item_t : Utypes.struct_item_t ;
+  inf_sig_item_t : Utypes.sig_item_t ;
+END ;
+
+RULE TOP : top := structure
+COMPUTE
+  $[1].inh_env := [] ;
+  $[0].it_structure := $[1].it_structure ;
 END ;
 
 RULE UtTrue : utype_t := loc
@@ -231,29 +310,58 @@ COMPUTE
   $[0].it_atomic_utype_t := Utypes.ContentEncoding $[1] $[2] ;
 END ;
 
-RULE UTTypeBindSingleton : utype_t_binding_list := id_t and bool and utype_t
+RULE UTBinding : b:utype_t_binding := id:id_t and sealed:bool and ut:utype_t
 COMPUTE
-  $[0].it_utype_t_binding_list := [($[1], $[2], $[3].it_utype_t)] ;
+  $[b].it_utype_t_binding := ($[id], $[sealed], $[ut].it_utype_t) ;
+  $[b].decl_binding := ($[id], $[sealed]) ;
+  $[ut].inh_env := $[b].inh_env ;
+  condition Fmt.(str "id %s was declared %s, but inferred %s"
+                   (if $[sealed] then "sealed" else "unsealed")
+                   (if $[ut].inf_sealed then "sealed" else "unsealed"))
+    ($[sealed] == $[ut].inf_sealed) ;
+  $[b].inf_binding := ($[id], $[sealed]) ; 
 END ;
 
-RULE UTTypeBindCons : utype_t_binding_list := id_t and bool and utype_t and utype_t_binding_list
+RULE UTTypeBindSingleton : l:utype_t_binding_list := b:utype_t_binding
 COMPUTE
-  $[0].it_utype_t_binding_list := [ ($[1], $[2], $[3].it_utype_t) :: $[4].it_utype_t_binding_list ] ;
+  $[l].it_utype_t_binding_list := [$[b].it_utype_t_binding] ;
+  $[l].decl_bindings := [$[b].decl_binding] ;
+  $[b].inh_env := $[l].inh_env ;
+  $[l].inf_bindings := [$[b].inf_binding] ; 
 END ;
 
-RULE StTypes : struct_item_t := loc and bool and utype_t_binding_list
+RULE UTTypeBindCons : l:utype_t_binding_list := b:utype_t_binding and tl:utype_t_binding_list
 COMPUTE
-  $[0].it_struct_item_t := Utypes.StTypes $[1] $[2] $[3].it_utype_t_binding_list ;
+  $[l].it_utype_t_binding_list := [ $[b].it_utype_t_binding :: $[tl].it_utype_t_binding_list ] ;
+  $[l].decl_bindings := [$[b].decl_binding :: $[tl].decl_bindings] ;
+  $[b].inh_env := $[l].inh_env ;
+  $[tl].inh_env := $[l].inh_env ;
+  $[l].inf_bindings := [$[b].inf_binding :: $[tl].inf_bindings] ; 
 END ;
 
-RULE StModuleBinding : struct_item_t := loc and id_t and module_expr_t
+RULE StTypes : st:struct_item_t := loc:loc and recflag:bool and l:utype_t_binding_list
 COMPUTE
-  $[0].it_struct_item_t := Utypes.StModuleBinding $[1] $[2] $[3].it_module_expr_t ;
+  $[st].it_struct_item_t := Utypes.StTypes $[loc] $[recflag] $[l].it_utype_t_binding_list ;
+  $subenv := if $[recflag] then
+      List.fold_left (fun env (tid, sealed) -> TEnv.push_type env (tid, sealed))
+      $[st].pre_env $[l].decl_bindings
+    else $[st].pre_env ;
+  $[l].inh_env := $subenv ;
+  $[st].post_env := List.fold_left (fun env (tid, sealed) -> TEnv.push_type env (tid, sealed))
+                    $[st].pre_env $[l].inf_bindings ;
 END ;
 
-RULE StImport : struct_item_t := loc and string and id_t
+RULE StModuleBinding : st:struct_item_t := loc:loc and id:id_t and me:module_expr_t
 COMPUTE
-  $[0].it_struct_item_t := Utypes.StImport $[1] $[2] $[3] ;
+  $[st].it_struct_item_t := Utypes.StModuleBinding $[loc] $[id] $[me].it_module_expr_t ;
+  $[me].inh_env := $[st].pre_env ;
+  $[st].post_env := TEnv.push_module $[st].pre_env ($[id], $[me].inf_module_type_t) ;
+END ;
+
+RULE StImport : st:struct_item_t := loc:loc and fname:string and mid:id_t
+COMPUTE
+  $[st].it_struct_item_t := Utypes.StImport $[loc] $[fname] $[mid] ;
+  condition "Must eliminate imports before type-check phase (b/c no HOAG)" False ;
 END ;
 
 RULE StLocal : struct_item_t := loc and structure and structure
@@ -284,6 +392,8 @@ END ;
 RULE StructureCons : structure := struct_item_t and structure
 COMPUTE
   $[0].it_structure := [ $[1].it_struct_item_t :: $[2].it_structure ] ;
+  $[1].inh_env := $[0].inh_env ;
+  $[2].inh_env := $[1].syn_env ;
 END ;
 
 RULE SignatureNil : signature
@@ -296,14 +406,21 @@ COMPUTE
   $[0].it_signature := [ $[1].it_sig_item_t :: $[2].it_signature ] ;
 END ;
 
-RULE MeStruct : module_expr_t := loc and structure
+RULE MeStruct : me:module_expr_t := loc:loc and stl:structure
 COMPUTE
-  $[0].it_module_expr_t := Utypes.MeStruct $[1] $[2].it_structure ;
+  $[me].it_module_expr_t := Utypes.MeStruct $[loc] $[stl].it_structure ;
+  $[stl].inh_env := $[me].inh_env ;
+  $[me].inf_module_expr_t := Utypes.MeStruct $[loc] $[stl].inf_structure ;
+  $[me].inf_module_type_t :=
+    MtSig $[loc] (List.sort_uniq Reloc.(wrap_cmp Stdlib.compare sig_item_t) $[stl].inf_signature) ;
 END ;
 
-RULE MeFunctorApp : module_expr_t := loc and module_expr_t and module_expr_t
+RULE MeFunctorApp : me:module_expr_t := loc:loc and me1:module_expr_t and me2:module_expr_t
 COMPUTE
-  $[0].it_module_expr_t := Utypes.MeFunctorApp $[1] $[2].it_module_expr_t $[3].it_module_expr_t ;
+  $[me].it_module_expr_t := Utypes.MeFunctorApp $[loc] $[me1].it_module_expr_t $[me2].it_module_expr_t ;
+  $[me1].inh_env := $[me].inh_env ;
+  $[me2].inh_env := $[me].inh_env ;
+
 END ;
 
 RULE MePath : module_expr_t := loc and module_path_t

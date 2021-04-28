@@ -8,11 +8,11 @@ IMPORT_PACKAGES = pa_ppx_migrate,pa_ppx.import
 IMPORT_OCAMLCFLAGS = -ppopt -pa_import-I -ppopt . -ppopt -pa_passthru-debug
 
 
-OBJ=ututil.cmo utypes.cmo utypes2.cmo utlexing.cmo utmigrate.cmo utmigrate2.cmo utparse0.cmo utprint.cmo \
+OBJ=ututil.cmo utypes.cmo utlexing.cmo utmigrate.cmo utparse0.cmo utprint.cmo \
     utio.cmo utconv.cmo uttypecheck.cmo utextract.cmo utsimplify.cmo utpostprocess.cmo utvalidate.cmo
 OML=ututil.ml uttestutil.ml utio.ml utconv.ml uttypecheck.ml utextract.ml utsimplify.ml utpostprocess.ml utvalidate.ml \
     syntax_test.ml schemastore_test.ml typing_test.ml extract_test.ml simplify_test.ml validate_test.ml utjtool.ml
-IMPORT_OML=utypes.ml utmigrate.ml utmigrate2.ml
+IMPORT_OML=utypes.ml utmigrate.ml
 LEXML=utlexing.ml
 RML=utparse0.ml utprint.ml
 
@@ -111,7 +111,7 @@ clean:
 	rm -rf *test *.cm* *.o _build *.log *.cache utjtool utj-generated *ppo.ml
 
 
-depend:: utypes.cmo utypes2.cmo
+depend:: utypes.cmo
 	$(OCAMLFIND) ocamldep $(OCAMLCFLAGS) -package $(PACKAGES) -syntax camlp5o \
 		$(OML) \
 		 > .depend.NEW
