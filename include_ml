@@ -43,8 +43,10 @@ open Yojson.Basic ;;
 open Ututil ;;
 #load "utypes.cmo";;
 open Utypes ;;
+(*
 #load "utypes2.cmo";;
 open Utypes2 ;;
+*)
 #load "utlexing.cmo";;
 open Utlexing ;;
 #load "utmigrate.cmo";;
@@ -124,9 +126,12 @@ open Eval_test ;;
 #trace ElimCastCast.exec ;;
 #trace S10ReduceFunctorApp.exec ;;
 *)
-
+(*
 #load "simplify_test.cmo";;
 open Simplify_test ;;
+*)
+#load "extract_test.cmo";;
+open Extract_test ;;
 
 (*
 #load "validate_test.cmo";;

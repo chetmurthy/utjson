@@ -70,8 +70,6 @@ let parsing = "parsing" >::: [
          {|[ "a": object ]|})
       ; ((Atomic (Ploc.dummy, [(Field (Ploc.dummy, "a", (Simple (Ploc.dummy, JObject))));FieldRequired (Ploc.dummy, ["a"])])),
          {|[ required "a": object ]|})
-      ; ((Atomic (Ploc.dummy, [(FieldRE (Ploc.dummy, "foo", (Simple (Ploc.dummy, JObject))))])),
-         {|[ /foo/ : object ]|})
       ; ((Atomic (Ploc.dummy, [(Field (Ploc.dummy, "a", (Simple (Ploc.dummy, JObject))))])),
          {|[ "a": object ; ]|})
       ; ((Atomic (Ploc.dummy, [(Field (Ploc.dummy, "a", (Simple (Ploc.dummy, JObject)))); (Field (Ploc.dummy, "b", (Simple (Ploc.dummy, JObject))))])),
@@ -125,8 +123,8 @@ let parsing = "parsing" >::: [
       ]
       )
   ; "sealed-utype" >:: (fun ctxt -> List.iter success [
-        ((Seal (Ploc.dummy, (Simple (Ploc.dummy, JObject)), [], None)), "seal object")
-      ; ((Seal (Ploc.dummy, (Simple (Ploc.dummy, JObject)), [("^[^\\+#$\\s\\.]+$", (Simple (Ploc.dummy, JString)))], None)),
+        ((Seal (Ploc.dummy, (Simple (Ploc.dummy, JObject)), [], UtFalse Ploc.dummy)), "seal object")
+      ; ((Seal (Ploc.dummy, (Simple (Ploc.dummy, JObject)), [("^[^\\+#$\\s\\.]+$", (Simple (Ploc.dummy, JString)))], UtFalse Ploc.dummy)),
          "seal object with /^[^\+#$\s\.]+$/ : string")
       ]
       )
@@ -136,31 +134,31 @@ let parsing = "parsing" >::: [
       ]
       )
   ; "struct_item" >:: (fun ctxt -> List.iter success_struct_item [
-      (StTypes(Ploc.dummy, false,[(ID.of_string "x",false, Simple (Ploc.dummy, JString))]), "type x = string ;")
-    ; ((StTypes (Ploc.dummy, false, [(ID.of_string "x",false, (Simple (Ploc.dummy, JString))); (ID.of_string "y",false, (Simple (Ploc.dummy, JNumber)))])),
+      (StTypes(Ploc.dummy, false,[(ID.of_string "x",None, Simple (Ploc.dummy, JString))]), "type x = string ;")
+    ; ((StTypes (Ploc.dummy, false, [(ID.of_string "x",None, (Simple (Ploc.dummy, JString))); (ID.of_string "y",None, (Simple (Ploc.dummy, JNumber)))])),
        "type x = string and y = number ;")
-    ; ((StTypes (Ploc.dummy, true, [(ID.of_string "x",false, (Simple (Ploc.dummy, JString))); (ID.of_string "y",false, (Simple (Ploc.dummy, JNumber)))])),
+    ; ((StTypes (Ploc.dummy, true, [(ID.of_string "x",None, (Simple (Ploc.dummy, JString))); (ID.of_string "y",None, (Simple (Ploc.dummy, JNumber)))])),
        "type rec x = string and y = number ;")
-    ; ((StTypes (Ploc.dummy, false, [(ID.of_string "x",false, (Simple (Ploc.dummy, JString))); (ID.of_string "y",false, (Simple (Ploc.dummy, JNumber)))])),
+    ; ((StTypes (Ploc.dummy, false, [(ID.of_string "x",None, (Simple (Ploc.dummy, JString))); (ID.of_string "y",None, (Simple (Ploc.dummy, JNumber)))])),
        "type nonrec x = string and y = number ;")
     ; ((StTypes (Ploc.dummy, false,
-                 [(ID.of_string "integer",false, (And (Ploc.dummy, (Simple (Ploc.dummy, JNumber)), (Atomic (Ploc.dummy, [(MultipleOf (Ploc.dummy, 1.))])))))])),
+                 [(ID.of_string "integer",None, (And (Ploc.dummy, (Simple (Ploc.dummy, JNumber)), (Atomic (Ploc.dummy, [(MultipleOf (Ploc.dummy, 1.))])))))])),
        "type integer = number && [ multipleOf 1.0 ; ] ;")
     ; ((StOpen (Ploc.dummy, DEREF (REL (ID.of_string "M"), (ID.of_string "N")), None)),
        "open M.N;")
     ; ((StInclude (Ploc.dummy, DEREF (REL (ID.of_string "M"), (ID.of_string "N")), None)),
        "include M.N;")
     ; ((StModuleBinding (Ploc.dummy, ID.of_string "M",
-                         (MeStruct (Ploc.dummy, [(StTypes (Ploc.dummy, false, [(ID.of_string "t",false, (Simple (Ploc.dummy, JObject)))]))])))),
+                         (MeStruct (Ploc.dummy, [(StTypes (Ploc.dummy, false, [(ID.of_string "t",None, (Simple (Ploc.dummy, JObject)))]))])))),
        "module M = struct type t = object ; end;")
-    ; ((StModuleType (Ploc.dummy, (ID.of_string "MTY"), (MtSig (Ploc.dummy, [(SiType (Ploc.dummy, ID.of_string "t",false))])))),
-       "module type MTY = sig type t ; end;")
+    ; ((StModuleType (Ploc.dummy, (ID.of_string "MTY"), (MtSig (Ploc.dummy, [(SiType (Ploc.dummy, ID.of_string "t",AN.mk false))])))),
+       "module type MTY = sig type [] t ; end;")
     ; ((StLocal (Ploc.dummy, 
         [(StImport (Ploc.dummy, "https://example.com/geographical-location.schema.json",
                     (ID.of_string "GeoLoc")))
         ],
         [(StTypes (Ploc.dummy, false,
-                   [(ID.of_string "product",false,
+                   [(ID.of_string "product",None,
                      (And (Ploc.dummy, (Simple (Ploc.dummy, JObject)),
                            (Atomic
                               (Ploc.dummy, [(Field (Ploc.dummy, "productid", (Ref(Ploc.dummy, (None, ID.of_string "integer")))));
@@ -221,9 +219,10 @@ end ;
 
       )
   ; "sealed-struct_item" >:: (fun ctxt -> List.iter success_struct_item [
-      (StTypes(Ploc.dummy, false,[(ID.of_string "x",true, Simple (Ploc.dummy, JString))]), "type sealed x = string ;")
-    ; (StTypes(Ploc.dummy, true,[(ID.of_string "x",true, Simple (Ploc.dummy, JString));(ID.of_string "y",false, Simple (Ploc.dummy, JNumber))]),
-       "type rec sealed x = string and y = number ;")
+      (StTypes(Ploc.dummy, false,[(ID.of_string "x",Some (AN.mk true), Simple (Ploc.dummy, JString))]),
+       "type [sealed] x = string ;")
+    ; (StTypes(Ploc.dummy, true,[(ID.of_string "x",Some (AN.mk true), Simple (Ploc.dummy, JString));(ID.of_string "y",Some (AN.mk false), Simple (Ploc.dummy, JNumber))]),
+       "type rec [sealed] x = string and [] y = number ;")
     ]
 
       )
@@ -232,12 +231,12 @@ end ;
        "M.N")
     ; ((MtSig (Ploc.dummy, [])),
        "sig end")
-    ; ((MtFunctorType (Ploc.dummy, ((ID.of_string "M"), (MtSig (Ploc.dummy, [(SiType (Ploc.dummy, ID.of_string "u",false))]))), (MtSig (Ploc.dummy, [(SiType (Ploc.dummy, ID.of_string "t",false))])))),
-       "functor (M: sig type u; end) -> sig type t ; end")
+    ; ((MtFunctorType (Ploc.dummy, ((ID.of_string "M"), (MtSig (Ploc.dummy, [(SiType (Ploc.dummy, ID.of_string "u",AN.mk false))]))), (MtSig (Ploc.dummy, [(SiType (Ploc.dummy, ID.of_string "t",AN.mk false))])))),
+       "functor (M: sig type [] u; end) -> sig type [] t ; end")
     ; ((MtSig
-          (Ploc.dummy, [(SiType (Ploc.dummy, ID.of_string "t",false)); (SiModuleBinding (Ploc.dummy, (ID.of_string "M"), (MtPath (Ploc.dummy, (None, (ID.of_string "MTY"))))));
-           (SiModuleType (Ploc.dummy, (ID.of_string "MTY2"), (MtSig (Ploc.dummy, [(SiType (Ploc.dummy, ID.of_string "u",false))]))))])),
-       "sig type t; module M : MTY ; module type MTY2 = sig type u ; end ; end")
+          (Ploc.dummy, [(SiType (Ploc.dummy, ID.of_string "t",AN.mk true)); (SiModuleBinding (Ploc.dummy, (ID.of_string "M"), (MtPath (Ploc.dummy, (None, (ID.of_string "MTY"))))));
+           (SiModuleType (Ploc.dummy, (ID.of_string "MTY2"), (MtSig (Ploc.dummy, [(SiType (Ploc.dummy, ID.of_string "u",AN.mk ~base_types:[JObject] false))]))))])),
+       "sig type [sealed] t; module M : MTY ; module type MTY2 = sig type [object] u ; end ; end")
       ]
 
       )
@@ -247,11 +246,11 @@ end ;
     ; ((MeFunctorApp (Ploc.dummy, (MePath (Ploc.dummy, REL (ID.of_string "M"))), (MePath (Ploc.dummy, REL (ID.of_string "N"))))),
        "M(N)")
     ; ((MeFunctorApp (Ploc.dummy, (MePath (Ploc.dummy, REL (ID.of_string "M"))),
-                      (MeStruct (Ploc.dummy, [(StTypes (Ploc.dummy, false, [(ID.of_string "t",false, (Simple (Ploc.dummy, JObject)))]))])))),
+                      (MeStruct (Ploc.dummy, [(StTypes (Ploc.dummy, false, [(ID.of_string "t",None, (Simple (Ploc.dummy, JObject)))]))])))),
        "M(struct type t = object ; end)")
     ; ((MeFunctor (Ploc.dummy, ((ID.of_string "M1"), (MtSig (Ploc.dummy, []))),
                    (MeFunctor (Ploc.dummy, ((ID.of_string "M2"), (MtSig (Ploc.dummy, []))),
-                               (MeStruct (Ploc.dummy, [(StTypes (Ploc.dummy, false, [(ID.of_string "t",false, (Simple (Ploc.dummy, JObject)))]))]))))
+                               (MeStruct (Ploc.dummy, [(StTypes (Ploc.dummy, false, [(ID.of_string "t",None, (Simple (Ploc.dummy, JObject)))]))]))))
                   )),
        "functor (M1: sig end)(M2:sig end) -> struct type t = object ; end")
       ]
@@ -262,15 +261,15 @@ end ;
        "include M.N;")
     ; ([SiModuleBinding (Ploc.dummy, (ID.of_string "M"), (MtPath (Ploc.dummy, (None, (ID.of_string "MTY")))))],
        "module M : MTY;")
-    ; ([SiModuleType (Ploc.dummy, (ID.of_string "MTY"), (MtSig (Ploc.dummy, [(SiType (Ploc.dummy, ID.of_string "t",false))])))],
-       "module type MTY = sig type t ; end;")
+    ; ([SiModuleType (Ploc.dummy, (ID.of_string "MTY"), (MtSig (Ploc.dummy, [(SiType (Ploc.dummy, ID.of_string "t",AN.mk false))])))],
+       "module type MTY = sig type [] t ; end;")
     ]
       )
   ; "sealed-sig_item" >:: (fun ctxt -> List.iter success_sig_item [
-      ([(SiType (Ploc.dummy, { prefix = "x"; index = -1 }, false))],
-       "type x;")
-    ; ([(SiType (Ploc.dummy, { prefix = "x"; index = -1 }, true))],
-       "type sealed x;")
+      ([(SiType (Ploc.dummy, { prefix = "x"; index = -1 }, AN.mk false))],
+       "type [] x;")
+    ; ([(SiType (Ploc.dummy, { prefix = "x"; index = -1 }, AN.mk true))],
+       "type [sealed] x;")
     ]
       )
   ]

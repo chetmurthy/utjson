@@ -61,8 +61,8 @@ and kestrel = object && [
 ]
 and logLevelThreshold = string && [ enum "Trace", "Debug", "Information", "Warning", "Error", "Critical", "None";
 ]
-and sealed logLevel = seal object with logLevelThreshold
-and sealed logging = seal (object && [
+and [sealed] logLevel = seal object with logLevelThreshold
+and [sealed] logging = seal (object && [
     "LogLevel": logLevel;
     "Console": [
         "LogLevel": logLevel;
@@ -79,7 +79,7 @@ and sealed logging = seal (object && [
     "EventLog": [ "LogLevel": logLevel; ];
 ]) with (object && [ "LogLevel": logLevel; ])
 and allowedHosts = string
-and sealed connectionStrings = seal object with string
+and [sealed] connectionStrings = seal object with string
 and _NLog = object && [
     "autoReload": boolean && [ default false; ];
     "throwConfigExceptions": (boolean || null) && [ default false; ];
@@ -333,7 +333,7 @@ and umbracoUnattended = [
 ];
 end ;
 open DEFINITIONS ;
- type nonrec sealed t = seal (object && [
+ type nonrec [sealed] t = seal (object && [
     "Kestrel": kestrel;
     "Logging": logging;
     "AllowedHosts": allowedHosts;

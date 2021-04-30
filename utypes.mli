@@ -45,7 +45,6 @@ type range_constraint_t =
 
 type atomic_utype_t =
     Field of loc * string * utype_t
-  | FieldRE of loc * string * utype_t
   | FieldRequired of loc * string list
   | ArrayOf of loc * utype_t
   | ArrayTuple of loc * utype_t list
@@ -54,8 +53,6 @@ type atomic_utype_t =
   | Size of loc * size_constraint_t
   | StringRE of loc * string
   | NumberBound of loc * range_constraint_t
-  | Sealed of loc
-  | OrElse of loc * utype_t
   | MultipleOf of loc * float
   | Enum of loc * Yojson.Basic.t list
   | Default of loc * Yojson.Basic.t
@@ -82,12 +79,20 @@ and utype_t =
   | Not of loc * utype_t
   | Atomic of loc * atomic_utype_t list
   | Ref of loc * ref_t
-  | Seal of loc * utype_t * (string * utype_t) list * utype_t option
-
+  | Seal of loc * utype_t * (string * utype_t) list * utype_t
 [@@deriving show { with_path = false },eq]
 
+module AN : sig
+type t = SEALED | UNSEALED of base_type_t list
+[@@deriving show { with_path = false }, eq]
+type t_option = t option
+[@@deriving show { with_path = false }, eq]
+val mk : ?base_types:base_type_t list -> bool -> t
+val sealed : t -> bool
+end
+
 type struct_item_t =
-    StTypes of loc * bool * (ID.t * bool * utype_t) list
+    StTypes of loc * bool * (ID.t * AN.t option * utype_t) list
   | StModuleBinding of loc * ID.t * module_expr_t
   | StImport of loc * string * ID.t
   | StLocal of loc * structure * structure
@@ -112,16 +117,17 @@ and module_type_t =
 and signature = sig_item_t list
 
 and sig_item_t =
-    SiType of loc * ID.t * bool
+    SiType of loc * ID.t * AN.t
   | SiModuleBinding of loc * ID.t * module_type_t
   | SiModuleType of loc * ID.t * module_type_t
   | SiInclude of loc * module_path_t
 
 and top_binding_t =
-  loc * ref_t * utype_t
+  loc * ref_t * AN.t * utype_t
 
 and top_bindings = top_binding_t list
 [@@deriving show { with_path = false },eq]
+
 
 val loc_of_utype : utype_t -> loc
 val loc_of_atomic_utype : atomic_utype_t -> loc

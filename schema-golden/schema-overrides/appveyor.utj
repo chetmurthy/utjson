@@ -1,12 +1,12 @@
 module DEFINITIONS = struct
 type rec possiblySecretString = string || number || seal (object && [ "secure": string; ])
-and sealed commitFilter = seal (object && [
+and [sealed] commitFilter = seal (object && [
     "message": string && [ format "regex"; ];
     "author": string && [ format "regex"; ] || string;
     "files": array && [ of string; ];
 ])
 and command = string xor (seal (object && [ "ps": string; ])) xor (seal (object && [ "pwsh": string; ])) xor (seal (object && [ "cmd": string; ])) xor (seal (object && [ "sh": string; ]))
-and sealed envVarHash = seal object with possiblySecretString
+and [sealed] envVarHash = seal object with possiblySecretString
 and platform = [ enum "x86", "x64", "ARM", "ARM64", "Win32", "Any CPU"; ]
 and configuration = string
 and imageName = [

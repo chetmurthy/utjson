@@ -6,12 +6,12 @@ and moduleSettings = object && [
     "image": string;
     "createOptions": createOptions;
 ] && [ required "image"; ]
-and sealed env = seal object with
+and [sealed] env = seal object with
     /^[^\+#$\s\.]+$/ : (object && [ "value": number || string || boolean; ] && [ required "value"; ])
 and createOptions = string && [ contentMediaType "application/json"; ];
 end ;
 open DEFINITIONS ;
- type nonrec sealed t = seal (object && [
+ type nonrec [sealed] t = seal (object && [
     "$edgeAgent": object && [
         "properties.desired": object && [
             "schemaVersion": string && [ /1.0/ ];

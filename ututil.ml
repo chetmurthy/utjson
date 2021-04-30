@@ -64,3 +64,8 @@ let canon_json (y : Yojson.Basic.t) : Yojson.Basic.t =
   | `List l -> `List (List.map yrec l)
   | `Assoc l -> `Assoc (List.stable_sort key_compare (List.map (fun (k,v) -> (k,yrec v)) l))
   in yrec y
+
+let canon l = 
+  l
+  |> List.sort_uniq Stdlib.compare
+  |> List.stable_sort Stdlib.compare

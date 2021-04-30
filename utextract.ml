@@ -322,8 +322,8 @@ let exec stl =
              pp_struct_item_t st)
     | StInclude (loc, mp, Some (MtSig (_, l) as mty)) ->
       let stl = l |> List.map (function
-            SiType (loc, tid, sealed) ->
-            StTypes(loc, false, [(tid, sealed, Ref(loc, (Some mp, tid)))])
+            SiType (loc, tid, anno) ->
+            StTypes(loc, false, [(tid, Some anno, Ref(loc, (Some mp, tid)))])
           | SiModuleBinding(loc, mid, mty) ->
             StModuleBinding(loc, mid, MeCast(loc, MePath(loc, DEREF(mp, mid)), mty))
           | SiModuleType(loc, mid, mty) ->
@@ -872,7 +872,7 @@ module FinalExtract = struct
 let check_closed (l : top_bindings) =
   let dt = make_dt () in
   let old_migrate_utype_t = dt.migrate_utype_t in
-  let defined = List.map (fun (_, tid, _) -> tid) l in
+  let defined = List.map (fun (_, tid, _, _) -> tid) l in
   let new_migrate_utype_t dt ut = match ut with
       Ref (_, (mpopt, id)) ->
       if not (List.mem (mpopt, id) defined) then
@@ -880,14 +880,18 @@ let check_closed (l : top_bindings) =
       ut
     | _ -> old_migrate_utype_t dt ut in
   let dt = { dt with migrate_utype_t = new_migrate_utype_t } in
-  l |> List.iter (fun (_, _, ut) -> ignore(dt.migrate_utype_t dt ut))
+  l |> List.iter (fun (_, _, _, ut) -> ignore(dt.migrate_utype_t dt ut))
 
 let rec extract_stl mpopt acc stl =
   List.fold_left (extract_st mpopt) acc stl
 
 and extract_st mpopt acc = function
     StTypes(loc, _, l) ->
-    List.fold_left (fun acc (id, _, ut) -> (loc, (mpopt, id), ut)::acc) acc l
+    List.fold_left (fun acc -> function
+          (id, Some anno, ut) -> (loc, (mpopt, id), anno, ut)::acc
+        | (_, None, _) ->
+          Fmt.(raise_failwithf loc "extract_st: should have annotations by now, but found none")
+      ) acc l
 
   | StModuleBinding(_, mid, MeStruct (_, l)) ->
     let mpopt = match mpopt with None -> Some(TOP mid) | Some mp -> Some(DEREF(mp, mid)) in

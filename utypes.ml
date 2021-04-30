@@ -74,6 +74,22 @@ type range_constraint_t = [%import: Utypes.range_constraint_t]
 [%%import: Utypes.atomic_utype_t]
 [@@deriving show { with_path = false },eq]
 
+module AN = struct
+type t = [%import: Utypes.AN.t]
+[@@deriving show { with_path = false },eq]
+type t_option = [%import: Utypes.AN.t_option]
+[@@deriving show { with_path = false }, eq]
+let mk ?(base_types=[]) sealed =
+  if sealed then begin
+    assert (base_types = []) ;
+    SEALED
+  end
+  else UNSEALED (canon base_types)
+
+let sealed = function SEALED -> true | _ -> false
+end
+
+
 [%%import: Utypes.struct_item_t]
 [@@deriving show { with_path = false },eq]
 
@@ -131,7 +147,6 @@ let loc_of_module_expr = function
 
 let loc_of_atomic_utype = function
     Field (loc, _, _)
-  | FieldRE (loc, _, _)
   | FieldRequired (loc, _)
   | ArrayOf (loc, _)
   | ArrayTuple (loc, _)
@@ -140,8 +155,6 @@ let loc_of_atomic_utype = function
   | Size (loc, _)
   | StringRE (loc, _)
   | NumberBound (loc, _)
-  | Sealed loc
-  | OrElse (loc, _)
   | MultipleOf (loc, _)
   | Enum (loc, _)
   | Default (loc, _)

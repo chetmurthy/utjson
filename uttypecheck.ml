@@ -75,7 +75,7 @@ let load_file ?(with_predefined=false) s =
   else stl
 
 module TEnv = struct
-  type t = (bool, module_type_t, module_type_t) Env.t
+  type t = (AN.t, module_type_t, module_type_t) Env.t
   [@@deriving show { with_path = false },eq]
 
   let mt = Env.mk ()
@@ -139,6 +139,108 @@ let closed_over f x l =
 let closed f x = closed_over f x []
 end
 
+module ANO = struct
+open AN
+
+(** a type is unsealable if it is not sealed, and its base_types do
+   not include "object", "array".  *)
+let unsealable = function
+    SEALED -> false
+  | UNSEALED l -> [] = intersect [JObject; JArray] l
+
+let sealed_or_unsealable = function
+    SEALED -> true
+  | UNSEALED _ as a -> unsealable a
+
+  (** two types can be conjoined (&&) if:
+
+    (1) they are both sealed
+
+      the result is sealed
+
+    (2) they are both unsealed
+
+      the result is unsealed, and the base_types are intersected
+
+  *)
+
+let conjoin loc a1 a2 =
+  match (a1, a2) with
+    SEALED, SEALED -> SEALED
+  | UNSEALED l1, UNSEALED l2 ->
+    UNSEALED (canon (intersect l1 l2))
+  | _ ->
+    Fmt.(raise_failwithf loc "AnnotationOps.conjoin: cannot conjoin (&&) %a, %a"
+           pp a1 pp a2)
+
+(** two types can be disjoined if
+
+    (1) they are both sealed
+
+    result is sealed
+
+    (2) they are both unsealed
+
+    result unions their base_types
+
+*)
+
+let disjoin loc a1 a2 =
+  match (a1, a2) with
+    SEALED, SEALED -> SEALED
+  | UNSEALED l1, UNSEALED l2 ->
+    UNSEALED (canon (l1@l2))
+  | _ ->
+    Fmt.(raise_failwithf loc "AnnotationOps.disjion: cannot disjoin (||) %a, %a"
+           pp a1 pp a2)
+
+(** two types can be xored if
+
+    either or both types is sealed or unsealable
+
+    result is sealed
+
+*)
+
+let xor loc a1 a2 =
+  if sealed_or_unsealable a1 && sealed_or_unsealable a2 then
+    SEALED
+  else
+    Fmt.(raise_failwithf loc "AnnotationOps.xor: cannot xor %a, %a"
+           pp a1 pp a2)
+
+(** two types can be implicated (a => b) if
+
+    either or both types is sealed or unsealable
+
+    result is sealed
+
+*)
+
+let impl loc a1 a2 =
+  if sealed_or_unsealable a1 && sealed_or_unsealable a2 then
+    SEALED
+  else
+    Fmt.(raise_failwithf loc "AnnotationOps.impl: cannot => %a, %a"
+           pp a1 pp a2)
+
+(** a type can be negated (not a) if
+
+    the type is sealed or unsealable
+
+    result is sealed
+
+*)
+
+let neg loc a1 =
+  if sealed_or_unsealable a1 then
+    SEALED
+  else
+    Fmt.(raise_failwithf loc "AnnotationOps.net: cannot negate %a"
+           pp a1)
+
+end
+
 let rec lookup_module loc env = function
     REL h -> TEnv.lookup_module env h
   | TOP _ as p -> Fmt.(failwithf "TOP should never appear in a module_path here: %a" pp_module_path_t p)
@@ -190,14 +292,22 @@ let fresh s =
     prefix^(string_of_int (num+1))
   else Fmt.(failwithf "fresh: internal error")
 
+let infer_base_type = function
+  | `Null -> JNull
+  | `Bool _ -> JBool
+  | `Int _ | `Float _ -> JNumber
+  | `String _ -> JString
+  | `Assoc _ -> JObject
+  | `List _ -> JArray
+
 let rec tc_utype env ut = match ut with
     Ref (loc, (None, t)) as ut -> begin match Env.lookup_t env t with
         None -> Fmt.(raise_failwithf loc "tc_utype: id %s not found in type-environment" (ID.to_string t))
-      | Some sealed -> (ut, sealed)
+      | Some anno -> (ut, anno)
     end
   | Ref (loc, (Some mpath, t)) as ut -> begin match lookup_module loc env mpath with
         MtSig (_, l) -> begin match l |> List.find_map (function
-            SiType (_, t', sealed) when t = t' -> Some sealed
+            SiType (_, t', anno) when t = t' -> Some anno
           | _ -> None
         ) with
           Some sealed -> (ut, sealed)
@@ -207,97 +317,111 @@ let rec tc_utype env ut = match ut with
       | _ -> Fmt.(raise_failwithf loc "tc_utype: module-path %a did not yield a signature" pp_module_path_t mpath)
     end
     
-  | UtTrue _ -> (ut, false)
-  | UtFalse _ -> (ut, false)
-  | Simple (loc, bt) -> let (bt, sealed) = tc_base_type env bt in (Simple (loc, bt), sealed)
+  | UtTrue _ -> (ut, AN.mk false)
+  | UtFalse _ -> (ut, AN.mk false)
+  | Simple (loc, bt) -> let (bt, anno) = tc_base_type env bt in (Simple (loc, bt), anno)
   | And(loc, ut1, ut2) ->
-    let (ut1, sealed1) = tc_utype env ut1 in
-    let (ut2, sealed2) = tc_utype env ut2 in
-    if sealed1=sealed2 then (And(loc, ut1, ut2), sealed1)
-    else Fmt.(raise_failwithf loc "tc_utype: cannot mix sealed/unsealed types in conjunction")
+    let (ut1, anno1) = tc_utype env ut1 in
+    let (ut2, anno2) = tc_utype env ut2 in
+    (And(loc, ut1, ut2), ANO.conjoin loc anno1 anno2)
            
   | Or(loc, ut1, ut2) ->
-    let (ut1, sealed1) = tc_utype env ut1 in
-    let (ut2, sealed2) = tc_utype env ut2 in
-    if sealed1=sealed2 then (Or(loc, ut1, ut2), sealed1)
-    else Fmt.(raise_failwithf loc "tc_utype: cannot mix sealed/unsealed types in disjunction")
+    let (ut1, anno1) = tc_utype env ut1 in
+    let (ut2, anno2) = tc_utype env ut2 in
+    (Or(loc, ut1, ut2), ANO.disjoin loc anno1 anno2)
            
   | Xor(loc, ut1, ut2) ->
-    let (ut1, sealed1) = tc_utype env ut1 in
-    let (ut2, sealed2) = tc_utype env ut2 in
-    if sealed1=sealed2 then (Xor(loc, ut1, ut2), sealed1)
-    else Fmt.(raise_failwithf loc "tc_utype: cannot mix sealed/unsealed types in xor")
+    let (ut1, anno1) = tc_utype env ut1 in
+    let (ut2, anno2) = tc_utype env ut2 in
+    (Xor(loc, ut1, ut2), ANO.xor loc anno1 anno2)
            
   | Impl(loc, ut1, ut2) ->
-    let (ut1, sealed1) = tc_utype env ut1 in
-    let (ut2, sealed2) = tc_utype env ut2 in
-    if sealed1=sealed2 then (Impl(loc, ut1, ut2), sealed1)
-    else Fmt.(raise_failwithf loc "tc_utype: cannot mix sealed/unsealed types in implication")
+    let (ut1, anno1) = tc_utype env ut1 in
+    let (ut2, anno2) = tc_utype env ut2 in
+    (Xor(loc, ut1, ut2), ANO.impl loc anno1 anno2)
            
   | Not (loc, ut1) ->
-    let (ut1, sealed1) = tc_utype env ut1 in
-      (Not (loc, ut1), sealed1)
+    let (ut1, anno1) = tc_utype env ut1 in
+    (Not(loc, ut1), ANO.neg loc anno1)
         
   | Atomic (loc, l) ->
-    let l = List.map (tc_atomic_type env) l in
-    (Atomic (loc, l), false)
-    
+    assert (l <> []) ;
+    let tcl = List.map (tc_atomic_type env) l in
+    let l = List.map fst tcl in
+    let annol = List.map snd tcl in
+    let anno = List.fold_left (ANO.conjoin loc) (List.hd annol) (List.tl annol) in
+    (Atomic (loc, l), anno)
+
   | Seal(loc, ut1, l, orelse) ->
-    let (ut1, sealed1) = tc_utype env ut1 in
-    if sealed1 then
+    let (ut1, anno1) = tc_utype env ut1 in
+    if AN.sealed anno1 then
       Fmt.(raise_failwithf loc "tc_utype: pointless to seal an already-sealed type")
     else
       let l = List.map (fun (re, ut) -> (re, tc_sub_utype env ut)) l in
-      let orelse = Option.map (tc_sub_utype env) orelse in
-      (Seal(loc, ut1,l,orelse), true)
+      let orelse = tc_sub_utype env orelse in
+      (Seal(loc, ut1,l,orelse), AN.mk true)
 
 and tc_base_type env t = match t with
-    JNull | JString | JBool | JNumber -> (t, false)
-  | JArray | JObject -> (t, false)
+    JNull | JString | JBool | JNumber -> (t, AN.mk ~base_types:[t] false)
+  | JArray | JObject -> (t, AN.mk ~base_types:[t] false)
 
 and tc_sub_utype env ut = fst(tc_utype env ut)
 
 and tc_atomic_type env ty = match ty with
-    Field(loc, fname, ut) -> Field(loc, fname, tc_sub_utype env ut)
-  | FieldRE(loc, re, ut) ->  FieldRE(loc, re, tc_sub_utype env ut)
-  | FieldRequired _ -> ty
-  | ArrayOf (loc, ut) -> ArrayOf(loc, tc_sub_utype env ut)
-  | ArrayTuple (loc, l) -> ArrayTuple(loc, List.map (tc_sub_utype env) l)
-  | ArrayUnique _ -> ty
-  | ArrayIndex (loc, n, ut) -> ArrayIndex (loc, n, tc_sub_utype env ut)
-  | Size _ -> ty
-  | StringRE _ -> ty
-  | NumberBound _ -> ty
-  | Sealed _ -> ty
-  | OrElse (loc, ut) -> OrElse (loc, tc_sub_utype env ut)
-  | MultipleOf _ -> ty
-  | Enum _ -> ty
-  | Default _ -> ty
-  | Format _ -> ty
-  | PropertyNames (loc, ut) -> PropertyNames(loc, tc_sub_utype env ut)
-  | ContentMediaType _ -> ty
-  | ContentEncoding _ -> ty
+    Field(loc, fname, ut) ->
+    (Field(loc, fname, tc_sub_utype env ut), AN.mk ~base_types:[JObject] false)
+  | FieldRequired _ ->
+    (ty, AN.mk ~base_types:[JObject] false)
+  | ArrayOf (loc, ut) ->
+    (ArrayOf(loc, tc_sub_utype env ut), AN.mk ~base_types:[JArray] false)
+  | ArrayTuple (loc, l) ->
+    (ArrayTuple(loc, List.map (tc_sub_utype env) l), AN.mk ~base_types:[JArray] false)
+  | ArrayUnique _ ->
+    (ty, AN.mk ~base_types:[JArray] false)
+  | ArrayIndex (loc, n, ut) ->
+    (ArrayIndex (loc, n, tc_sub_utype env ut), AN.mk ~base_types:[JArray] false)
+  | Size _ -> (ty, AN.mk ~base_types:[JArray;JString;JObject] false)
+  | StringRE _ -> (ty, AN.mk ~base_types:[JString] false)
+  | NumberBound _ -> (ty, AN.mk ~base_types:[JNumber] false)
+  | MultipleOf _ -> (ty, AN.mk ~base_types:[JNumber] false)
+  | Enum (_, l) -> (ty, AN.mk ~base_types:(l |> List.map infer_base_type |> canon) false)
+  | Default (_, j) -> (ty, AN.mk ~base_types:[infer_base_type j] false)
+  | Format _ -> (ty, AN.mk ~base_types:[JString] false)
+  | PropertyNames (loc, ut) ->
+    (PropertyNames(loc, tc_sub_utype env ut), AN.mk ~base_types:[JObject] false)
+  | ContentMediaType _ -> (ty, AN.mk ~base_types:[JString] false)
+  | ContentEncoding _ -> (ty, AN.mk ~base_types:[JString] false)
 
 and tc_struct_item env = function
     StTypes (loc, recflag,l) ->
     let subenv = if recflag then
-        l |> List.fold_left (fun env (tid, sealed, _) -> TEnv.push_type env (tid, sealed))
+        l |> List.fold_left (fun env -> function
+              (tid, Some anno, _) -> TEnv.push_type env (tid, anno)
+            | (_, None, _) ->
+              Fmt.(raise_failwithf loc "tc_struct_item: recursive types MUST be annotated")
+          )
           env
     else env in
     let l =
-      l |> List.rev_map (fun (tid, sealed, ut) ->
-          let (ut, sealed') = tc_utype subenv ut in
-          if sealed <> sealed' then
-            Fmt.(raise_failwithf loc "tc_struct_item: declared status of type %s was %s, but type-checker inferred %s"
+      l |> List.rev_map (fun (tid, anno_opt, ut) ->
+          let (ut, anno') = tc_utype subenv ut in
+          if None <> anno_opt && anno_opt <> Some anno' then
+            Fmt.(raise_failwithf loc "tc_struct_item: declared annotation of type %s was %a, but type-checker inferred %a"
                    (ID.to_string tid)
-                   (if sealed then "sealed" else "unsealed")
-                   (if sealed' then "sealed" else "unsealed"))
+                   AN.pp_t_option anno_opt
+                   AN.pp anno')
           else
-            (tid, sealed, ut)) |> List.rev in
-    let newenv = List.fold_left (fun env (tid, sealed, _) -> TEnv.push_type env (tid, sealed)) env l in
+            (tid, Some anno', ut)) |> List.rev in
+    let newenv = List.fold_left (fun env -> function
+          (tid, Some anno, _) -> TEnv.push_type env (tid, anno)
+        | (_, None, _) -> assert false
+      ) env l in
     (newenv,
      (StTypes(loc, recflag, l),
-     l |> List.map (fun (tid, sealed, _) -> SiType (loc, tid, sealed))))
+     l |> List.map (function
+            (tid, Some anno, _) -> SiType (loc, tid, anno)
+          | (_, None, _) -> assert false
+        )))
 
   | StModuleBinding (loc, mid, me) ->
     let (me, mty) = tc_module_expr env me in
@@ -359,12 +483,27 @@ and tc_struct_item env = function
     let st = StModuleType (loc, id, mty) in
     (TEnv.push_module_type env (id, mty), (st, [SiModuleType (loc, id, mty)]))
 
+and thin_signature sil =
+  let (sil, _) = List.fold_right (fun si (sil, env) ->
+      match si with
+        SiType(_, tid, _) when Env.has_t env tid -> (sil, env)
+      | SiType(_, tid, _) -> (si::sil, Env.add_t env (tid, ()))
+      | SiModuleBinding(_, mid, _) when Env.has_m env mid -> (sil, env)
+      | SiModuleBinding(_, mid, _) -> (si::sil, Env.add_m env (mid, ()))
+      | SiModuleType(_, mid, _) when Env.has_mt env mid -> (sil, env)
+      | SiModuleType(_, mid, _) -> (si::sil, Env.add_mt env (mid, ()))
+      | _ -> (sil, env)
+    ) sil ([], Env.mk()) in
+  sil
+
 and tc_structure env l =
   let (env, stacc, siacc) = List.fold_left (fun (env,stacc, siacc) st ->
       let (env', (st, sil)) = tc_struct_item env st in
       (env', st::stacc, sil::siacc))
       (env, [], []) l in
-  (env, (List.rev stacc, List.concat (List.rev siacc)))
+  let sil = List.concat (List.rev siacc) in
+  let sil = thin_signature sil in
+  (env, (List.rev stacc, sil))
 
 and tc_signature env l =
   let (env, acc) = List.fold_left (fun (env,acc) si ->
@@ -420,8 +559,11 @@ and tc_module_expr env = function
     let formal_mty = tc_module_type env formal_mty in
     let (me, actual_mty) = tc_module_expr env me in
     if not (satisfies_constraint env ~lhs:actual_mty ~rhs:formal_mty) then
-      Fmt.(raise_failwithf loc "module-expr cast fails: module_expr (%a : %a) does not satisfy %a"
-             pp_module_expr_t me pp_module_type_t actual_mty pp_module_type_t formal_mty) ;
+      Fmt.(raise_failwithf loc "module-expr cast fails: module_expr (%s : %s) does not satisfy %s"
+             (Normal.module_expr_printer me)
+             (Normal.module_type_printer actual_mty)
+             (Normal.module_type_printer formal_mty)
+          ) ;
     (MeCast(loc, me, formal_mty), formal_mty)
 
 and tc_module_type env mt =

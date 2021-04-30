@@ -151,7 +151,6 @@ EXTEND
       | "required" ; id = STRING -> [FieldRequired loc [id]]
       | "required" ; id = STRING ; ":" ; t = utype -> [Field loc id t;FieldRequired loc [id]]
       | id = STRING ; ":" ; t = utype -> [Field loc id t]
-      | re = REGEXP ; ":" ; t = utype -> [FieldRE loc re t]
       | re = REGEXP -> [StringRE loc re]
       | "of" ; t = utype -> [ArrayOf loc t]
       | l = LIST1 utype SEP "*" -> [ArrayTuple loc l]
@@ -159,8 +158,6 @@ EXTEND
       | n=INT ; ":" ; t=utype -> [ArrayIndex loc (int_of_string n) t]
       | "size" ; s=size_constraint -> [Size loc s]
       | "bounds" ; s=range_constraint -> [NumberBound loc s]
-      | "sealed" -> [Sealed loc]
-      | "orelse" ; t=utype -> [OrElse loc t]
       | "multipleOf" ; n = FLOAT -> [MultipleOf loc (float_of_string n)]
       | "enum" ; l = LIST1 json SEP "," -> [Enum loc (l |> List.map LJ.to_json |> List.map canon_json)]
       | "default" ; j=json -> [Default loc (LJ.to_json j)]
@@ -188,8 +185,10 @@ EXTEND
         "not" ; t = utype -> Not loc t
       ]
     | "seal" [
-        "seal" ; t = utype LEVEL "simple" -> Seal loc t [] None
-      | "seal" ; t = utype LEVEL "simple" ; "with" ; (l,orelse) = seal_extras -> Seal loc t l orelse
+        "seal" ; t = utype LEVEL "simple" ->
+        Seal loc t [] (UtFalse loc)
+      | "seal" ; t = utype LEVEL "simple" ; "with" ; (l,orelse) = seal_extras ->
+        Seal loc t (List.stable_sort Stdlib.compare l) orelse
       ]
     | "simple" [
         b = base_type -> Simple loc b
@@ -203,8 +202,8 @@ EXTEND
     ]
     ;
     seal_extras: [ [
-        r = REGEXP ; ":" ; t = utype -> ([(r,t)],None)
-      | t = utype -> ([],Some t)
+        r = REGEXP ; ":" ; t = utype -> ([(r,t)],UtFalse loc)
+      | t = utype -> ([],t)
       | r = REGEXP ; ":" ; t = utype; "," ; (l,orelse) = seal_extras -> ([(r,t)::l],orelse)
 
       ] ]
@@ -270,12 +269,21 @@ EXTEND
       ] ]
     ;
 
+    annotation: [ [
+        "[" ; "]" -> AN.mk False
+      | "[" ; "sealed" ; "]" -> AN.mk True
+      | "[" ; l = LIST1 base_type SEP "," ; "]" ->
+        AN.mk ~{base_types=l} False
+      ] ]
+    ;
+    annotation_opt: [ [ x = OPT annotation -> x ] ]
+    ;
     struct_item: [ [
         "module" ; uid=mid ; "=" ; e = module_expr ; ";" -> StModuleBinding loc uid e
       | "module" ; "type" ; uid=mid ; "=" ; e = module_type ; ";" -> StModuleType loc uid e
       | "local" ; l1 = structure ; "in" ; l2 = structure ; "end" ; ";" -> StLocal loc l1 l2
       | "type" ; rflag = [ "rec" -> True | "nonrec" -> False | -> False ] ;
-        l = LIST1 [ (id,sealed) = [ id = LIDENT -> (id, False) | "sealed" ; id = LIDENT -> (id, True) ] ; "=" ; t = utype -> (ID.of_string id, sealed, t) ] SEP "and" ;
+        l = LIST1 [ anno_opt = annotation_opt ; id = LIDENT ; "=" ; t = utype -> (ID.of_string id, anno_opt, t) ] SEP "and" ;
         ";" -> StTypes loc rflag l
       | "import" ; s=STRING ; "as"; uid=mid ; ";" -> StImport loc s uid
       | "open" ; p = module_path ; ";" -> StOpen loc p None
@@ -285,8 +293,8 @@ EXTEND
       ] ]
     ;
     sig_item: [ [
-        "type" ; l = LIST1 [ id = LIDENT -> (id, False) | "sealed" ; id = LIDENT -> (id, True) ] SEP "," ; ";" ->
-        l |> List.map (fun (s,sealed) -> SiType loc (ID.of_string s) sealed)
+        "type" ; l = LIST1 [ anno = annotation ; id = LIDENT -> (id, anno) ] SEP "," ; ";" ->
+        l |> List.map (fun (s,anno) -> SiType loc (ID.of_string s) anno)
       | "module" ; uid = mid ; ":" ; mty=module_type ; ";" -> [SiModuleBinding loc uid mty]
       | "module" ; "type" ; uid = mid ; "=" ; mty=module_type ; ";" -> [SiModuleType loc uid mty]
       | "include" ; p = module_path ; ";" -> [SiInclude loc p]
@@ -329,7 +337,7 @@ EXTEND
     ] ]
   ;
   top_binding: [ [
-      r = ref_ ; "=" ; ut = utype ; ";" -> (loc, r, ut)
+      a = annotation ; r = ref_ ; "=" ; ut = utype ; ";" -> (loc, r, a, ut)
     ] ]
   ;
   top_bindings: [ [

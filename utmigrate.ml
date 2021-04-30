@@ -26,8 +26,10 @@ and atomic_utype_t = [%import: Utypes.atomic_utype_t]
 and utype_t = [%import: Utypes.utype_t
   [@with ID.t := id_t]
 ]
+and annotation_t = [%import: Utypes.AN.t]
 and struct_item_t = [%import: Utypes.struct_item_t
   [@with ID.t := id_t]
+  [@with AN.t := annotation_t]
 ]
 and module_path_t = [%import: Utypes.module_path_t
   [@with ID.t := id_t]
@@ -45,9 +47,12 @@ and module_type_t = [%import: Utypes.module_type_t
 and signature = [%import: Utypes.signature]
 and sig_item_t = [%import: Utypes.sig_item_t
   [@with ID.t := id_t]
+  [@with AN.t := annotation_t]
 ]
 
-and top_binding_t = [%import: Utypes.top_binding_t]
+and top_binding_t = [%import: Utypes.top_binding_t
+  [@with AN.t := annotation_t]
+]
 and top_bindings = [%import: Utypes.top_bindings]
 [@@deriving migrate
     { optional = true
@@ -66,6 +71,7 @@ and top_bindings = [%import: Utypes.top_bindings]
           ; range_constraint_t
           ; atomic_utype_t
           ; utype_t
+          ; annotation_t
           ; struct_item_t
           ; module_path_t
           ; structure

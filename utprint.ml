@@ -77,8 +77,16 @@ and pr_module_type pc = fun [
   | MtPath _ (Some p, id) -> pprintf pc "%p.%s" print_module_path p (ID.to_string id)
   | MtPath _ (None, id) -> pprintf pc "%s" (ID.to_string id)
   ]
+and pr_annotation pc = fun [
+    AN.SEALED -> pprintf pc "[sealed]"
+  | AN.UNSEALED l -> pprintf pc "[%p]" (plist_with "," pr_base_type 0) l
+  ]
+and pr_annotation_opt pc = fun [
+    None -> pprintf pc ""
+  | Some a -> pprintf pc "%p " pr_annotation a
+  ]
 and pr_sig_item pc = fun [
-    SiType _ s sealed -> pprintf pc "type %s%s;" (if sealed then "sealed " else "") (ID.to_string s)
+    SiType _ s anno -> pprintf pc "type %p %s;" pr_annotation anno (ID.to_string s)
   | SiModuleBinding _ s mty -> 
     pprintf pc "module %s : %p;" (ID.to_string s) print_module_type mty
   | SiModuleType _ s mty ->
@@ -90,8 +98,8 @@ and pr_struct_item pc = fun [
     StTypes _ recflag l ->
     pprintf pc "type%s %p;" (if recflag then " rec" else " nonrec")
       (Prtools.vlist2
-         (fun pc (s, sealed,t) -> pprintf pc "%s%s = %p" (if sealed then "sealed " else "") (ID.to_string s) print_utype t)
-         (fun pc (s, sealed, t) -> pprintf pc "and %s%s = %p" (if sealed then "sealed " else "") (ID.to_string s) print_utype t)
+         (fun pc (s, anno_opt,t) -> pprintf pc "%p%s = %p" pr_annotation_opt anno_opt (ID.to_string s) print_utype t)
+         (fun pc (s, anno_opt, t) -> pprintf pc "and %p%s = %p" pr_annotation_opt anno_opt (ID.to_string s) print_utype t)
       ) l
   | StModuleBinding _ id mexp ->
     pprintf pc "module %s = %p;" (ID.to_string id) print_module_expr mexp
@@ -135,13 +143,13 @@ and pr_utype_not pc = fun [
     | x -> pr_utype_seal pc x
     ]
 and pr_utype_seal pc = fun [
-      Seal _ x [] None -> pprintf pc "seal %p" pr_utype_simple x
-    | Seal _ x l orelse -> pprintf pc "seal %p with %p" pr_utype_simple x pr_seal_extras (l,orelse)
-    | x -> pr_utype_simple pc x
-    ]
+    Seal _ x [] (UtFalse _) -> pprintf pc "seal %p" pr_utype_simple x
+  | Seal _ x l orelse -> pprintf pc "seal %p with %p" pr_utype_simple x pr_seal_extras (l,orelse)
+  | x -> pr_utype_simple pc x
+  ]
 and pr_seal_extras pc = fun [
-    ([(re,t)],None) -> pprintf pc "/%s/ : %p" (Escape.regexp re) pr_utype_simple t
-  | ([], Some t) ->  pprintf pc "%p" pr_utype_simple t
+    ([(re,t)], UtFalse _) -> pprintf pc "/%s/ : %p" (Escape.regexp re) pr_utype_simple t
+  | ([], t) ->  pprintf pc "%p" pr_utype_simple t
   | ([(re,t)::l],orelse) -> pprintf pc "/%s/ : %p, %p" (Escape.regexp re) pr_utype_simple t pr_seal_extras (l,orelse)
   ]
 and pr_utype_simple pc = fun [
@@ -163,7 +171,6 @@ and pr_base_type pc  = fun [
   ]
 and pr_atomic pc = fun [
     Field _ s t -> pprintf pc "%p: %p;" qstring s print_utype t
-  | FieldRE _ re t -> pprintf pc "/%s/ : %p;" (Escape.regexp re) print_utype t
   | FieldRequired _ l -> pprintf pc "required %p;" (plist_with ", " qstring 0) l
   | ArrayOf _ t -> pprintf pc "of %p;" print_utype t
   | ArrayTuple _ l -> pprintf pc "%p;" (plist_with " * " print_utype 0) l
@@ -172,8 +179,6 @@ and pr_atomic pc = fun [
   | Size _ sc -> pprintf pc "size %p;" print_size_constraint sc
   | StringRE _ re -> pprintf pc "/%s/" (Escape.regexp re)
   | NumberBound _ rc -> pprintf pc "bounds %p;" print_range_constraint rc
-  | Sealed _ -> pprintf pc "sealed;"
-  | OrElse _ t -> pprintf pc "orelse %p;" print_utype t
   | Enum _ l -> pprintf pc "enum %p;" (plist_with "," print_json 0) l
   | Default _ j -> pprintf pc "default %p;" print_json j
   | Format _ s -> pprintf pc "format %p;" qstring s
@@ -184,8 +189,8 @@ and pr_atomic pc = fun [
   ]
 
 and pr_top_binding pc = fun [
-      (_, (None, id), ut) -> pprintf pc "%s = %p;" (ID.to_string id) print_utype ut
-    | (_, (Some mp, id), ut) -> pprintf pc "%p.%s = %p;" print_module_path mp (ID.to_string id) print_utype ut
+      (_, (None, id), anno, ut) -> pprintf pc "%p %s = %p;" pr_annotation anno (ID.to_string id) print_utype ut
+    | (_, (Some mp, id), anno, ut) -> pprintf pc "%p %p.%s = %p;" pr_annotation anno print_module_path mp (ID.to_string id) print_utype ut
     ]
 
 and pr_top_bindings pc l =

@@ -25,11 +25,11 @@ let typecheck = "type_check" >::: [
         assert_equal ~printer:Normal.structure_printer ~cmp:structure_cmp
         ({|
 local module Predefined = struct
-  type nonrec integer = number && [ multipleOf 1.000000; ];
-  type nonrec scalar = boolean || number || string;
-  type nonrec json = null || scalar || array || object;
-  type nonrec positive_number = number && [ bounds (0.,max]; ];
-  end : sig type integer, json, positive_number, scalar; end; in  end;
+  type nonrec [number] integer = number && [ multipleOf 1.000000; ];
+  type nonrec [boolean,number,string] scalar = boolean || number || string;
+  type nonrec [null,boolean,number,string,array,object] json = null || scalar || array || object;
+  type nonrec [number] positive_number = number && [ bounds (0.,max]; ];
+  end : sig type [number] integer, [null,number,boolean,string,array,object] json, [number] positive_number, [boolean,number,string] scalar; end; in  end;
 |} |> structure_of_string_exn )
         ({|
 local import "lib/predefined.utj" as Predefined; in
@@ -40,11 +40,11 @@ end ;
         assert_equal ~printer:Normal.structure_printer ~cmp:structure_cmp
         ({|
 module M = struct
-  type nonrec t = object;
-end : sig type t; end;
-type nonrec t = array;
-open M : sig type t; end;
-type nonrec u = t;
+  type nonrec [object] t = object;
+end : sig type [object] t; end;
+type nonrec [array] t = array;
+open M : sig type [object] t; end;
+type nonrec [object] u = t;
 |} |> structure_of_string_exn )
         ({|
 module M = struct type t = object ; end ;
@@ -57,15 +57,15 @@ type u = t ;
         assert_equal ~printer:Normal.structure_printer ~cmp:structure_cmp
         ({|
 module M = struct
-  type nonrec t = object;
-  type nonrec u = array;
-end : sig type t, u; end : sig type t; end : sig type t; end;
+  type nonrec [object] t = object;
+  type nonrec [array] u = array;
+end : sig type [object] t, [array] u; end : sig type [object] t; end : sig type [object] t; end;
 |} |> structure_of_string_exn )
         ({|
 module M = (struct
   type t = object ;
   type u = array ;
-end : sig type t, u ; end ) : sig type t; end;
+end : sig type [object] t, [array] u ; end ) : sig type [object] t; end;
 |} |> structure_of_string_exn |> S4Typecheck.exec)
       )
   ]
@@ -142,14 +142,14 @@ let s5_elim_include = "step-5-elim_include" >::: [
         assert_equal ~printer:Normal.structure_printer ~cmp:structure_cmp
         ({|
   module LOCAL0 = struct
-    type nonrec t1 = object;
-    type nonrec t2 = object;
-  end : sig type t1, t2; end;
+    type nonrec [object] t1 = object;
+    type nonrec [object] t2 = object;
+  end : sig type [object] t1, [object] t2; end;
   local  in
-    type nonrec t1 = LOCAL0.t1;
-    type nonrec t2 = LOCAL0.t2;
+    type nonrec [object] t1 = LOCAL0.t1;
+    type nonrec [object] t2 = LOCAL0.t2;
    end;
-  type nonrec t3 = t1 && [ "a": t2; ];
+  type nonrec [object] t3 = t1 && [ "a": t2; ];
 |} |> structure_of_string_exn )
         ({|
 local type t1 = object ;
@@ -177,10 +177,10 @@ let s6_elim_empty_local = "step-6-elim_empty_local" >::: [
     "simple" >:: (fun ctxt -> 
         assert_equal ~printer:Normal.structure_printer ~cmp:structure_cmp
         ({|
-module LOCAL0 = struct type nonrec t1 = object; type nonrec t2 = object;
-  end : sig type t1, t2; end;
-  type nonrec t1 = LOCAL0.t1; type nonrec t2 = LOCAL0.t2;
-  type nonrec t3 = t1 && [ "a": t2; ];
+module LOCAL0 = struct type nonrec [object] t1 = object; type nonrec [object] t2 = object;
+  end : sig type [object] t1, [object] t2; end;
+  type nonrec [object] t1 = LOCAL0.t1; type nonrec [object] t2 = LOCAL0.t2;
+  type nonrec [object] t3 = t1 && [ "a": t2; ];
 |} |> structure_of_string_exn )
         ({|
 local type t1 = object ;
@@ -211,11 +211,11 @@ let s7_rename_overridden = "step-7-rename-overridden" >::: [
         assert_equal ~printer:Normal.structure_printer ~cmp:structure_cmp
         ({|
 module M = struct
-  type nonrec t0 = object;
-  type nonrec u0 = t0;
-  type nonrec t = array;
-  type nonrec u = t;
-end : sig type t; type u; end;
+  type nonrec [object] t0 = object;
+  type nonrec [object] u0 = t0;
+  type nonrec [array] t = array;
+  type nonrec [array] u = t;
+end : sig type [array] t; type [array] u; end;
 |} |> structure_of_string_exn )
         ({|
 module M = struct
@@ -248,11 +248,11 @@ let s8_absolute = "step-8-absolute" >::: [
         assert_equal ~printer:Normal.structure_printer ~cmp:structure_cmp
         ({|
 module M = struct
-  type nonrec t0 = object;
-  type nonrec u0 = .M.t0;
-  type nonrec t = array;
-  type nonrec u = .M.t;
-end : sig type t; type u; end;
+  type nonrec [object] t0 = object;
+  type nonrec [object] u0 = .M.t0;
+  type nonrec [array] t = array;
+  type nonrec [array] u = .M.t;
+end : sig type [array] t; type [array] u; end;
 |} |> structure_of_string_exn )
         ({|
 module M = struct
@@ -269,13 +269,13 @@ end ;
         ({|
 module M = struct
   module N = struct
-    type nonrec t = object;
-    type nonrec u = .M.N.t && [ "b": array; ];
-  end : sig type t, u; end;
-  module P = .M.N : sig type t, u; end;
+    type nonrec [object] t = object;
+    type nonrec [object] u = .M.N.t && [ "b": array; ];
+  end : sig type [object] t, [object] u; end;
+  module P = .M.N : sig type [object] t, [object] u; end;
 end : sig
-  module N : sig type t, u; end;
-  module P : sig type t, u; end;
+  module N : sig type [object] t, [object] u; end;
+  module P : sig type [object] t, [object] u; end;
 end;
 |} |> structure_of_string_exn )
         ({|
@@ -293,24 +293,24 @@ end ;
         assert_equal ~printer:Normal.structure_printer ~cmp:structure_cmp
         ({|
 module M = struct
-  module F = functor (M:sig type t; end) -> struct
-    type nonrec t = M.t && [ "a": object; ];
+  module F = functor (M:sig type [object] t; end) -> struct
+    type nonrec [object] t = M.t && [ "a": object; ];
   end;
   module NAMED0 = struct
-    type nonrec t = object;
-  end : sig type t; end;
-  module N = .M.F(.M.NAMED0) : sig type t; end;
-  type nonrec u = .M.N.t;
+    type nonrec [object] t = object;
+  end : sig type [object] t; end;
+  module N = .M.F(.M.NAMED0) : sig type [object] t; end;
+  type nonrec [object] u = .M.N.t;
 end : sig
-  type u;
-  module F : functor (M:sig type t; end) -> sig type t; end;
-  module N : sig type t; end;
-  module NAMED0 : sig type t; end;
+  type [object] u;
+  module F : functor (M:sig type [object] t; end) -> sig type [object] t; end;
+  module N : sig type [object] t; end;
+  module NAMED0 : sig type [object] t; end;
 end;
 |} |> structure_of_string_exn )
         ({|
 module M = struct
-  module F = functor(M : sig type t ; end) -> struct
+  module F = functor(M : sig type [object] t ; end) -> struct
     type t = M.t && [ "a": object ] ;   
   end ;
   module N = F(struct type t = object ; end) ;
@@ -340,15 +340,15 @@ let s9_elim_cast_cast = "step-9-elim-cast-cast" >::: [
         assert_equal ~printer:Normal.structure_printer ~cmp:structure_cmp
         ({|
 module M = struct
-  type nonrec t = object;
-  type nonrec u = array;
-end : sig type t; end;
+  type nonrec [object] t = object;
+  type nonrec [array] u = array;
+end : sig type [object] t; end;
 |} |> structure_of_string_exn )
         ({|
 module M = (struct
   type t = object ;
   type u = array ;
-end : sig type t, u ; end ) : sig type t; end;
+end : sig type [object] t, [array] u ; end ) : sig type [object] t; end;
 |} |> s9_doit)
       )
   ]
@@ -372,30 +372,30 @@ let s10_reduce_functor_app = "step-10-reduce-functor-app" >::: [
     "simple" >:: (fun ctxt -> 
         assert_equal ~printer:Normal.structure_printer ~cmp:structure_cmp
         ({|
-module type Ext1 = sig type extension; end;
-module ExtensibleTree = functor (M:sig type extension; end) -> struct
-  type rec t = object && [
+module type Ext1 = sig type [object] extension; end;
+module ExtensibleTree = functor (M:sig type [object] extension; end) -> struct
+  type rec [object] t = object && [
     "data": object;
     "children": array && [ of t; ];
   ] && M.extension;
 end;
 module NAMED0 = struct
-  type nonrec extension = [ sealed; ];
-end : sig type extension; end;
+  type nonrec [object] extension = [ "a" : number; ];
+end : sig type [object] extension; end;
 module StrictTree = struct
-  type nonrec t = object && [
+  type nonrec [object] t = object && [
     "data": object;
     "children": array && [ of .StrictTree.t; ];
   ] && .NAMED0.extension;
 end;
 |} |> structure_of_string_exn )
         ({|
-module type Ext1 = sig type extension ; end ;
+module type Ext1 = sig type [object] extension ; end ;
 module ExtensibleTree = functor( M : Ext1 ) -> struct
-  type rec t = object && [ "data" : object ; "children" : array && [ of t ] ] && M.extension ;
+  type rec [object] t = object && [ "data" : object ; "children" : array && [ of t ] ] && M.extension ;
 end ;
 
-module StrictTree = ExtensibleTree( struct type extension = [ sealed ]; end ) ;
+module StrictTree = ExtensibleTree( struct type extension = [ "a" : number ]; end ) ;
 |} |> s10_doit)
       )
   ]
@@ -455,18 +455,18 @@ let test_full (a,b) =
 let full_extract_tests = "full-extract" >::: [
     test_full ({|
 module Predefined = struct
-  type nonrec integer = number && [ multipleOf 1.0; ];
-    type nonrec scalar = boolean || number || string;
-    type nonrec json = null || .Predefined.scalar || array || object;
-    type nonrec positive_number = number && [ bounds (0.0,max]; ];
+  type nonrec [number] integer = number && [ multipleOf 1.0; ];
+    type nonrec [boolean,number,string] scalar = boolean || number || string;
+    type nonrec [null,boolean,number,string,array,object] json = null || .Predefined.scalar || array || object;
+    type nonrec [number] positive_number = number && [ bounds (0.0,max]; ];
   end;
   module M0 = struct
-    type nonrec t = object && [
+    type nonrec [object] t = object && [
         "lattitude": number;
         "longitude": number;
 ] && [ required "lattitude",  "longitude"; ];
     end;
-  type nonrec t = object && [
+  type nonrec [object] t = object && [
       "productId": .Predefined.integer;
       "productName": string;
       "price": number && [ bounds (0.0,max]; ];
@@ -495,15 +495,15 @@ let test_final (a,b) =
 
 let final_extract = "final-extract" >::: [
     test_final ({|
-.Predefined.integer = number && [ multipleOf 1.0; ];
-.Predefined.scalar = boolean || number || string;
-.Predefined.json = null || .Predefined.scalar || array || object;
-.Predefined.positive_number = number && [ bounds (0.0,max]; ];
-.M0.t = object && [
+[number] .Predefined.integer = number && [ multipleOf 1.0; ];
+[boolean,number,string] .Predefined.scalar = boolean || number || string;
+[null,boolean,number,string,array,object] .Predefined.json = null || .Predefined.scalar || array || object;
+[number] .Predefined.positive_number = number && [ bounds (0.0,max]; ];
+[object] .M0.t = object && [
     "lattitude": number;
     "longitude": number;
 ] && [ required "lattitude",  "longitude"; ];
-t = object && [
+[object] t = object && [
     "productId": .Predefined.integer;
     "productName": string;
     "price": number && [ bounds (0.0,max]; ];

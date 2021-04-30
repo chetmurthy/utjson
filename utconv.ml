@@ -104,10 +104,6 @@ module ConvContext = CC
 let isString j = match j with
   String _ -> true | _ -> false
 
-let isSealed j = match j with
-  Sealed _ -> true | _ -> false
-
-
 let andList loc l =
   let (last,l) = sep_last l in
   List.fold_right (fun a b -> And(loc,a,b)) l last
@@ -296,7 +292,7 @@ let known_keys = documentation_keys@known_useful_keys
 
   let rec conv_type_l j = match j with
       Assoc (loc, l) when l |> List.for_all (fun (k,_) -> List.mem k documentation_keys) ->
-      ([Ref (loc, (Some(REL (ID.of_string "Predefined")), (ID.of_string "json")))], [])
+      ([Ref (loc, (Some(REL (ID.of_string "Predefined")), (ID.of_string "json")))], ([], []))
     | Assoc (loc, l) ->
       let keys = List.map fst l in
       keys |> List.iter (fun k ->
@@ -570,82 +566,74 @@ let known_keys = documentation_keys@known_useful_keys
        | (None,None,None) -> []
       )
       in
-      let l2 =
+      let l2_additional = ref []
+      and l2_orelse = ref [] in begin
         (match assoc_opt "patternProperties" l with
-         Some (Assoc (loc, l)) ->
-         (List.map (fun (k,v) ->
-              let ut = conv_type0 v in
-              if k <> "" then
-                FieldRE(loc, k,ut)
-              else OrElse (loc, ut)
-            ) l)
-       | Some v -> Fmt.(raise_failwithf (LJ.to_loc v) "conv_type: malformed patternProperties member")
-       | None -> []
-      )@
-      (match assoc_opt "additionalProperties" l with
-         Some (Bool (loc, false)) -> [Sealed loc]
-       | Some (Bool (_, true)) -> []
-       | Some (Assoc (loc, _) as j) -> begin
-           match conv_type_l j with
-             ([], _) -> Fmt.(raise_failwithf loc "additionalProperties yielded no type-constraints")
-           | _ ->
-             [OrElse (loc, conv_type0 j)]
-       end
-       | Some v -> Fmt.(raise_failwithf (LJ.to_loc v) "conv_type: additionalProperties did not have bool or type payload")
-       | None -> []
-      )@
-      (match assoc_opt "additionalItems" l with
-         Some (Bool (loc, false)) -> [Sealed loc]
-       | Some (Bool (_, true)) -> []
-       | Some (Assoc (loc, _) as j) -> begin
-           match conv_type_l j with
-             ([], _) -> Fmt.(raise_failwithf loc "additionalItems yielded no type-constraints")
-           | _ ->
-             [OrElse (loc, conv_type0 j)]
-       end
-       | Some v -> Fmt.(raise_failwithf (LJ.to_loc v) "conv_type: additionalItems did not have bool or type payload")
-       | None -> []
-      )@
-      (match assoc_opt "unevaluatedProperties" l with
-         Some (Bool (loc, false)) -> [Sealed loc]
-       | Some (Assoc (loc, _) as j) -> begin
-           match conv_type_l j with
-             ([], _) -> Fmt.(raise_failwithf loc "unevaluatedProperties yielded no type-constraints")
-           | _ ->
-             [OrElse (loc, conv_type0 j)]
-       end
-       | Some v -> Fmt.(raise_failwithf (LJ.to_loc v) "conv_type: unevaluatedProperties did not have bool or type payload")
-       | None -> []
-      )
-      in
-      (l1,l2)
+           Some (Assoc (loc, l)) ->
+           l |> List.iter (fun (k,v) ->
+               let ut = conv_type0 v in
+               if k <> "" then
+                 Stack.push l2_additional (k,ut)
+               else Stack.push l2_orelse ut
+             )
+         | Some v -> Fmt.(raise_failwithf (LJ.to_loc v) "conv_type: malformed patternProperties member")
+         | None -> ()
+        );
+        (match assoc_opt "additionalProperties" l with
+           Some (Bool (loc, false)) -> Stack.push l2_orelse (UtFalse loc)
+         | Some (Bool (_, true)) -> ()
+         | Some (Assoc (loc, _) as j) -> begin
+             match conv_type_l j with
+               ([], _) -> Fmt.(raise_failwithf loc "additionalProperties yielded no type-constraints")
+             | _ ->
+               Stack.push l2_orelse (conv_type0 j)
+           end
+         | Some v -> Fmt.(raise_failwithf (LJ.to_loc v) "conv_type: additionalProperties did not have bool or type payload")
+         | None -> ()
+        ) ;
+        (match assoc_opt "additionalItems" l with
+           Some (Bool (loc, false)) -> Stack.push l2_orelse (UtFalse loc)
+         | Some (Bool (_, true)) -> ()
+         | Some (Assoc (loc, _) as j) -> begin
+             match conv_type_l j with
+               ([], _) -> Fmt.(raise_failwithf loc "additionalItems yielded no type-constraints")
+             | _ ->
+               Stack.push l2_orelse (conv_type0 j)
+           end
+         | Some v -> Fmt.(raise_failwithf (LJ.to_loc v) "conv_type: additionalItems did not have bool or type payload")
+         | None -> ()
+        ) ;
+        (match assoc_opt "unevaluatedProperties" l with
+           Some (Bool (loc, false)) -> Stack.push l2_orelse (UtFalse loc)
+         | Some (Assoc (loc, _) as j) -> begin
+             match conv_type_l j with
+               ([], _) -> Fmt.(raise_failwithf loc "unevaluatedProperties yielded no type-constraints")
+             | _ ->
+               Stack.push l2_orelse (conv_type0 j)
+           end
+         | Some v -> Fmt.(raise_failwithf (LJ.to_loc v) "conv_type: unevaluatedProperties did not have bool or type payload")
+         | None -> ()
+        ) ;
+        (l1,(!l2_additional, !l2_orelse))
+      end
 
     | j -> Fmt.(raise_failwithf (LJ.to_loc j) "conv_type: expected an object")
 
-  and wrap_seal j ut l2 =
+  and wrap_seal j ut (patterns, orelses) =
     let loc = LJ.to_loc j in
-    let patterns = l2 |> List.filter_map (function
-          FieldRE(_, re,ut) -> Some(re, ut)
-        | _ -> None
-      ) in
-    let orelse = match l2 |> List.filter_map (function
-          OrElse (_, ut) -> Some ut
-        | _ -> None
-      ) with
-      [] -> None
-    | [ut] -> Some ut
-    | _ -> Fmt.(raise_failwithf loc "conv_type: type had more than one Orelse") in
-    let hasSealed = List.exists isSealed l2 in
-    let addSealed =
-      patterns <> [] || orelse <> None || hasSealed in
+    let has_orelse, orelse = match orelses with
+        [] -> false, UtFalse loc
+      | [ut] -> true, ut
+      | _ -> Fmt.(raise_failwithf loc "conv_type: type had more than one Orelse") in
+    let addSealed = patterns <> [] || has_orelse in
       if addSealed then
-        Seal(loc, ut, patterns, orelse)
+        Seal(loc, ut, List.stable_sort Stdlib.compare patterns, orelse)
       else ut
 
   and conv_type0 ?(allow_empty=false) t =
     let loc = LJ.to_loc t in
     match conv_type_l t with
-      ([],[]) ->
+      ([],([],[])) ->
       if allow_empty then begin
         Fmt.(pf stderr "%s:WARNING: conv_type: conversion produced no result"
                (Ploc.string_of_location loc)
@@ -655,12 +643,12 @@ let known_keys = documentation_keys@known_useful_keys
       else
         Fmt.(raise_failwithf loc "conv_type: conversion produced no result")
     | ([],l2) ->
-      Fmt.(pf stderr "%s:WARNING: conv_type: conversion produced no type, but FieldRE/Orelse"
+      Fmt.(pf stderr "%s:WARNING: conv_type: conversion produced no type, but sealing directives"
              (Ploc.string_of_location loc)
           ) ;
       wrap_seal t (UtFalse loc) l2
 
-    | (l,[]) -> andList loc l
+    | (l,([], [])) -> andList loc l
     | (l1,l2) ->
       let ut = andList loc l1 in
       wrap_seal t ut l2
@@ -678,7 +666,8 @@ let known_keys = documentation_keys@known_useful_keys
         let def = conv_type def in
         let tname = typename_of_path path in
         let isSealed = match def with Seal _ -> true | _ -> false in
-        drec ((tname, isSealed, def)::acc)
+        let anno = if isSealed then Some(AN.mk isSealed) else None in
+        drec ((tname, anno, def)::acc)
     in
     drec []
 
@@ -726,7 +715,8 @@ let conv_schema cc t =
       ]
     else l in
   let isSealed = match t with Seal _ -> true | _ -> false in
-  l@[StTypes(loc, false, [(ID.of_string "t", isSealed, t)])]
+  let anno = if isSealed then Some (AN.mk isSealed) else None in
+  l@[StTypes(loc, false, [(ID.of_string "t", anno, t)])]
 
 let convert_file ?(with_predefined=false) cc s =
   let open Fpath in

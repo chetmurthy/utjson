@@ -19,7 +19,7 @@ end
 module RECache = REC
 
 let lookup_tid loc tdl (mpopt, id as tid) =
-  begin match tdl |> List.find_map (fun (_, tid', ut) -> if tid=tid' then Some ut else None) with
+  begin match tdl |> List.find_map (fun (_, tid', _, ut) -> if tid=tid' then Some ut else None) with
       Some t -> t
     | None ->
       let ut = Ref (loc, (mpopt, id)) in
@@ -243,7 +243,7 @@ and utype path (j : Yojson.Basic.t) (ctxt : Ctxt.t) t = match t with
         match (utype path j (Ctxt.start_assoc2 ()) ut, patterns, orelse) with
           (Error l, _, _) -> Error l
         | (Ok (Ctxt.Assoc2 { validated_keys }),
-           [], None)  ->
+           [], UtTrue _)  ->
           Ok ctxt
 
         | (Ok (Ctxt.Assoc2 a), patterns, orelse) ->
@@ -308,15 +308,12 @@ and utype path (j : Yojson.Basic.t) (ctxt : Ctxt.t) t = match t with
   and finish_array2 loc path l ctxt = function
       ({ tuple = None }, _) -> Ok ctxt
     | ({ tuple = Some n }, _) when n = List.length l -> Ok ctxt
-    | ({ tuple = Some n }, Some ut) ->
+    | ({ tuple = Some n }, ut) ->
       let l = nthtail l n in
       l |> List.mapi (fun i x -> (i+n, x))
       |> lifted_forall (fun (i,j) ->
           enter_utype loc ((string_of_int i)::path) j ut)
       |> (function Ok () -> Ok ctxt | Error l -> Error l)
-
-    | ({ tuple = Some n }, None) ->
-      Error [path, UtFalse loc]
 
   and finish_assoc loc path l = function
       { validated_keys ; sealed ; patterns ; orelse } ->
@@ -339,10 +336,7 @@ and utype path (j : Yojson.Basic.t) (ctxt : Ctxt.t) t = match t with
           else match patterns |> List.find_map (fun (restr, ut) ->
               if Pcre.pmatch ~rex:(REC.get restr) k then Some ut else None) with
             Some ut -> enter_utype loc (k::path) j ut
-          | None ->
-            match orelse with
-              None -> Error [path, UtFalse loc]
-            | Some ut -> enter_utype loc (k::path) j ut
+          | None -> enter_utype loc (k::path) j orelse
         )
       |> (function Ok () -> Ok ctxt | Error l -> Error l)
 
@@ -364,18 +358,6 @@ and utype path (j : Yojson.Basic.t) (ctxt : Ctxt.t) t = match t with
       if fl |> List.for_all (fun fname -> List.mem_assoc fname l) then
         Ok ctxt
       else Error[path,Atomic(loc, [t])]
-
-    | (`Assoc _, FieldRE(_, re, ut)) ->
-      Ctxt.add_pattern ctxt (re, ut)
-
-    | (`Assoc _, Sealed _) ->
-      Ctxt.set_sealed ctxt
-
-    | (`List _, Sealed _) ->
-      Ctxt.set_sealed ctxt
-
-    | (`Assoc _, OrElse (_, ut)) -> Ctxt.set_orelse ctxt ut
-    | (`List _, OrElse (_, ut)) -> Ctxt.set_orelse ctxt ut
 
     | (`Assoc l, PropertyNames (loc, ut)) ->
       begin match l |> lifted_forall (fun (k,_) -> enter_utype loc (k::path) (`String k) ut) with
