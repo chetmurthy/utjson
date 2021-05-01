@@ -21,7 +21,7 @@ let convert1 cc ~with_predefined ~verbose ~typecheck infile outfile =
   output_string oc "\n" ;
   if outfile <> "-" then close_out oc
 
-let convert_to_utj with_predefined verbose typecheck filepath destdir outputfile files =
+let convert_to_utj0 with_predefined verbose typecheck filepath destdir outputfile files =
   let filepath = List.concat filepath in
   let cc = CC.mk ~verbose ~filepath () in
   match (destdir, files, outputfile) with
@@ -45,6 +45,9 @@ let convert_to_utj with_predefined verbose typecheck filepath destdir outputfile
                 destdir
                 outputfile
                 (String.concat ", " files))
+
+let convert_to_utj with_predefined verbose typecheck filepath destdir outputfile files =
+  convert_to_utj0 with_predefined verbose typecheck filepath destdir outputfile files
 
 (* Command line interface *)
 
@@ -224,6 +227,8 @@ let cmd =
   Term.info "help" ~version:"v0.1" ~doc ~exits:Term.default_exits ~man
 end
 ;;
+
+Pa_ppx_base.Pp_MLast.Ploc.pp_loc_verbose := true ;;
 
 if not !Sys.interactive then
   Term.(exit @@ eval_choice

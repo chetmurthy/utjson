@@ -69,6 +69,9 @@ value g = Grammar.gcreate lexer;
 value (json : Grammar.Entry.e LJ.t) = Grammar.Entry.create g "json";
 value (json_eoi : Grammar.Entry.e LJ.t) = Grammar.Entry.create g "json_eoi";
 
+value (annotation : Grammar.Entry.e AN.t) = Grammar.Entry.create g "annotation";
+value (annotation_eoi : Grammar.Entry.e AN.t) = Grammar.Entry.create g "annotation_eoi";
+
 value (utype : Grammar.Entry.e utype_t) = Grammar.Entry.create g "utype";
 value (utype_eoi : Grammar.Entry.e utype_t) = Grammar.Entry.create g "utype_eoi";
 
@@ -102,6 +105,7 @@ value (top_bindings_eoi : Grammar.Entry.e (list top_binding_t)) = Grammar.Entry.
 EXTEND
   GLOBAL:
     json json_eoi
+    annotation annotation_eoi
     utype utype_eoi
     structure structure_eoi
     struct_item struct_item_eoi
@@ -202,9 +206,9 @@ EXTEND
     ]
     ;
     seal_extras: [ [
-        r = REGEXP ; ":" ; t = utype -> ([(r,t)],UtFalse loc)
-      | t = utype -> ([],t)
-      | r = REGEXP ; ":" ; t = utype; "," ; (l,orelse) = seal_extras -> ([(r,t)::l],orelse)
+        r = REGEXP ; ":" ; t = utype LEVEL "simple"  -> ([(r,t)],UtFalse loc)
+      | t = utype LEVEL "simple" -> ([],t)
+      | r = REGEXP ; ":" ; t = utype LEVEL "simple" ; "," ; (l,orelse) = seal_extras -> ([(r,t)::l],orelse)
 
       ] ]
     ;
@@ -347,6 +351,7 @@ EXTEND
 
 
   json_eoi : [ [ e = json ; EOI -> e ] ] ;
+  annotation_eoi : [ [ e = annotation ; EOI -> e ] ] ;
   utype_eoi : [ [ e = utype ; EOI -> e ] ] ;
   structure_eoi : [ [ e = structure ; EOI -> e ] ] ;
   struct_item_eoi : [ [ e = struct_item ; EOI -> e ] ] ;
@@ -361,6 +366,9 @@ END;
 
 value parse_json = Grammar.Entry.parse json ;
 value parse_json_eoi = Grammar.Entry.parse json_eoi ;
+
+value parse_annotation = Grammar.Entry.parse annotation ;
+value parse_annotation_eoi = Grammar.Entry.parse annotation_eoi ;
 
 value parse_utype = Grammar.Entry.parse utype ;
 value parse_utype_eoi = Grammar.Entry.parse utype_eoi ;

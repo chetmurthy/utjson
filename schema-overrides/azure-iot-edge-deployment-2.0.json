@@ -211,7 +211,7 @@
                     "additionalProperties": false
                 },
                 "$edgeHub": {
-		    "$id": "#edgeHub",
+		    "$id": "#the:edgeHub",
                     "type": "object",
                     "title": "Configuration for the edgeHub module",
                     "required": [
@@ -317,7 +317,8 @@
     "additionalProperties": false,
     "definitions": {
 	"$edgeHub": {
-	    "$ref": "#edgeHub"
+	    "utj:annotation": "[sealed]",
+	    "$ref": "#the:edgeHub"
 	},
         "moduleType": {
             "enum": [

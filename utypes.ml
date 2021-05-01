@@ -48,6 +48,8 @@ let to_string {prefix=s; index=n} =
   if -1 = n then s
   else Printf.(sprintf "%s%d" s n)
 
+let pp_hum pps x = Fmt.(pf pps "%s" (to_string x))
+
 let fresh l {prefix=s;index=n} =
   let nums = l |> List.filter_map (fun {prefix=s';index=m} ->
       if s=s' then Some m else None) in
@@ -59,6 +61,7 @@ end
 
 type base_type_t = [%import: Utypes.base_type_t]
 [@@deriving show { with_path = false },eq]
+let all_base_types = [JNull; JString; JBool; JNumber; JArray; JObject]
 
 module Bound = struct
   type 'a t = [%import: 'a Utypes.Bound.t]
@@ -79,12 +82,16 @@ type t = [%import: Utypes.AN.t]
 [@@deriving show { with_path = false },eq]
 type t_option = [%import: Utypes.AN.t_option]
 [@@deriving show { with_path = false }, eq]
+
 let mk ?(base_types=[]) sealed =
   if sealed then begin
     assert (base_types = []) ;
     SEALED
   end
-  else UNSEALED (canon base_types)
+  else begin
+    assert (base_types <> []) ;
+    UNSEALED (canon base_types)
+  end
 
 let sealed = function SEALED -> true | _ -> false
 end

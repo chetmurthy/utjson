@@ -168,7 +168,10 @@ let conjoin loc a1 a2 =
   match (a1, a2) with
     SEALED, SEALED -> SEALED
   | UNSEALED l1, UNSEALED l2 ->
-    UNSEALED (canon (intersect l1 l2))
+    let l = canon (intersect l1 l2) in
+    if l = [] then Fmt.(raise_failwithf loc "AnnotationOps.conjoin: cannot conjoin (&&) %a, %a: empty unsealed result"
+           pp a1 pp a2) ;
+    AN.mk ~base_types:l false
   | _ ->
     Fmt.(raise_failwithf loc "AnnotationOps.conjoin: cannot conjoin (&&) %a, %a"
            pp a1 pp a2)
@@ -181,7 +184,11 @@ let conjoin loc a1 a2 =
 
     (2) they are both unsealed
 
-    result unions their base_types
+    result intersects their base_types (and it MUST be nonempty)
+
+    (3) one is sealed, and the other is unsealable
+
+    result is sealed
 
 *)
 
@@ -189,7 +196,9 @@ let disjoin loc a1 a2 =
   match (a1, a2) with
     SEALED, SEALED -> SEALED
   | UNSEALED l1, UNSEALED l2 ->
-    UNSEALED (canon (l1@l2))
+    AN.mk ~base_types:(canon (l1@l2)) false
+  | SEALED, _ when unsealable a2 -> SEALED
+  | _, SEALED when unsealable a1 -> SEALED
   | _ ->
     Fmt.(raise_failwithf loc "AnnotationOps.disjion: cannot disjoin (||) %a, %a"
            pp a1 pp a2)
@@ -198,13 +207,17 @@ let disjoin loc a1 a2 =
 
     either or both types is sealed or unsealable
 
-    result is sealed
+    if either type is sealed, then result is sealed
+    otherwise, union the base_types.
 
 *)
 
 let xor loc a1 a2 =
+  let open AN in
   if sealed_or_unsealable a1 && sealed_or_unsealable a2 then
-    SEALED
+    match (a1, a2) with
+      (SEALED, _) | (_, SEALED) -> SEALED
+    | (UNSEALED l1, UNSEALED l2) -> AN.mk ~base_types:(canon (l1@l2)) false
   else
     Fmt.(raise_failwithf loc "AnnotationOps.xor: cannot xor %a, %a"
            pp a1 pp a2)
@@ -236,7 +249,7 @@ let neg loc a1 =
   if sealed_or_unsealable a1 then
     SEALED
   else
-    Fmt.(raise_failwithf loc "AnnotationOps.net: cannot negate %a"
+    Fmt.(raise_failwithf loc "AnnotationOps.neg: cannot negate %a"
            pp a1)
 
 end
@@ -317,8 +330,8 @@ let rec tc_utype env ut = match ut with
       | _ -> Fmt.(raise_failwithf loc "tc_utype: module-path %a did not yield a signature" pp_module_path_t mpath)
     end
     
-  | UtTrue _ -> (ut, AN.mk false)
-  | UtFalse _ -> (ut, AN.mk false)
+  | UtTrue _ -> (ut, AN.mk ~base_types:all_base_types false)
+  | UtFalse _ -> (ut, AN.mk ~base_types:all_base_types false)
   | Simple (loc, bt) -> let (bt, anno) = tc_base_type env bt in (Simple (loc, bt), anno)
   | And(loc, ut1, ut2) ->
     let (ut1, anno1) = tc_utype env ut1 in
@@ -346,7 +359,7 @@ let rec tc_utype env ut = match ut with
         
   | Atomic (loc, l) ->
     assert (l <> []) ;
-    let tcl = List.map (tc_atomic_type env) l in
+    let tcl = l |> List.rev_map (tc_atomic_type env) |> List.rev in
     let l = List.map fst tcl in
     let annol = List.map snd tcl in
     let anno = List.fold_left (ANO.conjoin loc) (List.hd annol) (List.tl annol) in
@@ -397,8 +410,10 @@ and tc_struct_item env = function
     let subenv = if recflag then
         l |> List.fold_left (fun env -> function
               (tid, Some anno, _) -> TEnv.push_type env (tid, anno)
-            | (_, None, _) ->
-              Fmt.(raise_failwithf loc "tc_struct_item: recursive types MUST be annotated")
+            | (tid, None, _) ->
+              Fmt.(raise_failwithf loc "tc_struct_item: recursive types (%a) MUST be annotated"
+                     ID.pp_hum tid
+                  )
           )
           env
     else env in

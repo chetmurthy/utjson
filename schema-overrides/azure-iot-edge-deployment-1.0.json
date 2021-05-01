@@ -187,7 +187,7 @@
                     }
                 },
                 "$edgeHub": {
-		    "$id": "#edgeHub",
+		    "$id": "#the:edgeHub",
                     "type": "object",
                     "title": "Configuration for the edgeHub module",
                     "required": [
@@ -259,7 +259,8 @@
 	    "$ref": "#runtime"
 	},
 	"$edgeHub": {
-	    "$ref": "#edgeHub"
+	    "utj:annotation": "[object]",
+	    "$ref": "#the:edgeHub"
 	},
         "moduleType": {
             "enum": [

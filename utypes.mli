@@ -4,6 +4,7 @@ type t = {prefix: string;  index: int}
 
 val of_string : string -> t
 val to_string : t -> string
+val pp_hum : t Fmt.t
 val fresh : t list -> t -> t
 val sort_uniq_list : t list -> t list
 end
@@ -29,6 +30,7 @@ end
 type base_type_t =
   JNull | JString | JBool | JNumber | JArray | JObject
 [@@deriving show { with_path = false },eq]
+val all_base_types : base_type_t list
 
 module Bound : sig
   type 'a t = { it : 'a ; exclusive : bool }

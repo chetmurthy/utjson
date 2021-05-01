@@ -25,7 +25,7 @@ README.html: README.rst
 
 test0:: all
 	rm -rf _build && mkdir -p _build
-	./syntax_test
+#	./syntax_test
 	./typing_test
 	./extract_test
 	./simplify_test

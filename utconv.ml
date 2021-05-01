@@ -1,6 +1,7 @@
 open Pa_ppx_utils.Std
 
 open Ututil
+open Utmigrate.Self
 open Utypes
 open Utypes.LJ
 open Utparse0
@@ -287,6 +288,7 @@ let known_garbage_keys = [
   ; "x-kubernetes-preserve-unknown-fields"
   ; "x-kubernetes-unions"
   ; "fileMatch"
+  ; "utj:annotation"
   ]
 let known_keys = documentation_keys@known_useful_keys
 
@@ -581,7 +583,7 @@ let known_keys = documentation_keys@known_useful_keys
         );
         (match assoc_opt "additionalProperties" l with
            Some (Bool (loc, false)) -> Stack.push l2_orelse (UtFalse loc)
-         | Some (Bool (_, true)) -> ()
+         | Some (Bool (_, true)) -> Stack.push l2_orelse (UtTrue loc)
          | Some (Assoc (loc, _) as j) -> begin
              match conv_type_l j with
                ([], _) -> Fmt.(raise_failwithf loc "additionalProperties yielded no type-constraints")
@@ -593,7 +595,7 @@ let known_keys = documentation_keys@known_useful_keys
         ) ;
         (match assoc_opt "additionalItems" l with
            Some (Bool (loc, false)) -> Stack.push l2_orelse (UtFalse loc)
-         | Some (Bool (_, true)) -> ()
+         | Some (Bool (_, true)) -> Stack.push l2_orelse (UtTrue loc)
          | Some (Assoc (loc, _) as j) -> begin
              match conv_type_l j with
                ([], _) -> Fmt.(raise_failwithf loc "additionalItems yielded no type-constraints")
@@ -605,6 +607,7 @@ let known_keys = documentation_keys@known_useful_keys
         ) ;
         (match assoc_opt "unevaluatedProperties" l with
            Some (Bool (loc, false)) -> Stack.push l2_orelse (UtFalse loc)
+         | Some (Bool (loc, true)) -> Stack.push l2_orelse (UtTrue loc)
          | Some (Assoc (loc, _) as j) -> begin
              match conv_type_l j with
                ([], _) -> Fmt.(raise_failwithf loc "unevaluatedProperties yielded no type-constraints")
@@ -635,7 +638,7 @@ let known_keys = documentation_keys@known_useful_keys
     match conv_type_l t with
       ([],([],[])) ->
       if allow_empty then begin
-        Fmt.(pf stderr "%s:WARNING: conv_type: conversion produced no result"
+        Fmt.(pf stderr "%s:WARNING: conv_type: conversion produced no result\n%!"
                (Ploc.string_of_location loc)
             ) ;
         UtTrue loc
@@ -643,7 +646,7 @@ let known_keys = documentation_keys@known_useful_keys
       else
         Fmt.(raise_failwithf loc "conv_type: conversion produced no result")
     | ([],l2) ->
-      Fmt.(pf stderr "%s:WARNING: conv_type: conversion produced no type, but sealing directives"
+      Fmt.(pf stderr "%s:WARNING: conv_type: conversion produced no type, but sealing directives\n%!"
              (Ploc.string_of_location loc)
           ) ;
       wrap_seal t (UtFalse loc) l2
@@ -656,6 +659,22 @@ let known_keys = documentation_keys@known_useful_keys
   let conv_type j = conv_type0 j
   let top_conv_type t = conv_type0 ~allow_empty:true t
 
+  let conv1_definition (path, j) =
+    let def = conv_type j in
+    let tname = typename_of_path path in
+    let isSealed = match def with Seal _ -> true | _ -> false in
+    let anno = if isSealed then Some(AN.mk isSealed) else
+        match j with
+          Assoc (loc, l) -> begin match assoc_opt "utj:annotation" l with
+            None -> None
+          | Some (String(_, annostr)) ->
+            Some (parse_string parse_annotation_eoi annostr)
+          | Some _ -> Fmt.(raise_failwithf loc "conv1_definition: utj:annotation's payload must be a string")
+        end
+        | _ -> None
+    in
+    (tname, anno, def)
+
   let conv_definitions () =
     let rec drec acc =
       if Stack.empty definitions_worklist then
@@ -663,13 +682,63 @@ let known_keys = documentation_keys@known_useful_keys
       else
         let (path, def) = Stack.top definitions_worklist in
         Stack.pop definitions_worklist ;
-        let def = conv_type def in
-        let tname = typename_of_path path in
-        let isSealed = match def with Seal _ -> true | _ -> false in
-        let anno = if isSealed then Some(AN.mk isSealed) else None in
+        let (tname, anno, def) = conv1_definition (path, def) in
         drec ((tname, anno, def)::acc)
     in
     drec []
+
+    let mentions ut =
+      let acc = ref [] in
+      let dt = make_dt() in
+      let old_migrate_utype_t = dt.migrate_utype_t in
+      let new_migrate_utype_t __dt__ ut = match ut with
+          Ref(_, (None, tid)) -> Stack.push acc tid ; ut
+        | _ -> old_migrate_utype_t __dt__ ut in
+      let dt = { dt with migrate_utype_t = new_migrate_utype_t } in
+      ignore (dt.migrate_utype_t dt ut) ;
+      canon !acc
+
+    let is_recursive_group adj g =
+      let open Pa_ppx_utils.Tsort0 in
+      g |> List.exists (fun tid ->
+          let mentioned = adj_lookup adj tid in
+          [] <> intersect g mentioned)
+
+    open Pa_ppx_utils.Tsort0
+    let make_adj (l : (ID.t * ID.t) list) = mkadj l
+    let sort_groups nodes adj = tsort (nodes : ID.t list) (adj : ID.t hash_adj_t)
+
+    let regroup_definitions l =
+      let names = l |> List.map (fun (tname, _, _) -> tname) in
+      let mentions_to_defs = l |> List.concat_map (fun (tname, _, ut) ->
+          ut |> mentions |> List.map (fun id -> (tname, id))
+        ) in
+      let _top = ID.of_string "DEFINITIONS" in
+      let extra_mentions = names |> List.map (fun id -> (id, _top)) in
+      (* every [id] mentioned in a utype is defined in this list *)
+      assert(mentions_to_defs |> List.for_all (fun (_, id) -> List.mem id names)) ;
+      let open Pa_ppx_utils.Tsort0 in
+      let mentions_to_defs_adj = make_adj (mentions_to_defs@extra_mentions) in
+      let sorted = sort_groups (_top::names) mentions_to_defs_adj in
+      let sorted = except [_top] sorted in
+      sorted |> List.iter (fun g ->
+          Fmt.(pf stderr "group: %a\n%!" (list ~sep:(const string " ") ID.pp_hum) g)
+        ) ;
+      sorted |> List.map (fun g ->
+          (is_recursive_group mentions_to_defs_adj g, g)
+        )
+
+    let definitions_to_stl loc =
+      let l = conv_definitions () in
+      if l = [] then [] else
+      let groups = regroup_definitions l in
+      let name_to_definition = l |> List.map (fun (tname, _, _ as d) -> (tname, d)) in
+      let group_to_definitions (g : ID.t list) =
+        g |> List.map (fun tid -> List.assoc tid name_to_definition) in
+      groups |> List.map (fun (recflag, g) ->
+            let defs = group_to_definitions g in
+            StTypes(loc, recflag, defs)
+        )
 
 let recognize_definition t = match t with
   Assoc (_, l) ->
@@ -705,12 +774,11 @@ let conv_schema cc t =
   reset cc t ;
   recognize_definitions cc t ;
   let t = top_conv_type t in
-  let defs = conv_definitions() in
-  let defs = List.stable_sort Stdlib.compare defs in
+  let defs_stl = definitions_to_stl loc in
   let l = List.map (fun (id, mid) -> StImport(loc, id, mid)) !imports in
-  let l = if defs <> [] then
+  let l = if defs_stl <> [] then
       l@[
-        StModuleBinding(loc, ID.of_string "DEFINITIONS", MeStruct (loc, [StTypes(loc, true, defs)]))
+        StModuleBinding(loc, ID.of_string "DEFINITIONS", MeStruct (loc, defs_stl))
       ; StOpen(loc, REL (ID.of_string "DEFINITIONS"), None)
       ]
     else l in
