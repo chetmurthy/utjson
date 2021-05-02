@@ -26,7 +26,11 @@ and atomic_utype_t = [%import: Utypes.atomic_utype_t]
 and utype_t = [%import: Utypes.utype_t
   [@with ID.t := id_t]
 ]
-and annotation_t = [%import: Utypes.AN.t]
+and annotation_t = [%import: Utypes.AN.t
+  [@with Utypes.AN.kind := kind]
+]
+and annotation_opt = annotation_t option
+and kind = [%import: Utypes.AN.kind]
 and struct_item_t = [%import: Utypes.struct_item_t
   [@with ID.t := id_t]
   [@with AN.t := annotation_t]
@@ -71,7 +75,6 @@ and top_bindings = [%import: Utypes.top_bindings]
           ; range_constraint_t
           ; atomic_utype_t
           ; utype_t
-          ; annotation_t
           ; struct_item_t
           ; module_path_t
           ; structure
@@ -107,6 +110,19 @@ and top_bindings = [%import: Utypes.top_bindings]
           srctype = [%typ: loc]
         ; dsttype = [%typ: Utypes.loc]
         ; code = fun __dt__ x -> x
+        }
+      ; migrate_kind = {
+          srctype = [%typ: kind]
+        ; dsttype = [%typ: Utypes.AN.kind]
+        ; code = fun __dt__ x -> x
+        }
+      ; migrate_annotation = {
+          srctype = [%typ: annotation_t]
+        ; dsttype = [%typ: Utypes.AN.t]
+        }
+      ; migrate_annotation_opt = {
+          srctype = [%typ: annotation_opt]
+        ; dsttype = [%typ: Utypes.AN.t option]
         }
       }
     }]

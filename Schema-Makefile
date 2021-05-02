@@ -33,7 +33,6 @@ TARGETS=utj-generated/http-schema-cache/kubernetesjsonschema.dev/master/_definit
 	utj-generated/sarif-2.1.0-rtm.0.utj \
 	utj-generated/http-schema-cache/json.schemastore.org/sarif-2.1.0-rtm.0.utj \
 	utj-generated/sarif-schema-2.1.0.utj \
-	utj-generated/http-schema-cache/docs.renovatebot.com/renovate-schema.utj \
 
 all: $(TARGETS)
 UTJFLAGS=-p -t --utj-path utj-generated
@@ -50,7 +49,7 @@ utj-generated/http-schema-cache/json.schemastore.org/azure-iot-edge-deployment-2
 utj-generated/http-schema-cache/json.schemastore.org/azure-iot-edge-deployment-1.0.utj: schema-overrides/azure-iot-edge-deployment-1.0.json
 	./utjtool convert $(UTJFLAGS) -o $@ $<
 
-utj-generated/schema-overrides/ansible-role-2.9.utj: schema-overrides/ansible-role-2.9.json
+utj-generated/schema-overrides/ansible-role-2.9.utj: schema-overrides/FIXED-schema/ansible-role-2.9.json
 	./utjtool convert $(UTJFLAGS) -o $@ $<
 
 utj-generated/http-schema-cache/json.schemastore.org/web-manifest.utj: schemastore/src/schemas/json/web-manifest.json
@@ -77,22 +76,22 @@ utj-generated/http-schema-cache/www.iptc.org/std/ninjs/ninjs-schema_1.1.utj: sch
 utj-generated/http-schema-cache/www.iptc.org/std/ninjs/ninjs-schema_1.0.utj: schema-overrides/ninjs-schema_1.0.json
 	./utjtool convert $(UTJFLAGS) -o $@ $<
 
-utj-generated/lsdlschema-3.1.utj: schemastore/src/schemas/json/lsdlschema-3.1.json
+utj-generated/lsdlschema-3.1.utj: schema-overrides/FIXED-schema/lsdlschema-3.1.json
 	./utjtool convert $(UTJFLAGS) -o $@ $<
 
-utj-generated/lsdlschema-3.0.utj: schemastore/src/schemas/json/lsdlschema-3.0.json
+utj-generated/lsdlschema-3.0.utj: schema-overrides/FIXED-schema/lsdlschema-3.0.json
 	./utjtool convert $(UTJFLAGS) -o $@ $<
 
-utj-generated/lsdlschema-2.0.utj: schemastore/src/schemas/json/lsdlschema-2.0.json
+utj-generated/lsdlschema-2.0.utj: schema-overrides/FIXED-schema/lsdlschema-2.0.json
 	./utjtool convert $(UTJFLAGS) -o $@ $<
 
-utj-generated/lsdlschema-1.2.utj: schemastore/src/schemas/json/lsdlschema-1.2.json
+utj-generated/lsdlschema-1.2.utj: schema-overrides/FIXED-schema/lsdlschema-1.2.json
 	./utjtool convert $(UTJFLAGS) -o $@ $<
 
-utj-generated/lsdlschema-1.0.utj: schemastore/src/schemas/json/lsdlschema-1.0.json
+utj-generated/lsdlschema-1.0.utj: schema-overrides/FIXED-schema/lsdlschema-1.0.json
 	./utjtool convert $(UTJFLAGS) -o $@ $<
 
-utj-generated/lsdlschema-0.7.utj: schemastore/src/schemas/json/lsdlschema-0.7.json
+utj-generated/lsdlschema-0.7.utj: schema-overrides/FIXED-schema/lsdlschema-0.7.json
 	./utjtool convert $(UTJFLAGS) -o $@ $<
 
 utj-generated/http-schema-cache/json.schemastore.org/jsbeautifyrc.utj: schemastore/src/schemas/json/jsbeautifyrc.json
@@ -110,39 +109,35 @@ utj-generated/http-schema-cache/json.schemastore.org/feed-1.utj: schema-override
 utj-generated/http-schema-cache/json-schema.org/draft-04/schema.utj: schema-overrides/schema-draft-v4.json
 	./utjtool convert $(UTJFLAGS) -o $@ $<
 
-utj-generated/http-schema-cache/json.schemastore.org/jsonld.utj: schemastore/src/schemas/json/jsonld.json
+utj-generated/http-schema-cache/json.schemastore.org/jsonld.utj: schema-overrides/FIXED-schema/jsonld.json
 	./utjtool convert $(UTJFLAGS) -o $@ $<
 
 utj-generated/http-schema-cache/json.schemastore.org/schema-org-thing.utj: schemastore/src/schemas/json/schema-org-thing.json
 	./utjtool convert $(UTJFLAGS) -o $@ $<
 
-utj-generated/sarif-2.1.0-rtm.5.utj: schemastore/src/schemas/json/sarif-2.1.0-rtm.5.json
+utj-generated/sarif-2.1.0-rtm.5.utj: schema-overrides/FIXED-schema/sarif-2.1.0-rtm.5.json
 	./utjtool convert $(UTJFLAGS) -o $@ $<
 
-utj-generated/sarif-2.1.0-rtm.4.utj: schemastore/src/schemas/json/sarif-2.1.0-rtm.4.json
+utj-generated/sarif-2.1.0-rtm.4.utj: schema-overrides/FIXED-schema/sarif-2.1.0-rtm.4.json
 	./utjtool convert $(UTJFLAGS) -o $@ $<
 
-utj-generated/sarif-2.1.0-rtm.3.utj: schemastore/src/schemas/json/sarif-2.1.0-rtm.3.json
+utj-generated/sarif-2.1.0-rtm.3.utj: schema-overrides/FIXED-schema/sarif-2.1.0-rtm.3.json
 	./utjtool convert $(UTJFLAGS) -o $@ $<
 
-utj-generated/sarif-2.1.0-rtm.2.utj: schemastore/src/schemas/json/sarif-2.1.0-rtm.2.json
+utj-generated/sarif-2.1.0-rtm.2.utj: schema-overrides/FIXED-schema/sarif-2.1.0-rtm.2.json
 	./utjtool convert $(UTJFLAGS) -o $@ $<
 
-utj-generated/sarif-2.1.0-rtm.1.utj: schemastore/src/schemas/json/sarif-2.1.0-rtm.1.json
+utj-generated/sarif-2.1.0-rtm.1.utj: schema-overrides/FIXED-schema/sarif-2.1.0-rtm.1.json
 	./utjtool convert $(UTJFLAGS) -o $@ $<
 
-utj-generated/sarif-2.1.0-rtm.0.utj: schemastore/src/schemas/json/sarif-2.1.0-rtm.0.json
+utj-generated/sarif-2.1.0-rtm.0.utj: schema-overrides/FIXED-schema/sarif-2.1.0-rtm.0.json
 	./utjtool convert $(UTJFLAGS) -o $@ $<
 
-utj-generated/http-schema-cache/json.schemastore.org/sarif-2.1.0-rtm.0.utj: schemastore/src/schemas/json/sarif-2.1.0-rtm.0.json
+utj-generated/http-schema-cache/json.schemastore.org/sarif-2.1.0-rtm.0.utj: schema-overrides/FIXED-schema/sarif-2.1.0-rtm.0.json
 	./utjtool convert $(UTJFLAGS) -o $@ $<
 
-utj-generated/sarif-schema-2.1.0.utj: schemastore/src/schemas/json/sarif-2.1.0.json
+utj-generated/sarif-schema-2.1.0.utj: schema-overrides/FIXED-schema/sarif-2.1.0.json
 	./utjtool convert $(UTJFLAGS) -o $@ $<
-
-utj-generated/http-schema-cache/docs.renovatebot.com/renovate-schema.utj: schema-overrides/renovate-schema.json
-	./utjtool convert $(UTJFLAGS) -o $@ $<
-
 
 clean:
 	rm -rf utj-generated

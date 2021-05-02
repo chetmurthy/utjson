@@ -251,14 +251,15 @@ and utype path (j : Yojson.Basic.t) (ctxt : Ctxt.t) t = match t with
         | (Ok _, _, _) -> assert false
       end
 
-    | `List l -> begin
-        assert (patterns = []) ;
+    | `List l when patterns = [] -> begin
         match (utype path j (Ctxt.start_array2 ()) ut, orelse) with
           (Error l, _) -> Error l
         | (Ok (Ctxt.Array2 a), _) -> finish_array2 loc path l ctxt (a, orelse)
         | (Ok _, _) -> assert false
           
       end
+
+    | `List l -> Error [path, ut]
 
     | _ -> begin match utype path j Ctxt.start_other ut with
           Error l -> Error l

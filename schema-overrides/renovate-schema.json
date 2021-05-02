@@ -1,6 +1,7 @@
 {
   "title": "JSON schema for Renovate config files (https://renovatebot.com/)",
   "$schema": "http://json-schema.org/draft-04/schema#",
+  "utj:annotation": "[object]",
   "$id": "#TheType",
   "type": "object",
   "properties": {
@@ -82,7 +83,7 @@
     "assigneesSampleSize": {
       "description": "Take a random sample of given size from assignees.",
       "type": "integer",
-      "default": null
+      "default": 0
     },
     "autodiscover": {
       "description": "Autodiscover all repositories.",

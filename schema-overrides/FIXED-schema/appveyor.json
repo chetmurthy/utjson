@@ -233,6 +233,7 @@
       ]
     },
     "job": {
+      "utj:annotation": "[object]",
       "properties": {
         "version": {
           "description": "Version format",
@@ -332,6 +333,7 @@
           "anyOf": [
             {
               "type": "object",
+		"additionalProperties": true,
               "properties": {
                 "global": {
                   "description": "variables defined here are no different than those defined at top level of 'environment' node",

@@ -317,7 +317,7 @@
     "additionalProperties": false,
     "definitions": {
 	"$edgeHub": {
-	    "utj:annotation": "[sealed]",
+	    "utj:annotation": "[sealed,object]",
 	    "$ref": "#the:edgeHub"
 	},
         "moduleType": {

@@ -85,12 +85,14 @@ and utype_t =
 [@@deriving show { with_path = false },eq]
 
 module AN : sig
-type t = SEALED | UNSEALED of base_type_t list
+type kind = SEALED | UNSEALED
+and t = loc * kind * base_type_t list
 [@@deriving show { with_path = false }, eq]
 type t_option = t option
 [@@deriving show { with_path = false }, eq]
-val mk : ?base_types:base_type_t list -> bool -> t
+val mk : loc -> base_type_t list -> bool -> t
 val sealed : t -> bool
+val base_types : t -> base_type_t list
 end
 
 type struct_item_t =

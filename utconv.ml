@@ -5,6 +5,7 @@ open Utmigrate.Self
 open Utypes
 open Utypes.LJ
 open Utparse0
+open Uttypecheck
 
 let is_capitalized s =
   let c0 = String.get s 0 in
@@ -300,7 +301,7 @@ let known_keys = documentation_keys@known_useful_keys
       keys |> List.iter (fun k ->
           if not (List.mem k known_keys) then begin
             if List.mem k known_garbage_keys then
-              Fmt.(pf stderr "%s: conv_type: known garbage object-key %s"
+              Fmt.(pf stderr "%s: conv_type: known garbage object-key %s\n%!"
                      (Ploc.string_of_location loc)
                      k)
             else
@@ -659,20 +660,43 @@ let known_keys = documentation_keys@known_useful_keys
   let conv_type j = conv_type0 j
   let top_conv_type t = conv_type0 ~allow_empty:true t
 
+  let infer_naive_annotation ut =
+    let rec inrec ut = match ut with
+        Seal(_, ut, _, _) -> begin match inrec ut with
+            Some (loc, _, l) -> Some (AN.mk loc l true)
+          | None -> None
+        end
+      | And(loc, ut1, ut2) -> begin match (inrec ut1, inrec ut2) with
+          (Some a1, Some a2) -> Some (ANO.conjoin loc a1 a2)
+          | (Some a, _) -> Some a
+          | (None, Some a) -> Some a
+          | (None, None) -> None
+        end
+      | Or(loc, ut1, ut2) -> begin match (inrec ut1, inrec ut2) with
+            (Some a1, Some a2) -> Some (ANO.disjoin loc a1 a2)
+          | (Some a, _) -> Some a
+          | (None, Some a) -> Some a
+          | (None, None) -> None
+        end
+      | _ -> None
+    in inrec ut
+
+  let extract_declared_annotation j = match j with
+      Assoc (loc, l) -> begin match assoc_opt "utj:annotation" l with
+          None -> None
+        | Some (String(_, annostr)) ->
+          Some (parse_string parse_annotation_eoi annostr)
+        | Some _ -> Fmt.(raise_failwithf loc "conv1_definition: utj:annotation's payload must be a string")
+      end
+    | _ -> None
+
   let conv1_definition (path, j) =
     let def = conv_type j in
     let tname = typename_of_path path in
-    let isSealed = match def with Seal _ -> true | _ -> false in
-    let anno = if isSealed then Some(AN.mk isSealed) else
-        match j with
-          Assoc (loc, l) -> begin match assoc_opt "utj:annotation" l with
-            None -> None
-          | Some (String(_, annostr)) ->
-            Some (parse_string parse_annotation_eoi annostr)
-          | Some _ -> Fmt.(raise_failwithf loc "conv1_definition: utj:annotation's payload must be a string")
-        end
-        | _ -> None
-    in
+    let anno = match (infer_naive_annotation def, extract_declared_annotation j) with
+        (_, Some a) -> Some a
+      | (Some a, _) -> Some a
+      | _ -> None in
     (tname, anno, def)
 
   let conv_definitions () =
@@ -769,11 +793,11 @@ let recognize_definitions cc t = match t with
     end
   | _ -> ()
 
-let conv_schema cc t =
-  let loc = LJ.to_loc t in
-  reset cc t ;
-  recognize_definitions cc t ;
-  let t = top_conv_type t in
+let conv_schema cc j =
+  let loc = LJ.to_loc j in
+  reset cc j ;
+  recognize_definitions cc j ;
+  let t = top_conv_type j in
   let defs_stl = definitions_to_stl loc in
   let l = List.map (fun (id, mid) -> StImport(loc, id, mid)) !imports in
   let l = if defs_stl <> [] then
@@ -782,8 +806,12 @@ let conv_schema cc t =
       ; StOpen(loc, REL (ID.of_string "DEFINITIONS"), None)
       ]
     else l in
-  let isSealed = match t with Seal _ -> true | _ -> false in
-  let anno = if isSealed then Some (AN.mk isSealed) else None in
+
+    let anno = match (infer_naive_annotation t, extract_declared_annotation j) with
+        (_, Some a) -> Some a
+      | (Some a, _) -> Some a
+      | _ -> None in
+
   l@[StTypes(loc, false, [(ID.of_string "t", anno, t)])]
 
 let convert_file ?(with_predefined=false) cc s =

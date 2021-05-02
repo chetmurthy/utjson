@@ -274,10 +274,8 @@ EXTEND
     ;
 
     annotation: [ [
-        "[" ; "]" -> AN.mk False
-      | "[" ; "sealed" ; "]" -> AN.mk True
-      | "[" ; l = LIST1 base_type SEP "," ; "]" ->
-        AN.mk ~{base_types=l} False
+        "[" ; "sealed" ; "," ; l = LIST1 base_type SEP "," ; "]" -> AN.mk loc l True
+      | "[" ; l = LIST1 base_type SEP "," ; "]" -> AN.mk loc l False
       ] ]
     ;
     annotation_opt: [ [ x = OPT annotation -> x ] ]

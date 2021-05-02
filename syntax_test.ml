@@ -151,8 +151,8 @@ let parsing = "parsing" >::: [
     ; ((StModuleBinding (Ploc.dummy, ID.of_string "M",
                          (MeStruct (Ploc.dummy, [(StTypes (Ploc.dummy, false, [(ID.of_string "t",None, (Simple (Ploc.dummy, JObject)))]))])))),
        "module M = struct type t = object ; end;")
-    ; ((StModuleType (Ploc.dummy, (ID.of_string "MTY"), (MtSig (Ploc.dummy, [(SiType (Ploc.dummy, ID.of_string "t",AN.mk false))])))),
-       "module type MTY = sig type [] t ; end;")
+    ; ((StModuleType (Ploc.dummy, (ID.of_string "MTY"), (MtSig (Ploc.dummy, [(SiType (Ploc.dummy, ID.of_string "t",AN.mk Ploc.dummy [JObject] false))])))),
+       "module type MTY = sig type [object] t ; end;")
     ; ((StLocal (Ploc.dummy, 
         [(StImport (Ploc.dummy, "https://example.com/geographical-location.schema.json",
                     (ID.of_string "GeoLoc")))
@@ -219,10 +219,10 @@ end ;
 
       )
   ; "sealed-struct_item" >:: (fun ctxt -> List.iter success_struct_item [
-      (StTypes(Ploc.dummy, false,[(ID.of_string "x",Some (AN.mk true), Simple (Ploc.dummy, JString))]),
-       "type [sealed] x = string ;")
-    ; (StTypes(Ploc.dummy, true,[(ID.of_string "x",Some (AN.mk true), Simple (Ploc.dummy, JString));(ID.of_string "y",Some (AN.mk false), Simple (Ploc.dummy, JNumber))]),
-       "type rec [sealed] x = string and [] y = number ;")
+      (StTypes(Ploc.dummy, false,[(ID.of_string "x",Some (AN.mk Ploc.dummy [JArray] true), Simple (Ploc.dummy, JArray))]),
+       "type [sealed,array] x = array ;")
+    ; (StTypes(Ploc.dummy, true,[(ID.of_string "x",Some (AN.mk Ploc.dummy [JString] true), Simple (Ploc.dummy, JString));(ID.of_string "y",Some (AN.mk Ploc.dummy [JNumber] false), Simple (Ploc.dummy, JNumber))]),
+       "type rec [sealed,string] x = string and [number] y = number ;")
     ]
 
       )
@@ -231,12 +231,12 @@ end ;
        "M.N")
     ; ((MtSig (Ploc.dummy, [])),
        "sig end")
-    ; ((MtFunctorType (Ploc.dummy, ((ID.of_string "M"), (MtSig (Ploc.dummy, [(SiType (Ploc.dummy, ID.of_string "u",AN.mk false))]))), (MtSig (Ploc.dummy, [(SiType (Ploc.dummy, ID.of_string "t",AN.mk false))])))),
-       "functor (M: sig type [] u; end) -> sig type [] t ; end")
+    ; ((MtFunctorType (Ploc.dummy, ((ID.of_string "M"), (MtSig (Ploc.dummy, [(SiType (Ploc.dummy, ID.of_string "u",AN.mk Ploc.dummy [JString] false))]))), (MtSig (Ploc.dummy, [(SiType (Ploc.dummy, ID.of_string "t",AN.mk Ploc.dummy [JNumber] false))])))),
+       "functor (M: sig type [string] u; end) -> sig type [number] t ; end")
     ; ((MtSig
-          (Ploc.dummy, [(SiType (Ploc.dummy, ID.of_string "t",AN.mk true)); (SiModuleBinding (Ploc.dummy, (ID.of_string "M"), (MtPath (Ploc.dummy, (None, (ID.of_string "MTY"))))));
-           (SiModuleType (Ploc.dummy, (ID.of_string "MTY2"), (MtSig (Ploc.dummy, [(SiType (Ploc.dummy, ID.of_string "u",AN.mk ~base_types:[JObject] false))]))))])),
-       "sig type [sealed] t; module M : MTY ; module type MTY2 = sig type [object] u ; end ; end")
+          (Ploc.dummy, [(SiType (Ploc.dummy, ID.of_string "t",AN.mk Ploc.dummy [JObject] true)); (SiModuleBinding (Ploc.dummy, (ID.of_string "M"), (MtPath (Ploc.dummy, (None, (ID.of_string "MTY"))))));
+           (SiModuleType (Ploc.dummy, (ID.of_string "MTY2"), (MtSig (Ploc.dummy, [(SiType (Ploc.dummy, ID.of_string "u",AN.mk Ploc.dummy [JObject] false))]))))])),
+       "sig type [sealed,object] t; module M : MTY ; module type MTY2 = sig type [object] u ; end ; end")
       ]
 
       )
@@ -261,15 +261,15 @@ end ;
        "include M.N;")
     ; ([SiModuleBinding (Ploc.dummy, (ID.of_string "M"), (MtPath (Ploc.dummy, (None, (ID.of_string "MTY")))))],
        "module M : MTY;")
-    ; ([SiModuleType (Ploc.dummy, (ID.of_string "MTY"), (MtSig (Ploc.dummy, [(SiType (Ploc.dummy, ID.of_string "t",AN.mk false))])))],
-       "module type MTY = sig type [] t ; end;")
+    ; ([SiModuleType (Ploc.dummy, (ID.of_string "MTY"), (MtSig (Ploc.dummy, [(SiType (Ploc.dummy, ID.of_string "t",AN.mk Ploc.dummy [JNumber] false))])))],
+       "module type MTY = sig type [number] t ; end;")
     ]
       )
   ; "sealed-sig_item" >:: (fun ctxt -> List.iter success_sig_item [
-      ([(SiType (Ploc.dummy, { prefix = "x"; index = -1 }, AN.mk false))],
-       "type [] x;")
-    ; ([(SiType (Ploc.dummy, { prefix = "x"; index = -1 }, AN.mk true))],
-       "type [sealed] x;")
+      ([(SiType (Ploc.dummy, { prefix = "x"; index = -1 }, AN.mk Ploc.dummy [JObject] false))],
+       "type [object] x;")
+    ; ([(SiType (Ploc.dummy, { prefix = "x"; index = -1 }, AN.mk Ploc.dummy [JString] true))],
+       "type [sealed,string] x;")
     ]
       )
   ]

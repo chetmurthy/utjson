@@ -186,14 +186,16 @@
         },
         {
           "type": "array",
-          "anyOf": [
-            {
-              "type": "integer"
-            },
-            {
-              "type": "string"
-            }
-          ]
+	    "items": {
+		"anyOf": [
+		    {
+			"type": "integer"
+		    },
+		    {
+			"type": "string"
+		    }
+		]
+	    }
         }
       ]
     },

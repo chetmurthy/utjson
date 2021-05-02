@@ -78,8 +78,8 @@ and pr_module_type pc = fun [
   | MtPath _ (None, id) -> pprintf pc "%s" (ID.to_string id)
   ]
 and pr_annotation pc = fun [
-    AN.SEALED -> pprintf pc "[sealed]"
-  | AN.UNSEALED l -> pprintf pc "[%p]" (plist_with "," pr_base_type 0) l
+    (_, AN.SEALED, l) -> pprintf pc "[sealed,%p]" (plist_with "," pr_base_type 0) l
+  | (_, AN.UNSEALED, l) -> pprintf pc "[%p]" (plist_with "," pr_base_type 0) l
   ]
 and pr_annotation_opt pc = fun [
     None -> pprintf pc ""

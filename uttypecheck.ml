@@ -5,11 +5,19 @@ open Ututil
 open Utypes
 open Utio
 
+let autoseal_in_negative_context = ref true
+
 module Reloc = struct
   open Utmigrate.Self
 
   let wrap_cmp ?(reloc=(fun _ -> Ploc.dummy)) f relocf a b = f (relocf reloc a) (relocf reloc b)
   open Utmigrate
+
+  let annotation_opt reloc x =
+    let dt = make_dt () in
+    let new_migrate_loc dt loc = reloc loc in
+    let dt = { dt with migrate_loc = new_migrate_loc } in
+    dt.migrate_annotation_opt dt x
 
   let structure reloc x =
     let dt = make_dt () in
@@ -145,79 +153,80 @@ open AN
 (** a type is unsealable if it is not sealed, and its base_types do
    not include "object", "array".  *)
 let unsealable = function
-    SEALED -> false
-  | UNSEALED l -> [] = intersect [JObject; JArray] l
+    (_, SEALED, _) -> false
+  | (_, UNSEALED, l) -> [] = intersect [JObject; JArray] l
+
+let sealable = function
+    (_, SEALED, _) -> false
+  | (_, UNSEALED, l) -> l = [JObject] || l = [JArray]
 
 let sealed_or_unsealable = function
-    SEALED -> true
-  | UNSEALED _ as a -> unsealable a
+    (_, SEALED, _) -> true
+  | (_, UNSEALED, _) as a -> unsealable a
 
   (** two types can be conjoined (&&) if:
 
-    (1) they are both sealed
+    (1) their base_types intersection is nonempty
 
-      the result is sealed
-
-    (2) they are both unsealed
-
-      the result is unsealed, and the base_types are intersected
+    (2) sealing:
+      (a) both are sealed -> result is sealed
+      (b) either is unsealed -> result is unsealed
 
   *)
 
 let conjoin loc a1 a2 =
-  match (a1, a2) with
-    SEALED, SEALED -> SEALED
-  | UNSEALED l1, UNSEALED l2 ->
-    let l = canon (intersect l1 l2) in
-    if l = [] then Fmt.(raise_failwithf loc "AnnotationOps.conjoin: cannot conjoin (&&) %a, %a: empty unsealed result"
-           pp a1 pp a2) ;
-    AN.mk ~base_types:l false
-  | _ ->
-    Fmt.(raise_failwithf loc "AnnotationOps.conjoin: cannot conjoin (&&) %a, %a"
-           pp a1 pp a2)
+  let base_types = intersect (base_types a1) (base_types a2) in
+  if base_types = [] then
+    Fmt.(raise_failwithf loc "ANO.conjoin: base types must have nonempty intersection: %a, %a"
+           AN.pp a1 AN.pp a2
+        ) ;
+  let sealed = (sealed a1) && (sealed a2) in
+    AN.mk loc base_types sealed
 
 (** two types can be disjoined if
 
-    (1) they are both sealed
+    (1) base_types are unioned
 
-    result is sealed
-
-    (2) they are both unsealed
-
-    result intersects their base_types (and it MUST be nonempty)
-
-    (3) one is sealed, and the other is unsealable
-
-    result is sealed
+    (2) sealing:
+        (a) if both are sealed -> result is sealed
+        (b) they are both unsealed -> result is unsealed
+        (c) one is sealed, the other is unsealable -> result is sealed
 
 *)
 
 let disjoin loc a1 a2 =
-  match (a1, a2) with
-    SEALED, SEALED -> SEALED
-  | UNSEALED l1, UNSEALED l2 ->
-    AN.mk ~base_types:(canon (l1@l2)) false
-  | SEALED, _ when unsealable a2 -> SEALED
-  | _, SEALED when unsealable a1 -> SEALED
+  let base_types = (base_types a1)@(base_types a2) in
+  let sealed = match (sealed a1, sealed a2) with
+    true, true -> true
+  | false, false -> false
+  | true, _ when unsealable a2 -> true
+  | _, true when unsealable a1 -> true
   | _ ->
     Fmt.(raise_failwithf loc "AnnotationOps.disjion: cannot disjoin (||) %a, %a"
-           pp a1 pp a2)
+           pp a1 pp a2) in
+  mk loc base_types sealed
 
 (** two types can be xored if
 
-    either or both types is sealed or unsealable
+    (1) base types are unioned
+
+    (2) sealing: either or both types is sealed or unsealable
 
     if either type is sealed, then result is sealed
-    otherwise, union the base_types.
-
 *)
 
 let xor loc a1 a2 =
-  let open AN in
+  let delta = [] in
+  let a1,delta = if !autoseal_in_negative_context && sealable a1 then
+      (mk loc (base_types a1) true, [`Left]@delta)
+  else (a1, delta) in
+  let a2,delta = if !autoseal_in_negative_context && sealable a2 then
+      (mk loc (base_types a2) true, [`Right]@delta)
+  else (a2, delta) in
+  let base_types = (base_types a1)@(base_types a2) in
   if sealed_or_unsealable a1 && sealed_or_unsealable a2 then
-    match (a1, a2) with
-      (SEALED, _) | (_, SEALED) -> SEALED
-    | (UNSEALED l1, UNSEALED l2) -> AN.mk ~base_types:(canon (l1@l2)) false
+    let sealed = AN.sealed a1 || AN.sealed a2 in
+    (mk loc base_types sealed,delta)
   else
     Fmt.(raise_failwithf loc "AnnotationOps.xor: cannot xor %a, %a"
            pp a1 pp a2)
@@ -226,13 +235,21 @@ let xor loc a1 a2 =
 
     either or both types is sealed or unsealable
 
-    result is sealed
+    result is sealed, base_types are from "b"
 
 *)
 
 let impl loc a1 a2 =
+  let delta = [] in
+  let a1,delta = if !autoseal_in_negative_context && sealable a1 then
+      (mk loc (base_types a1) true, [`Left]@delta)
+  else (a1, delta) in
+  let a2,delta = if !autoseal_in_negative_context && sealable a2 then
+      (mk loc (base_types a2) true, [`Right]@delta)
+  else (a2, delta) in
+  let base_types = base_types a2 in
   if sealed_or_unsealable a1 && sealed_or_unsealable a2 then
-    SEALED
+    (mk loc base_types true,delta)
   else
     Fmt.(raise_failwithf loc "AnnotationOps.impl: cannot => %a, %a"
            pp a1 pp a2)
@@ -243,15 +260,21 @@ let impl loc a1 a2 =
 
     result is sealed
 
+    base_types is negated
+
 *)
 
 let neg loc a1 =
+  let delta = [] in
+  let a1,delta = if !autoseal_in_negative_context && sealable a1 then
+      (mk loc (base_types a1) true, [`Left]@delta)
+  else (a1, delta) in
+  let base_types = all_base_types in
   if sealed_or_unsealable a1 then
-    SEALED
+    (mk loc base_types true, delta)
   else
     Fmt.(raise_failwithf loc "AnnotationOps.neg: cannot negate %a"
            pp a1)
-
 end
 
 let rec lookup_module loc env = function
@@ -330,9 +353,9 @@ let rec tc_utype env ut = match ut with
       | _ -> Fmt.(raise_failwithf loc "tc_utype: module-path %a did not yield a signature" pp_module_path_t mpath)
     end
     
-  | UtTrue _ -> (ut, AN.mk ~base_types:all_base_types false)
-  | UtFalse _ -> (ut, AN.mk ~base_types:all_base_types false)
-  | Simple (loc, bt) -> let (bt, anno) = tc_base_type env bt in (Simple (loc, bt), anno)
+  | UtTrue loc -> (ut, AN.mk loc all_base_types false)
+  | UtFalse loc -> (ut, AN.mk loc all_base_types false)
+  | Simple (loc, bt) -> let (bt, anno) = tc_base_type loc env bt in (Simple (loc, bt), anno)
   | And(loc, ut1, ut2) ->
     let (ut1, anno1) = tc_utype env ut1 in
     let (ut2, anno2) = tc_utype env ut2 in
@@ -346,16 +369,24 @@ let rec tc_utype env ut = match ut with
   | Xor(loc, ut1, ut2) ->
     let (ut1, anno1) = tc_utype env ut1 in
     let (ut2, anno2) = tc_utype env ut2 in
-    (Xor(loc, ut1, ut2), ANO.xor loc anno1 anno2)
+    let (anno, delta) = ANO.xor loc anno1 anno2 in
+    let ut1 = if List.mem `Left delta then Seal(loc, ut1, [], UtTrue loc) else ut1 in
+    let ut2 = if List.mem `Right delta then Seal(loc, ut2, [], UtTrue loc) else ut2 in
+    (Xor(loc, ut1, ut2), anno)
            
   | Impl(loc, ut1, ut2) ->
     let (ut1, anno1) = tc_utype env ut1 in
     let (ut2, anno2) = tc_utype env ut2 in
-    (Xor(loc, ut1, ut2), ANO.impl loc anno1 anno2)
+    let (anno, delta) = ANO.impl loc anno1 anno2 in
+    let ut1 = if List.mem `Left delta then Seal(loc, ut1, [], UtTrue loc) else ut1 in
+    let ut2 = if List.mem `Right delta then Seal(loc, ut2, [], UtTrue loc) else ut2 in
+    (Xor(loc, ut1, ut2), anno)
            
   | Not (loc, ut1) ->
     let (ut1, anno1) = tc_utype env ut1 in
-    (Not(loc, ut1), ANO.neg loc anno1)
+    let (anno, delta) = ANO.neg loc anno1 in
+    let ut1 = if List.mem `Left delta then Seal(loc, ut1, [], UtTrue loc) else ut1 in
+    (Not(loc, ut1), anno)
         
   | Atomic (loc, l) ->
     assert (l <> []) ;
@@ -372,38 +403,38 @@ let rec tc_utype env ut = match ut with
     else
       let l = List.map (fun (re, ut) -> (re, tc_sub_utype env ut)) l in
       let orelse = tc_sub_utype env orelse in
-      (Seal(loc, ut1,l,orelse), AN.mk true)
+      (Seal(loc, ut1,l,orelse), AN.(mk loc (base_types anno1) true))
 
-and tc_base_type env t = match t with
-    JNull | JString | JBool | JNumber -> (t, AN.mk ~base_types:[t] false)
-  | JArray | JObject -> (t, AN.mk ~base_types:[t] false)
+and tc_base_type loc env t = match t with
+    JNull | JString | JBool | JNumber -> (t, AN.mk loc [t] false)
+  | JArray | JObject -> (t, AN.mk loc [t] false)
 
 and tc_sub_utype env ut = fst(tc_utype env ut)
 
 and tc_atomic_type env ty = match ty with
     Field(loc, fname, ut) ->
-    (Field(loc, fname, tc_sub_utype env ut), AN.mk ~base_types:[JObject] false)
-  | FieldRequired _ ->
-    (ty, AN.mk ~base_types:[JObject] false)
+    (Field(loc, fname, tc_sub_utype env ut), AN.mk loc [JObject] false)
+  | FieldRequired (loc, _) ->
+    (ty, AN.mk loc [JObject] false)
   | ArrayOf (loc, ut) ->
-    (ArrayOf(loc, tc_sub_utype env ut), AN.mk ~base_types:[JArray] false)
+    (ArrayOf(loc, tc_sub_utype env ut), AN.mk loc [JArray] false)
   | ArrayTuple (loc, l) ->
-    (ArrayTuple(loc, List.map (tc_sub_utype env) l), AN.mk ~base_types:[JArray] false)
-  | ArrayUnique _ ->
-    (ty, AN.mk ~base_types:[JArray] false)
+    (ArrayTuple(loc, List.map (tc_sub_utype env) l), AN.mk loc [JArray] false)
+  | ArrayUnique loc ->
+    (ty, AN.mk loc [JArray] false)
   | ArrayIndex (loc, n, ut) ->
-    (ArrayIndex (loc, n, tc_sub_utype env ut), AN.mk ~base_types:[JArray] false)
-  | Size _ -> (ty, AN.mk ~base_types:[JArray;JString;JObject] false)
-  | StringRE _ -> (ty, AN.mk ~base_types:[JString] false)
-  | NumberBound _ -> (ty, AN.mk ~base_types:[JNumber] false)
-  | MultipleOf _ -> (ty, AN.mk ~base_types:[JNumber] false)
-  | Enum (_, l) -> (ty, AN.mk ~base_types:(l |> List.map infer_base_type |> canon) false)
-  | Default (_, j) -> (ty, AN.mk ~base_types:[infer_base_type j] false)
-  | Format _ -> (ty, AN.mk ~base_types:[JString] false)
+    (ArrayIndex (loc, n, tc_sub_utype env ut), AN.mk loc [JArray] false)
+  | Size (loc, _) -> (ty, AN.mk loc [JArray;JString;JObject] false)
+  | StringRE (loc, _) -> (ty, AN.mk loc [JString] false)
+  | NumberBound (loc, _) -> (ty, AN.mk loc [JNumber] false)
+  | MultipleOf (loc, _) -> (ty, AN.mk loc [JNumber] false)
+  | Enum (loc, l) -> (ty, AN.mk loc (l |> List.map infer_base_type |> canon) false)
+  | Default (loc, j) -> (ty, AN.mk loc all_base_types false)
+  | Format (loc, _) -> (ty, AN.mk loc [JString] false)
   | PropertyNames (loc, ut) ->
-    (PropertyNames(loc, tc_sub_utype env ut), AN.mk ~base_types:[JObject] false)
-  | ContentMediaType _ -> (ty, AN.mk ~base_types:[JString] false)
-  | ContentEncoding _ -> (ty, AN.mk ~base_types:[JString] false)
+    (PropertyNames(loc, tc_sub_utype env ut), AN.mk loc [JObject] false)
+  | ContentMediaType (loc, _) -> (ty, AN.mk loc [JString] false)
+  | ContentEncoding (loc, _) -> (ty, AN.mk loc [JString] false)
 
 and tc_struct_item env = function
     StTypes (loc, recflag,l) ->
@@ -420,7 +451,7 @@ and tc_struct_item env = function
     let l =
       l |> List.rev_map (fun (tid, anno_opt, ut) ->
           let (ut, anno') = tc_utype subenv ut in
-          if None <> anno_opt && anno_opt <> Some anno' then
+          if None <> anno_opt && not Reloc.(wrap_cmp AN.equal_t_option annotation_opt anno_opt (Some anno')) then
             Fmt.(raise_failwithf loc "tc_struct_item: declared annotation of type %s was %a, but type-checker inferred %a"
                    (ID.to_string tid)
                    AN.pp_t_option anno_opt

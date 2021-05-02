@@ -2,9 +2,11 @@
     "$schema": "http://json-schema.org/draft-04/schema#",
     "description": "Modified JSON Schema draft v4 that includes the optional '$ref' and 'format'",
     "$id": "#TheType",
+    "utj:annotation": "[object]",
     "definitions": {
         "schemaArray": {
             "type": "array",
+	    "utj:annotation": "[array]",
             "minItems": 1,
             "items": { "$ref": "#TheType" }
         },

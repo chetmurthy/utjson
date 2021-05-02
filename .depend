@@ -93,11 +93,15 @@ typing_test.cmx : \
 utconv.cmo : \
     utypes.cmi \
     ututil.cmo \
-    utparse0.cmo
+    uttypecheck.cmo \
+    utparse0.cmo \
+    utmigrate.cmo
 utconv.cmx : \
     utypes.cmx \
     ututil.cmx \
-    utparse0.cmx
+    uttypecheck.cmx \
+    utparse0.cmx \
+    utmigrate.cmx
 utextract.cmo : \
     utypes.cmi \
     ututil.cmo \

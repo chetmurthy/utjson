@@ -91,10 +91,10 @@ let top_json (j : Yojson.Basic.t) = top_yojson j ;;
 let top_loc_json j = top_yojson (LJ.to_json j) ;;
 #install_printer top_loc_json ;;
 
-#load "utconv.cmo";;
-open Utconv ;;
 #load "uttypecheck.cmo";;
 open Uttypecheck ;;
+#load "utconv.cmo";;
+open Utconv ;;
 #load "utextract.cmo";;
 open Utextract ;;
 #load "utsimplify.cmo";;
@@ -103,10 +103,10 @@ open Utsimplify ;;
 open Utpostprocess ;;
 #load "utvalidate.cmo";;
 open Utvalidate ;;
-
+(*
 #load "syntax_test.cmo";;
 open Syntax_test ;;
-
+*)
 (*
 #load "typing_test.cmo";;
 open Typing_test ;;
@@ -134,10 +134,10 @@ open Simplify_test ;;
 #load "extract_test.cmo";;
 open Extract_test ;;
 *)
-(*
+
 #load "validate_test.cmo";;
 open Validate_test ;;
-*)
+
 (*
 #load "schemastore_test.cmo";;
 open Schemastore_test ;;

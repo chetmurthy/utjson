@@ -78,22 +78,21 @@ type range_constraint_t = [%import: Utypes.range_constraint_t]
 [@@deriving show { with_path = false },eq]
 
 module AN = struct
-type t = [%import: Utypes.AN.t]
+[%%import: Utypes.AN.t]
 [@@deriving show { with_path = false },eq]
 type t_option = [%import: Utypes.AN.t_option]
 [@@deriving show { with_path = false }, eq]
 
-let mk ?(base_types=[]) sealed =
-  if sealed then begin
-    assert (base_types = []) ;
+let mk loc base_types sealed =
+  assert (base_types <> []) ;
+  let kind = if sealed then
     SEALED
-  end
-  else begin
-    assert (base_types <> []) ;
-    UNSEALED (canon base_types)
-  end
+  else
+    UNSEALED in
+  (loc, kind, canon base_types)
 
-let sealed = function SEALED -> true | _ -> false
+let sealed = function (_, SEALED, _) -> true | _ -> false
+let base_types (_, _, l) = l
 end
 
 
