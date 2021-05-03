@@ -17,11 +17,19 @@
             "properties": {
                 "@graph": {
                     "description": "Used to express a graph.",
-                    "type": ["array", "object"],
-                    "additionalItems": {
-                        "anyOf": [{ "$ref": "#/definitions/common" }]
-                    }
-                }
+		    "anyOf": [
+			{
+			    "type": "array",
+			    "additionalItems": {
+				"anyOf": [{ "$ref": "#/definitions/common" }]
+			    }
+			},
+			{
+			    "additionalProperties": true,
+			    "type": "object"
+			}
+		    ]
+		}
             }
         },
         "common":{
@@ -49,9 +57,16 @@
                 },
                 "@container": {
                     "description": "Used to set the default container type for a term.",
-                    "type": ["string", "null"],
-                    "enum": ["@language", "@list", "@index", "@set"]
-                },
+		    "anyOf": [
+			{
+			    "type": "string",
+			    "enum": ["@language", "@list", "@index", "@set"]
+			},
+			{
+			    "type": "null"
+			}
+		    ]
+		},
                 "@list": {
                     "description": "Used to express an ordered set of data."
                 },
@@ -60,21 +75,42 @@
                 },
                 "@reverse": {
                     "description": "Used to express reverse properties.",
-                    "type": ["string", "object", "null"],
-                    "additionalProperties": {
-                        "anyOf": [{ "$ref": "#/definitions/common" }]
-                    }
-                },
+		    "anyOf": [
+			{
+			    "type": ["string", "null"]
+			},
+			{
+			    "type": "object",
+			    "additionalProperties": {
+				"anyOf": [{ "$ref": "#/definitions/common" }]
+			    }
+			}
+		    ]
+		},
                 "@base": {
-                    "description": "Used to set the base IRI against which relative IRIs are resolved",
-                    "type": ["string", "null"],
-                    "format": "uri"
-                },
+		    "description": "Used to set the base IRI against which relative IRIs are resolved",
+		    "anyOf": [
+			{
+			    "type": "null"
+			},
+			{
+			    "type": "string",
+			    "format": "uri"
+			}
+		    ]
+		},
                 "@vocab": {
                     "description": "Used to expand properties and values in @type with a common prefix IRI",
-                    "type": ["string", "null"],
-                    "format": "uri"
-                }
+		    "anyOf": [
+			{
+			    "type": "null"
+			},
+			{
+			    "type": "string",
+			    "format": "uri"
+			}
+		    ]
+		}
             }
         }
     },
@@ -85,6 +121,14 @@
         { "$ref": "#/definitions/common" }
     ],
 
-    "type": ["object", "array"],
-    "additionalProperties": true
+    "anyOf": [
+	{
+	    "type": "object",
+	    "additionalProperties": true
+	},
+	{
+	    "type": "array",
+	    "additionalItems": true
+	}
+    ]
 }
