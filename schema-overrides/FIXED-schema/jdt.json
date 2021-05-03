@@ -1,0 +1,112 @@
+{
+  "title": "JSON schema for JSON Document Transforms",
+  "$schema": "http://json-schema.org/draft-04/schema#",
+    "utj:annotation": "[sealed,object]",
+  "$id": "#TheType",
+  "type": "object",
+
+  "definitions": {
+    "@jdt.path": {
+      "type": "string",
+      "description": "Use JSONPath syntax to navigate to the node where the transform should be applied."
+    },
+    "@jdt.value": {
+      "type": "string",
+      "description": "The transformation value that should be applied."
+    }
+  },
+
+    "properties": {
+	"@jdt.rename": {
+	    "description": "Renames nodes",
+	    "oneOf": [
+		{
+		    "type": "object",
+		    "properties": {
+			"@jdt.path": { "$ref": "#/definitions/@jdt.path" },
+			"@jdt.value": { "$ref": "#/definitions/@jdt.value" }
+		    }
+		},
+		{
+		    "type": "array",
+		    "items": {
+			"properties": {
+			    "@jdt.path": { "$ref": "#/definitions/@jdt.path" },
+			    "@jdt.value": { "$ref": "#/definitions/@jdt.value" }
+			}
+		    }
+		}
+	    ]
+	},
+
+	"@jdt.replace": {
+	    "description": "Replaces the current node with the given value. ",
+	    "oneOf": [
+		{
+		    "type": "array",
+		    "items": {
+			"properties": {
+			    "@jdt.path": { "$ref": "#/definitions/@jdt.path" },
+			    "@jdt.value": { "$ref": "#/definitions/@jdt.value" }
+			}
+		    }
+		},
+		{
+		    "type": "object",
+		    "properties": {
+			"@jdt.path": { "$ref": "#/definitions/@jdt.path" },
+			"@jdt.value": { "$ref": "#/definitions/@jdt.value" }
+		    }
+		}
+	    ]
+	},
+
+	"@jdt.remove": {
+		    "description": "Removes the node with the given name from the current level.",
+	    "oneOf": [
+		{
+		    "type": [ "boolean", "string" ]
+		},
+		{
+		    "type": "array",
+		    "items": {
+			"type": [ "boolean", "integer", "null", "number", "object", "string" ]
+		    }
+		},
+		{
+		    "type": "object",
+		    "description": "Removes the node with the given name from the current level.",
+		    "properties": {
+			"@jdt.path": { "$ref": "#/definitions/@jdt.path" }
+		    }
+		}
+	    ]
+	},
+
+	"@jdt.merge": {
+	    "description": "Merges the current node value with the given object.",
+	    "oneOf": [
+		{
+		    "type": "object",
+		    "properties": {
+			"@jdt.path": { "$ref": "#/definitions/@jdt.path" },
+			"@jdt.value": { "$ref": "#/definitions/@jdt.value" }
+		    }
+		},
+		{
+		    "type": "array",
+		    "items": {
+			"properties": {
+			    "@jdt.path": { "$ref": "#/definitions/@jdt.path" },
+			    "@jdt.value": { "$ref": "#/definitions/@jdt.value" }
+			}
+		    }
+		}
+	    ]
+	}
+    },
+
+  "additionalProperties": {
+    "$ref": "#TheType"
+  }
+}

@@ -2,6 +2,7 @@
 	"$schema": "http://json-schema.org/draft-04/schema#",
 	"title": "JSON schema for component.json files",
         "$id": "#TheType",
+	  "utj:annotation": "[sealed,object]",
 	"type": "object",
 	"additionalProperties": true,
 

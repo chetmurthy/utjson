@@ -577,7 +577,7 @@
                                     "$ref": "#/definitions/vmArguments"
                                 },
                                 "size": {
-                                    "$ref": "#/definitions/size"
+                                    "$ref": "#/definitions/size_"
                                 },
                                 "runtime": {
                                     "$ref": "#/definitions/runtime"
@@ -937,7 +937,7 @@
             "description": "String of VM arguments passed to the JVM.",
             "type": "string"
         },
-        "size": {
+        "size_": {
             "description": "Size of the JVM, e.g. lite, pro, prem, prem-plus.",
             "type": "string",
             "default": "lite"
@@ -974,7 +974,7 @@
                         "$ref": "#/definitions/vmArguments"
                     },
                     "size": {
-                        "$ref": "#/definitions/size"
+                        "$ref": "#/definitions/size_"
                     },
                     "runtime": {
                         "$ref": "#/definitions/runtime"

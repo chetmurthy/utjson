@@ -482,6 +482,7 @@
 				}
 			},
 			"container":{
+			    "utj:annotation": "[object]",
 				"$id":"#/definitions/user_paths/container",
 				"title":"Containers",
 				"type":"object",
@@ -508,6 +509,7 @@
 			},
 			"actions": {
 				"transaction":{
+				    "utj:annotation": "[object]",
 					"$id":"#/definitions/user_paths/actions/transaction",
 					"title":"Action: Transaction",
 					"type":"object",
@@ -573,6 +575,7 @@
 					}
 				},
 				"if": {
+				    "utj:annotation": "[object]",
 					"$id":"#/definitions/user_paths/actions/if",
 					"title":"Action: If",
 					"type": "object",

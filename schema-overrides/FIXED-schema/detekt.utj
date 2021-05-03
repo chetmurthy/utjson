@@ -3,7 +3,7 @@ import "lib/predefined.utj" as Predefined;
       "build": object && [
           "maxIssues": number;
           "excludeCorrectable": boolean;
-          "weights": null || (object && [ orelse number; ]);
+          "weights": seal (object || null) with number;
 ];
       "config": object && [
           "validation": boolean;
@@ -20,7 +20,7 @@ import "lib/predefined.utj" as Predefined;
 ];
       "output-reports": object && [
           "active": boolean;
-          "exclude": null || (array && [ of string; ]);
+          "exclude": (array && [ of string; ] || null);
 ];
       "comments": object && [
           "active": boolean;

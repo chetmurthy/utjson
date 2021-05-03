@@ -1,0 +1,35 @@
+{
+
+    "title": "JSON schema for Windows resource files (.resjson)",
+    "$schema": "http://json-schema.org/draft-04/schema#",
+
+    "type": "object",
+    "minProperties": 1,
+    "additionalProperties": {
+        "anyOf": [
+            {
+                "type": "string"
+            },
+            {
+                "$ref": "#/definitions/resource"
+            }
+        ]
+    },
+    "definitions": {
+        "resource": {
+	    "utj:annotation": "[sealed,object]",
+            "type": "object",
+            "additionalProperties": {
+                "minProperties": 1,
+                "anyOf": [
+                    {
+                        "type": "string"
+                    },
+                    {
+                        "$ref": "#/definitions/resource"
+                    }
+                ]
+            }
+        }
+    }
+}

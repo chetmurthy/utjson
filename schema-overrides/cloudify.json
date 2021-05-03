@@ -1588,7 +1588,7 @@
       "required": ["size"]
     },
     "cloudifyDatatypesAzureNetworkVirtualNetworkConfig": {
-      "type": "string",
+      "type": "object",
       "description": "See https://msdn.microsoft.com/en-us/library/mt163661.aspx",
       "properties": {
         "addressSpace": {
@@ -2964,6 +2964,7 @@
       }
     },
     "nodeTypeCloudifyAzureNodesComputeWindowsVirtualMachineProperties": {
+	"utj:annotation": "[object]",
       "type": "object",
       "allOf": [
         {"$ref": "#/definitions/nodeTypeCloudifyAzureNodesComputeWindowsVirtualMachineProperties"},
@@ -3286,7 +3287,7 @@
               "enum": ["azure.cloudify_azure.resources.network.loadbalancer.create_probe"]
             },
             "delete": {
-              "type": "object",
+              "type": "string",
               "enum": ["azure.cloudify_azure.resources.network.loadbalancer.delete_probe"]
             }
           }
@@ -3548,7 +3549,7 @@
               }
             },
             "delete": {
-              "type": "string",
+              "type": "object",
               "properties": {
                 "implementation": {
                   "type": "string",
@@ -4181,7 +4182,7 @@
               "type": "object",
               "properties": {
                 "implementation": {
-                  "type": "object",
+                  "type": "string",
                   "enum": ["cfy_util.cloudify_deployment_proxy.tasks.create_deployment"]
                 }
               }
@@ -5583,7 +5584,7 @@
             },
             "tags": {
               "description": "A list of simple strings assigned to a project. Tags can be used to classify projects into groups.",
-              "type":"object",
+              "type":"array",
               "items": {"type":"string"}
             }
           }
@@ -6675,7 +6676,7 @@
               "type":"object",
               "properties": {
                 "implementation": {
-                  "type": "object",
+                  "type": "string",
                   "enum": ["openstack.openstack_plugin.resources.compute.host_aggregate.update"]
                 },
                 "inputs": {
@@ -9961,9 +9962,11 @@
                       "ToPort": { "type": "integer"},
                       "IpRanges": {
                         "type": "array",
-                        "properties": {
-                          "CidrIp": { "type": "string" }
-                        }
+			  "items": {
+                              "properties": {
+				  "CidrIp": { "type": "string" }
+                              }
+			  }
                       }
                     }
                   }

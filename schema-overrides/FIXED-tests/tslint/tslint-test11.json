@@ -1,0 +1,41 @@
+{
+  "rules": {
+      "adjacent-overload-signatures": [true, {
+      "severity": "error"
+    }],
+      "ban-types": [true,
+        [ "Boolean", "Use `boolean` instead." ],
+        [ "Function", "Use an arrow function expression like `() => void` instead." ],
+        [ "Number", "Use `number` instead." ],
+        [ "Object", "Use `object` instead." ],
+        [ "String", "Use `string` instead." ],
+        [ "Symbol", "Use `symbol` instead." ]
+    ],
+      "member-access": [true, "check-accessor"],
+      "member-ordering": [true, {
+        "order": [
+          "public-static-field",
+          "public-static-method",
+          "protected-static-field",
+          "protected-static-method",
+          "private-static-field",
+          "private-static-method",
+          "public-instance-field",
+          "protected-instance-field",
+          "private-instance-field",
+          "public-constructor",
+          "protected-constructor",
+          "private-constructor",
+          "public-instance-method",
+          "protected-instance-method",
+          "private-instance-method"
+        ],
+        "alphabetize": true
+      }],
+      "no-any": [ false, { "ignore-rest-args": true } ],
+    "no-internal-module": false,
+      "curly": [true, "ignore-same-line"],
+      "no-empty": [ true, "allow-empty-catch" ]
+  },
+  "defaultSeverity": "warning"
+}

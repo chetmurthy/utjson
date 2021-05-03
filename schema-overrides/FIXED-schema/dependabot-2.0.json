@@ -226,7 +226,7 @@
             "type": "string"
           },
           "description": "Reviewers to set on pull requests",
-          "minimum": 1
+          "minItems": 1
         },
         "schedule": {
           "description": "Schedule preferences",

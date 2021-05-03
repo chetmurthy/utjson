@@ -1,0 +1,10 @@
+{
+  "rules": {
+    "ordered-imports": [
+	true,
+	{
+            "grouped-imports": true
+	}
+    ]
+  }
+}

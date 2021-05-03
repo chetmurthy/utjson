@@ -1,0 +1,12 @@
+{
+  "rules": {
+    "no-any": true,
+    "radix": [true],
+    "ordered-imports": [
+	true,
+      {
+        "grouped-imports": true
+      }
+    ]
+  }
+}

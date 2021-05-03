@@ -2,11 +2,13 @@
 	"title": "JSON schema for the Source Maps v3",
 	"$schema": "http://json-schema.org/draft-04/schema#",
         "$id": "#TheType",
+    "utj:annotation": "[sealed,object]",
 	"type": "object",
 	"required": [ "version" ],
 
 	"definitions": {
 		"sectionMap": {
+    "utj:annotation": "[sealed,object]",
 			"oneOf": [
 				{
 					"additionalProperties": false,
@@ -30,9 +32,7 @@
 
 	"patternProperties": {
 		"^x_": {
-			"description": "Any property starting with 'x_' is valid.",
-			"additionalItems": true,
-			"additionalProperties": true
+			"description": "Any property starting with 'x_' is valid."
 		}
 	},
 

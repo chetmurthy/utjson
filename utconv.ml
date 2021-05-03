@@ -12,13 +12,15 @@ let is_capitalized s =
   match c0 with
   'A'..'Z' -> true | _ -> false
 
+let isdigit c = '0' <= c && c <= '9'
+
   let clean_path s =
     let s = Str.(substitute_first (regexp (quote "#/$defs/")) (fun _ -> "") s) in
     let s = Str.(substitute_first (regexp (quote "#/defs/")) (fun _ -> "") s) in
     let s = Str.(substitute_first (regexp (quote "#/refs/")) (fun _ -> "") s) in
     let s = Str.(substitute_first (regexp (quote "#/definitions/")) (fun _ -> "") s) in
     let s = Str.(global_substitute (regexp "[@#:/.$-]") (fun _ -> "_") s) in
-    if is_capitalized s then
+    if is_capitalized s || isdigit (String.get s 0) then
       "_"^s
     else s
 
@@ -626,7 +628,7 @@ let known_keys = documentation_keys@known_useful_keys
   and wrap_seal j ut (patterns, orelses) =
     let loc = LJ.to_loc j in
     let has_orelse, orelse = match orelses with
-        [] -> false, UtFalse loc
+        [] -> false, UtTrue loc
       | [ut] -> true, ut
       | _ -> Fmt.(raise_failwithf loc "conv_type: type had more than one Orelse") in
     let addSealed = patterns <> [] || has_orelse in
@@ -650,7 +652,7 @@ let known_keys = documentation_keys@known_useful_keys
       Fmt.(pf stderr "%s:WARNING: conv_type: conversion produced no type, but sealing directives\n%!"
              (Ploc.string_of_location loc)
           ) ;
-      wrap_seal t (UtFalse loc) l2
+      wrap_seal t (UtTrue loc) l2
 
     | (l,([], [])) -> andList loc l
     | (l1,l2) ->
@@ -745,9 +747,11 @@ let known_keys = documentation_keys@known_useful_keys
       let mentions_to_defs_adj = make_adj (mentions_to_defs@extra_mentions) in
       let sorted = sort_groups (_top::names) mentions_to_defs_adj in
       let sorted = except [_top] sorted in
+(*
       sorted |> List.iter (fun g ->
           Fmt.(pf stderr "group: %a\n%!" (list ~sep:(const string " ") ID.pp_hum) g)
         ) ;
+*)
       sorted |> List.map (fun g ->
           (is_recursive_group mentions_to_defs_adj g, g)
         )

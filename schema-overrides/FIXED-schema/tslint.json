@@ -3,29 +3,35 @@
   "title": "JSON schema for the TSLint configuration files.",
   "type": "object",
   "definitions": {
-    "rule": {
-      "type": [
-        "boolean",
-        "object",
-        "array"
-      ],
-      "minItems": 1,
-      "properties": {
-        "severity": {
-          "description": "Severity level. Level \"error\" will cause exit code 2.",
-          "type": "string",
-          "enum": [
-            "default",
-            "error",
-            "warning",
-            "warn",
-            "off",
-            "none"
-          ],
-          "default": "default"
-        }
-      }
-    },
+      "rule": {
+	  "anyOf": [
+	      {
+		  "type": "boolean"
+	      },
+	      {
+		  "type": "array",
+		  "minItems": 1
+	      },
+	      {
+		  "type": "object",
+		  "properties": {
+		      "severity": {
+			  "description": "Severity level. Level \"error\" will cause exit code 2.",
+			  "type": "string",
+			  "enum": [
+			      "default",
+			      "error",
+			      "warning",
+			      "warn",
+			      "off",
+			      "none"
+			  ],
+			  "default": "default"
+		      }
+		  }
+	      }
+	  ]
+      },
     "rules": {
       "properties": {
         "align": {
@@ -52,33 +58,23 @@
             {
               "$ref": "#/definitions/rule"
             },
-            {
-              "items": [
-                {
-                  "type": "boolean"
-                }
-              ],
-              "additionalItems": {
-                "$ref": "#/definitions/rules/properties/align/definitions/options/items"
-              },
-              "maxItems": 6,
-              "uniqueItems": true,
-              "properties": {
-                "options": {
-                  "description": "An option value or an array of multiple option values.",
-                  "oneOf": [
-                    {
-                      "$ref": "#/definitions/rules/properties/align/definitions/options"
-                    },
-                    {
-                      "$ref": "#/definitions/rules/properties/align/definitions/options/items"
-                    }
-                  ]
-                },
-                "severity": {}
-              },
-              "additionalProperties": false
-            }
+	      {
+		  "anyOf": [
+		      { "type": "boolean" },
+		      {
+			  "items": [
+			      {
+				  "type": "boolean"
+			      }
+			  ],
+			  "additionalItems": {
+			      "$ref": "#/definitions/rules/properties/align/definitions/options/items"
+			  },
+			  "maxItems": 6,
+			  "uniqueItems": true
+		      }
+		  ]
+	      }
           ]
         },
         "arrow-parens": {
@@ -109,22 +105,7 @@
               "additionalItems": {
                 "$ref": "#/definitions/rules/properties/arrow-parens/definitions/options/items"
               },
-              "maxItems": 2,
-              "properties": {
-                "options": {
-                  "description": "An option value or an array of multiple option values.",
-                  "oneOf": [
-                    {
-                      "$ref": "#/definitions/rules/properties/arrow-parens/definitions/options"
-                    },
-                    {
-                      "$ref": "#/definitions/rules/properties/arrow-parens/definitions/options/items"
-                    }
-                  ]
-                },
-                "severity": {}
-              },
-              "additionalProperties": false
+              "maxItems": 2
             }
           ]
         },
@@ -156,22 +137,7 @@
               "additionalItems": {
                 "$ref": "#/definitions/rules/properties/arrow-return-shorthand/definitions/options/items"
               },
-              "maxItems": 2,
-              "properties": {
-                "options": {
-                  "description": "An option value or an array of multiple option values.",
-                  "oneOf": [
-                    {
-                      "$ref": "#/definitions/rules/properties/arrow-return-shorthand/definitions/options"
-                    },
-                    {
-                      "$ref": "#/definitions/rules/properties/arrow-return-shorthand/definitions/options/items"
-                    }
-                  ]
-                },
-                "severity": {}
-              },
-              "additionalProperties": false
+              "maxItems": 2
             }
           ]
         },
@@ -186,6 +152,7 @@
                     "type": "string"
                   },
                   {
+		      "additionalItems": false,
                     "type": "array",
                     "items": {
                       "type": "string"
@@ -230,32 +197,22 @@
             {
               "$ref": "#/definitions/rule"
             },
-            {
-              "items": [
-                {
-                  "type": "boolean"
-                }
-              ],
-              "additionalItems": {
-                "$ref": "#/definitions/rules/properties/ban/definitions/options/items"
-              },
-              "uniqueItems": true,
-              "properties": {
-                "options": {
-                  "description": "An option value or an array of multiple option values.",
-                  "oneOf": [
-                    {
-                      "$ref": "#/definitions/rules/properties/ban/definitions/options"
-                    },
-                    {
-                      "$ref": "#/definitions/rules/properties/ban/definitions/options/items"
-                    }
-                  ]
-                },
-                "severity": {}
-              },
-              "additionalProperties": false
-            }
+	      {
+		  "anyOf": [
+		      { "type": "boolean" },
+		      {
+			  "items": [
+			      {
+				  "type": "boolean"
+			      }
+			  ],
+			  "additionalItems": {
+			      "$ref": "#/definitions/rules/properties/ban/definitions/options/items"
+			  },
+			  "uniqueItems": true
+		      }
+		  ]
+	      }
           ]
         },
         "ban-comma-operator": {
@@ -270,11 +227,7 @@
                   "type": "boolean"
                 }
               ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
+              "additionalItems": false
             }
           ]
         },
@@ -290,11 +243,7 @@
                   "type": "boolean"
                 }
               ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
+              "additionalItems": false
             }
           ]
         },
@@ -304,18 +253,19 @@
             {
               "$ref": "#/definitions/rule"
             },
-            {
-              "items": [
-                {
-                  "type": "boolean"
-                }
-              ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
-            }
+              {
+		  "anyOf": [
+		      { "type": "boolean" },
+		      {
+			  "items": [
+			      {
+				  "type": "boolean"
+			      }
+			  ],
+			  "additionalItems": false
+		      }
+		  ]
+	      }
           ]
         },
         "comment-format": {
@@ -331,10 +281,7 @@
                       "check-space",
                       "check-lowercase",
                       "check-uppercase"
-                    ],
-                    "minItems": 1,
-                    "maxItems": 3,
-                    "uniqueItems": true
+                    ]
                   },
                   {
                     "type": "object",
@@ -364,33 +311,23 @@
             {
               "$ref": "#/definitions/rule"
             },
-            {
-              "items": [
-                {
-                  "type": "boolean"
-                }
-              ],
-              "additionalItems": {
-                "$ref": "#/definitions/rules/properties/comment-format/definitions/options/items"
-              },
-              "maxItems": 5,
-              "uniqueItems": true,
-              "properties": {
-                "options": {
-                  "description": "An option value or an array of multiple option values.",
-                  "oneOf": [
-                    {
-                      "$ref": "#/definitions/rules/properties/comment-format/definitions/options"
-                    },
-                    {
-                      "$ref": "#/definitions/rules/properties/comment-format/definitions/options/items"
-                    }
-                  ]
-                },
-                "severity": {}
-              },
-              "additionalProperties": false
-            }
+	      {
+		  "anyOf": [
+		      { "type": "boolean" },
+		      {
+			  "items": [
+			      {
+				  "type": "boolean"
+			      }
+			  ],
+			  "additionalItems": {
+			      "$ref": "#/definitions/rules/properties/comment-format/definitions/options/items"
+			  },
+			  "maxItems": 5,
+			  "uniqueItems": true
+		      }
+		  ]
+	      }
           ]
         },
         "completed-docs": {
@@ -589,33 +526,23 @@
             {
               "$ref": "#/definitions/rule"
             },
-            {
-              "items": [
-                {
-                  "type": "boolean"
-                }
-              ],
-              "additionalItems": {
-                "$ref": "#/definitions/rules/properties/completed-docs/definitions/options/items"
-              },
-              "maxItems": 11,
-              "uniqueItems": true,
-              "properties": {
-                "options": {
-                  "description": "An option value or an array of multiple option values.",
-                  "oneOf": [
-                    {
-                      "$ref": "#/definitions/rules/properties/completed-docs/definitions/options"
-                    },
-                    {
-                      "$ref": "#/definitions/rules/properties/completed-docs/definitions/options/items"
-                    }
-                  ]
-                },
-                "severity": {}
-              },
-              "additionalProperties": false
-            }
+	      {
+		  "anyOf": [
+		      { "type": "boolean" },
+		      {
+			  "items": [
+			      {
+				  "type": "boolean"
+			      }
+			  ],
+			  "additionalItems": {
+			      "$ref": "#/definitions/rules/properties/completed-docs/definitions/options/items"
+			  },
+			  "maxItems": 11,
+			  "uniqueItems": true
+		      }
+		  ]
+	      }
           ]
         },
         "curly": {
@@ -628,42 +555,32 @@
                 "enum": [
                   "as-needed",
                   "ignore-same-line"
-                ],
+                ]
+              },
                 "minItems": 1,
                 "maxItems": 2,
                 "uniqueItems": true
-              }
             }
           },
           "allOf": [
             {
               "$ref": "#/definitions/rule"
             },
-            {
-              "items": [
-                {
-                  "type": "boolean"
-                }
-              ],
-              "additionalItems": {
-                "$ref": "#/definitions/rules/properties/curly/definitions/options/items"
-              },
-              "properties": {
-                "options": {
-                  "description": "An option value or an array of multiple option values.",
-                  "oneOf": [
-                    {
-                      "$ref": "#/definitions/rules/properties/curly/definitions/options"
-                    },
-                    {
-                      "$ref": "#/definitions/rules/properties/curly/definitions/options/items"
-                    }
-                  ]
-                },
-                "severity": {}
-              },
-              "additionalProperties": false
-            }
+              {
+		  "anyOf": [
+		      { "type": "boolean" },
+		      {
+			  "items": [
+			      {
+				  "type": "boolean"
+			      }
+			  ],
+			  "additionalItems": {
+			      "$ref": "#/definitions/rules/properties/curly/definitions/options/items"
+			  }
+		      }
+		  ]
+	      }
           ]
         },
         "cyclomatic-complexity": {
@@ -683,32 +600,22 @@
             {
               "$ref": "#/definitions/rule"
             },
-            {
-              "items": [
-                {
-                  "type": "boolean"
-                }
-              ],
-              "additionalItems": {
-                "$ref": "#/definitions/rules/properties/cyclomatic-complexity/definitions/options/items"
-              },
-              "maxItems": 2,
-              "properties": {
-                "options": {
-                  "description": "An option value or an array of multiple option values.",
-                  "oneOf": [
-                    {
-                      "$ref": "#/definitions/rules/properties/cyclomatic-complexity/definitions/options"
-                    },
-                    {
-                      "$ref": "#/definitions/rules/properties/cyclomatic-complexity/definitions/options/items"
-                    }
-                  ]
-                },
-                "severity": {}
-              },
-              "additionalProperties": false
-            }
+	      {
+		  "anyOf": [
+		      { "type": "boolean" },
+		      {
+			  "items": [
+			      {
+				  "type": "boolean"
+			      }
+			  ],
+			  "additionalItems": {
+			      "$ref": "#/definitions/rules/properties/cyclomatic-complexity/definitions/options/items"
+			  },
+			  "maxItems": 2
+		      }
+		  ]
+	      }
           ]
         },
         "deprecation": {
@@ -723,11 +630,7 @@
                   "type": "boolean"
                 }
               ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
+              "additionalItems": false
             }
           ]
         },
@@ -743,11 +646,7 @@
                   "type": "boolean"
                 }
               ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
+              "additionalItems": false
             }
           ]
         },
@@ -757,18 +656,19 @@
             {
               "$ref": "#/definitions/rule"
             },
-            {
-              "items": [
-                {
-                  "type": "boolean"
-                }
-              ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
-            }
+              {
+		  "anyOf": [
+		      { "type": "boolean" },
+		      {
+			  "items": [
+			      {
+				  "type": "boolean"
+			      }
+			  ],
+			  "additionalItems": false
+		      }
+		  ]
+	      }
           ]
         },
         "file-header": {
@@ -796,22 +696,7 @@
               "additionalItems": {
                 "$ref": "#/definitions/rules/properties/file-header/definitions/options/items"
               },
-              "maxItems": 3,
-              "properties": {
-                "options": {
-                  "description": "An option value or an array of multiple option values.",
-                  "oneOf": [
-                    {
-                      "$ref": "#/definitions/rules/properties/file-header/definitions/options"
-                    },
-                    {
-                      "$ref": "#/definitions/rules/properties/file-header/definitions/options/items"
-                    }
-                  ]
-                },
-                "severity": {}
-              },
-              "additionalProperties": false
+              "maxItems": 3
             }
           ]
         },
@@ -856,18 +741,19 @@
             {
               "$ref": "#/definitions/rule"
             },
-            {
-              "items": [
-                {
-                  "type": "boolean"
-                }
-              ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
-            }
+	      {
+		  "anyOf": [
+		      { "type": "boolean" },
+		      {
+			  "items": [
+			      {
+				  "type": "boolean"
+			      }
+			  ],
+			  "additionalItems": false
+		      }
+		  ]
+	      }
           ]
         },
         "import-blacklist": {
@@ -918,22 +804,7 @@
               "additionalItems": {
                 "$ref": "#/definitions/rules/properties/import-blacklist/definitions/options/items"
               },
-              "uniqueItems": true,
-              "properties": {
-                "options": {
-                  "description": "An option value or an array of multiple option values.",
-                  "oneOf": [
-                    {
-                      "$ref": "#/definitions/rules/properties/import-blacklist/definitions/options"
-                    },
-                    {
-                      "$ref": "#/definitions/rules/properties/import-blacklist/definitions/options/items"
-                    }
-                  ]
-                },
-                "severity": {}
-              },
-              "additionalProperties": false
+              "uniqueItems": true
             }
           ]
         },
@@ -949,11 +820,7 @@
                   "type": "boolean"
                 }
               ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
+              "additionalItems": false
             }
           ]
         },
@@ -998,22 +865,7 @@
                   "$ref": "#/definitions/rules/properties/indent/definitions/options/items/1"
                 }
               ],
-              "maxItems": 3,
-              "properties": {
-                "options": {
-                  "description": "An option value or an array of multiple option values.",
-                  "oneOf": [
-                    {
-                      "$ref": "#/definitions/rules/properties/indent/definitions/options"
-                    },
-                    {
-                      "$ref": "#/definitions/rules/properties/indent/definitions/options/items/0"
-                    }
-                  ]
-                },
-                "severity": {}
-              },
-              "additionalProperties": false
+              "maxItems": 3
             }
           ]
         },
@@ -1037,31 +889,21 @@
             {
               "$ref": "#/definitions/rule"
             },
-            {
-              "items": [
-                {
-                  "type": "boolean"
-                }
-              ],
-              "additionalItems": {
-                "$ref": "#/definitions/rules/properties/jsdoc-format/definitions/options/items"
-              },
-              "properties": {
-                "options": {
-                  "description": "An option value or an array of multiple option values.",
-                  "oneOf": [
-                    {
-                      "$ref": "#/definitions/rules/properties/jsdoc-format/definitions/options"
-                    },
-                    {
-                      "$ref": "#/definitions/rules/properties/jsdoc-format/definitions/options/items"
-                    }
-                  ]
-                },
-                "severity": {}
-              },
-              "additionalProperties": false
-            }
+	      {
+		  "anyOf": [
+		      { "type": "boolean" },
+		      {
+			  "items": [
+			      {
+				  "type": "boolean"
+			      }
+			  ],
+			  "additionalItems": {
+			      "$ref": "#/definitions/rules/properties/jsdoc-format/definitions/options/items"
+			  }
+		      }
+		  ]
+	      }
           ]
         },
         "label-position": {
@@ -1076,11 +918,7 @@
                   "type": "boolean"
                 }
               ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
+              "additionalItems": false
             }
           ]
         },
@@ -1113,22 +951,7 @@
               "additionalItems": {
                 "$ref": "#/definitions/rules/properties/linebreak-style/definitions/options/items"
               },
-              "maxItems": 2,
-              "properties": {
-                "options": {
-                  "description": "An option value or an array of multiple option values.",
-                  "oneOf": [
-                    {
-                      "$ref": "#/definitions/rules/properties/linebreak-style/definitions/options"
-                    },
-                    {
-                      "$ref": "#/definitions/rules/properties/linebreak-style/definitions/options/items"
-                    }
-                  ]
-                },
-                "severity": {}
-              },
-              "additionalProperties": false
+              "maxItems": 2
             }
           ]
         },
@@ -1171,22 +994,7 @@
               ],
               "additionalItems": false,
               "minItems": 2,
-              "maxItems": 3,
-              "properties": {
-                "options": {
-                  "description": "An option value or an array of multiple option values.",
-                  "oneOf": [
-                    {
-                      "$ref": "#/definitions/rules/properties/max-classes-per-file/definitions/options"
-                    },
-                    {
-                      "$ref": "#/definitions/rules/properties/max-classes-per-file/definitions/options/items/0"
-                    }
-                  ]
-                },
-                "severity": {}
-              },
-              "additionalProperties": false
+              "maxItems": 3
             }
           ]
         },
@@ -1216,22 +1024,7 @@
               "additionalItems": {
                 "$ref": "#/definitions/rules/properties/max-file-line-count/definitions/options/items"
               },
-              "maxItems": 2,
-              "properties": {
-                "options": {
-                  "description": "An option value or an array of multiple option values.",
-                  "oneOf": [
-                    {
-                      "$ref": "#/definitions/rules/properties/max-file-line-count/definitions/options"
-                    },
-                    {
-                      "$ref": "#/definitions/rules/properties/max-file-line-count/definitions/options/items"
-                    }
-                  ]
-                },
-                "severity": {}
-              },
-              "additionalProperties": false
+              "maxItems": 2
             }
           ]
         },
@@ -1282,22 +1075,7 @@
               "additionalItems": {
                 "$ref": "#/definitions/rules/properties/max-line-length/definitions/options/items"
               },
-              "maxItems": 2,
-              "properties": {
-                "options": {
-                  "description": "An option value or an array of multiple option values.",
-                  "oneOf": [
-                    {
-                      "$ref": "#/definitions/rules/properties/max-line-length/definitions/options"
-                    },
-                    {
-                      "$ref": "#/definitions/rules/properties/max-line-length/definitions/options/items"
-                    }
-                  ]
-                },
-                "severity": {}
-              },
-              "additionalProperties": false
+              "maxItems": 2
             }
           ]
         },
@@ -1397,32 +1175,22 @@
             {
               "$ref": "#/definitions/rule"
             },
-            {
-              "items": [
-                {
-                  "type": "boolean"
-                }
-              ],
-              "additionalItems": {
-                "$ref": "#/definitions/rules/properties/member-ordering/definitions/options/items"
-              },
-              "maxItems": 2,
-              "properties": {
-                "options": {
-                  "description": "An option value or an array of multiple option values.",
-                  "oneOf": [
-                    {
-                      "$ref": "#/definitions/rules/properties/member-ordering/definitions/options"
-                    },
-                    {
-                      "$ref": "#/definitions/rules/properties/member-ordering/definitions/options/items"
-                    }
-                  ]
-                },
-                "severity": {}
-              },
-              "additionalProperties": false
-            }
+	      {
+		  "anyOf": [
+		      { "type": "boolean" },
+		      {
+			  "items": [
+			      {
+				  "type": "boolean"
+			      }
+			  ],
+			  "additionalItems": {
+			      "$ref": "#/definitions/rules/properties/member-ordering/definitions/options/items"
+			  },
+			  "maxItems": 2
+		      }
+		  ]
+	      }
           ]
         },
         "newline-before-return": {
@@ -1437,11 +1205,7 @@
                   "type": "boolean"
                 }
               ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
+              "additionalItems": false
             }
           ]
         },
@@ -1457,11 +1221,7 @@
                   "type": "boolean"
                 }
               ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
+              "additionalItems": false
             }
           ]
         },
@@ -1477,11 +1237,7 @@
                   "type": "boolean"
                 }
               ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
+              "additionalItems": false
             }
           ]
         },
@@ -1491,18 +1247,19 @@
             {
               "$ref": "#/definitions/rule"
             },
-            {
-              "items": [
-                {
-                  "type": "boolean"
-                }
-              ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
-            }
+	      {
+		  "anyOf": [
+		      { "type": "boolean" },
+		      {
+			  "items": [
+			      {
+				  "type": "boolean"
+			      }
+			  ],
+			  "additionalItems": false
+		      }
+		  ]
+	      }
           ]
         },
         "no-bitwise": {
@@ -1511,18 +1268,19 @@
             {
               "$ref": "#/definitions/rule"
             },
-            {
-              "items": [
-                {
-                  "type": "boolean"
-                }
-              ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
-            }
+	      {
+		  "anyOf": [
+		      { "type": "boolean" },
+		      {
+			  "items": [
+			      {
+				  "type": "boolean"
+			      }
+			  ],
+			  "additionalItems": false
+		      }
+		  ]
+	      }
           ]
         },
         "no-conditional-assignment": {
@@ -1531,18 +1289,19 @@
             {
               "$ref": "#/definitions/rule"
             },
-            {
-              "items": [
-                {
-                  "type": "boolean"
-                }
-              ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
-            }
+	      {
+		  "anyOf": [
+		      { "type": "boolean" },
+		      {
+			  "items": [
+			      {
+				  "type": "boolean"
+			      }
+			  ],
+			  "additionalItems": false
+		      }
+		  ]
+	      }
           ]
         },
         "no-consecutive-blank-lines": {
@@ -1562,32 +1321,22 @@
             {
               "$ref": "#/definitions/rule"
             },
-            {
-              "items": [
-                {
-                  "type": "boolean"
-                }
-              ],
-              "additionalItems": {
-                "$ref": "#/definitions/rules/properties/no-consecutive-blank-lines/definitions/options/items"
-              },
-              "maxItems": 2,
-              "properties": {
-                "options": {
-                  "description": "An option value or an array of multiple option values.",
-                  "oneOf": [
-                    {
-                      "$ref": "#/definitions/rules/properties/no-consecutive-blank-lines/definitions/options"
-                    },
-                    {
-                      "$ref": "#/definitions/rules/properties/no-consecutive-blank-lines/definitions/options/items"
-                    }
-                  ]
-                },
-                "severity": {}
-              },
-              "additionalProperties": false
-            }
+	      {
+		  "anyOf": [
+		      { "type": "boolean" },
+		      {
+			  "items": [
+			      {
+				  "type": "boolean"
+			      }
+			  ],
+			  "additionalItems": {
+			      "$ref": "#/definitions/rules/properties/no-consecutive-blank-lines/definitions/options/items"
+			  },
+			  "maxItems": 2
+		      }
+		  ]
+	      }
           ]
         },
         "no-console": {
@@ -1606,32 +1355,22 @@
             {
               "$ref": "#/definitions/rule"
             },
-            {
-              "items": [
-                {
-                  "type": "boolean"
-                }
-              ],
-              "additionalItems": {
-                "$ref": "#/definitions/rules/properties/no-console/definitions/options/items"
-              },
-              "uniqueItems": true,
-              "properties": {
-                "options": {
-                  "description": "An option value or an array of multiple option values.",
-                  "oneOf": [
-                    {
-                      "$ref": "#/definitions/rules/properties/no-console/definitions/options"
-                    },
-                    {
-                      "$ref": "#/definitions/rules/properties/no-console/definitions/options/items"
-                    }
-                  ]
-                },
-                "severity": {}
-              },
-              "additionalProperties": false
-            }
+	      {
+		  "anyOf": [
+		      { "type": "boolean" },
+		      {
+			  "items": [
+			      {
+				  "type": "boolean"
+			      }
+			  ],
+			  "additionalItems": {
+			      "$ref": "#/definitions/rules/properties/no-console/definitions/options/items"
+			  },
+			  "uniqueItems": true
+		      }
+		  ]
+	      }
           ]
         },
         "no-construct": {
@@ -1640,18 +1379,19 @@
             {
               "$ref": "#/definitions/rule"
             },
-            {
-              "items": [
-                {
-                  "type": "boolean"
-                }
-              ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
-            }
+	      {
+		  "anyOf": [
+		      { "type": "boolean" },
+		      {
+			  "items": [
+			      {
+				  "type": "boolean"
+			      }
+			  ],
+			  "additionalItems": false
+		      }
+		  ]
+	      }
           ]
         },
         "no-debugger": {
@@ -1660,18 +1400,19 @@
             {
               "$ref": "#/definitions/rule"
             },
-            {
-              "items": [
-                {
-                  "type": "boolean"
-                }
-              ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
-            }
+	      {
+		  "anyOf": [
+		      { "type": "boolean" },
+		      {
+			  "items": [
+			      {
+				  "type": "boolean"
+			      }
+			  ],
+			  "additionalItems": false
+		      }
+		  ]
+	      }
           ]
         },
         "no-default-export": {
@@ -1686,11 +1427,7 @@
                   "type": "boolean"
                 }
               ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
+              "additionalItems": false
             }
           ]
         },
@@ -1720,19 +1457,7 @@
                   "$ref": "#/definitions/rules/properties/no-duplicate-imports/definitions/options"
                 }
               ],
-              "maxItems": 2,
-              "properties": {
-                "options": {
-                  "description": "An option value or an array of multiple option values.",
-                  "oneOf": [
-                    {
-                      "$ref": "#/definitions/rules/properties/no-duplicate-imports/definitions/options"
-                    }
-                  ]
-                },
-                "severity": {}
-              },
-              "additionalProperties": false
+              "maxItems": 2
             }
           ]
         },
@@ -1748,11 +1473,7 @@
                   "type": "boolean"
                 }
               ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
+              "additionalItems": false
             }
           ]
         },
@@ -1768,11 +1489,7 @@
                   "type": "boolean"
                 }
               ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
+              "additionalItems": false
             }
           ]
         },
@@ -1795,32 +1512,22 @@
             {
               "$ref": "#/definitions/rule"
             },
-            {
-              "items": [
-                {
-                  "type": "boolean"
-                }
-              ],
-              "additionalItems": {
-                "$ref": "#/definitions/rules/properties/no-duplicate-variable/definitions/options/items"
-              },
-              "maxItems": 2,
-              "properties": {
-                "options": {
-                  "description": "An option value or an array of multiple option values.",
-                  "oneOf": [
-                    {
-                      "$ref": "#/definitions/rules/properties/no-duplicate-variable/definitions/options"
-                    },
-                    {
-                      "$ref": "#/definitions/rules/properties/no-duplicate-variable/definitions/options/items"
-                    }
-                  ]
-                },
-                "severity": {}
-              },
-              "additionalProperties": false
-            }
+	      {
+		  "anyOf": [
+		      { "type": "boolean" },
+		      {
+			  "items": [
+			      {
+				  "type": "boolean"
+			      }
+			  ],
+			  "additionalItems": {
+			      "$ref": "#/definitions/rules/properties/no-duplicate-variable/definitions/options/items"
+			  },
+			  "maxItems": 2
+		      }
+		  ]
+	      }
           ]
         },
         "no-dynamic-delete": {
@@ -1835,11 +1542,7 @@
                   "type": "boolean"
                 }
               ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
+              "additionalItems": false
             }
           ]
         },
@@ -1864,33 +1567,23 @@
             {
               "$ref": "#/definitions/rule"
             },
-            {
-              "items": [
-                {
-                  "type": "boolean"
-                }
-              ],
-              "additionalItems": {
-                "$ref": "#/definitions/rules/properties/no-empty/definitions/options/items"
-              },
-              "maxItems": 3,
-              "uniqueItems": true,
-              "properties": {
-                "options": {
-                  "description": "An option value or an array of multiple option values.",
-                  "oneOf": [
-                    {
-                      "$ref": "#/definitions/rules/properties/no-empty/definitions/options"
-                    },
-                    {
-                      "$ref": "#/definitions/rules/properties/no-empty/definitions/options/items"
-                    }
-                  ]
-                },
-                "severity": {}
-              },
-              "additionalProperties": false
-            }
+	      {
+		  "anyOf": [
+		      { "type": "boolean" },
+		      {
+			  "items": [
+			      {
+				  "type": "boolean"
+			      }
+			  ],
+			  "additionalItems": {
+			      "$ref": "#/definitions/rules/properties/no-empty/definitions/options/items"
+			  },
+			  "maxItems": 3,
+			  "uniqueItems": true
+		      }
+		  ]
+	      }
           ]
         },
         "no-eval": {
@@ -1899,18 +1592,19 @@
             {
               "$ref": "#/definitions/rule"
             },
-            {
-              "items": [
-                {
-                  "type": "boolean"
-                }
-              ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
-            }
+	      {
+		  "anyOf": [
+		      { "type": "boolean" },
+		      {
+			  "items": [
+			      {
+				  "type": "boolean"
+			      }
+			  ],
+			  "additionalItems": false
+		      }
+		  ]
+	      }
           ]
         },
         "no-for-in-array": {
@@ -1925,11 +1619,7 @@
                   "type": "boolean"
                 }
               ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
+              "additionalItems": false
             }
           ]
         },
@@ -1967,22 +1657,7 @@
               "maxItems": 3,
               "additionalItems": {
                 "$ref": "#/definitions/rules/properties/no-implicit-dependencies/definitions/options/items/0"
-              },
-              "properties": {
-                "options": {
-                  "description": "An option value or an array of multiple option values.",
-                  "oneOf": [
-                    {
-                      "$ref": "#/definitions/rules/properties/no-implicit-dependencies/definitions/options"
-                    },
-                    {
-                      "$ref": "#/definitions/rules/properties/no-implicit-dependencies/definitions/options/items/0"
-                    }
-                  ]
-                },
-                "severity": {}
-              },
-              "additionalProperties": false
+              }
             }
           ]
         },
@@ -2017,22 +1692,7 @@
               "additionalItems": {
                 "$ref": "#/definitions/rules/properties/no-import-side-effect/definitions/options/items"
               },
-              "maxItems": 2,
-              "properties": {
-                "options": {
-                  "description": "An option value or an array of multiple option values.",
-                  "oneOf": [
-                    {
-                      "$ref": "#/definitions/rules/properties/no-import-side-effect/definitions/options"
-                    },
-                    {
-                      "$ref": "#/definitions/rules/properties/no-import-side-effect/definitions/options/items"
-                    }
-                  ]
-                },
-                "severity": {}
-              },
-              "additionalProperties": false
+              "maxItems": 2
             }
           ]
         },
@@ -2048,11 +1708,7 @@
                   "type": "boolean"
                 }
               ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
+              "additionalItems": false
             }
           ]
         },
@@ -2084,22 +1740,7 @@
               "additionalItems": {
                 "$ref": "#/definitions/rules/properties/no-invalid-this/definitions/options/items"
               },
-              "maxItems": 2,
-              "properties": {
-                "options": {
-                  "description": "An option value or an array of multiple option values.",
-                  "oneOf": [
-                    {
-                      "$ref": "#/definitions/rules/properties/no-invalid-this/definitions/options"
-                    },
-                    {
-                      "$ref": "#/definitions/rules/properties/no-invalid-this/definitions/options/items"
-                    }
-                  ]
-                },
-                "severity": {}
-              },
-              "additionalProperties": false
+              "maxItems": 2
             }
           ]
         },
@@ -2115,11 +1756,7 @@
                   "type": "boolean"
                 }
               ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
+              "additionalItems": false
             }
           ]
         },
@@ -2148,22 +1785,7 @@
               "additionalItems": {
                 "$ref": "#/definitions/rules/properties/no-magic-numbers/definitions/options/items"
               },
-              "uniqueItems": true,
-              "properties": {
-                "options": {
-                  "description": "An option value or an array of multiple option values.",
-                  "oneOf": [
-                    {
-                      "$ref": "#/definitions/rules/properties/no-magic-numbers/definitions/options"
-                    },
-                    {
-                      "$ref": "#/definitions/rules/properties/no-magic-numbers/definitions/options/items"
-                    }
-                  ]
-                },
-                "severity": {}
-              },
-              "additionalProperties": false
+              "uniqueItems": true
             }
           ]
         },
@@ -2179,11 +1801,7 @@
                   "type": "boolean"
                 }
               ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
+              "additionalItems": false
             }
           ]
         },
@@ -2199,11 +1817,7 @@
                   "type": "boolean"
                 }
               ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
+              "additionalItems": false
             }
           ]
         },
@@ -2219,11 +1833,7 @@
                   "type": "boolean"
                 }
               ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
+              "additionalItems": false
             }
           ]
         },
@@ -2239,11 +1849,7 @@
                   "type": "boolean"
                 }
               ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
+              "additionalItems": false
             }
           ]
         },
@@ -2253,18 +1859,19 @@
             {
               "$ref": "#/definitions/rule"
             },
-            {
-              "items": [
-                {
-                  "type": "boolean"
-                }
-              ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
-            }
+	      {
+		  "anyOf": [
+		      { "type": "boolean" },
+		      {
+			  "items": [
+			      {
+				  "type": "boolean"
+			      }
+			  ],
+			  "additionalItems": false
+		      }
+		  ]
+	      }
           ]
         },
         "no-shadowed-variable": {
@@ -2310,32 +1917,22 @@
             {
               "$ref": "#/definitions/rule"
             },
-            {
-              "items": [
-                {
-                  "type": "boolean"
-                }
-              ],
-              "additionalItems": {
-                "$ref": "#/definitions/rules/properties/no-shadowed-variable/definitions/options/items"
-              },
-              "maxItems": 2,
-              "properties": {
-                "options": {
-                  "description": "An option value or an array of multiple option values.",
-                  "oneOf": [
-                    {
-                      "$ref": "#/definitions/rules/properties/no-shadowed-variable/definitions/options"
-                    },
-                    {
-                      "$ref": "#/definitions/rules/properties/no-shadowed-variable/definitions/options/items"
-                    }
-                  ]
-                },
-                "severity": {}
-              },
-              "additionalProperties": false
-            }
+	      {
+		  "anyOf": [
+		      { "type": "boolean" },
+		      {
+			  "items": [
+			      {
+				  "type": "boolean"
+			      }
+			  ],
+			  "additionalItems": {
+			      "$ref": "#/definitions/rules/properties/no-shadowed-variable/definitions/options/items"
+			  },
+			  "maxItems": 2
+		      }
+		  ]
+	      }
           ]
         },
         "no-sparse-arrays": {
@@ -2350,11 +1947,7 @@
                   "type": "boolean"
                 }
               ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
+              "additionalItems": false
             }
           ]
         },
@@ -2364,18 +1957,19 @@
             {
               "$ref": "#/definitions/rule"
             },
-            {
-              "items": [
-                {
-                  "type": "boolean"
-                }
-              ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
-            }
+	      {
+		  "anyOf": [
+		      { "type": "boolean" },
+		      {
+			  "items": [
+			      {
+				  "type": "boolean"
+			      }
+			  ],
+			  "additionalItems": false
+		      }
+		  ]
+	      }
           ]
         },
         "no-string-throw": {
@@ -2390,11 +1984,7 @@
                   "type": "boolean"
                 }
               ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
+              "additionalItems": false
             }
           ]
         },
@@ -2423,22 +2013,7 @@
               "additionalItems": {
                 "$ref": "#/definitions/rules/properties/no-submodule-imports/definitions/options/items"
               },
-              "uniqueItems": true,
-              "properties": {
-                "options": {
-                  "description": "An option value or an array of multiple option values.",
-                  "oneOf": [
-                    {
-                      "$ref": "#/definitions/rules/properties/no-submodule-imports/definitions/options"
-                    },
-                    {
-                      "$ref": "#/definitions/rules/properties/no-submodule-imports/definitions/options/items"
-                    }
-                  ]
-                },
-                "severity": {}
-              },
-              "additionalProperties": false
+              "uniqueItems": true
             }
           ]
         },
@@ -2448,18 +2023,19 @@
             {
               "$ref": "#/definitions/rule"
             },
-            {
-              "items": [
-                {
-                  "type": "boolean"
-                }
-              ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
-            }
+	      {
+		  "anyOf": [
+		      { "type": "boolean" },
+		      {
+			  "items": [
+			      {
+				  "type": "boolean"
+			      }
+			  ],
+			  "additionalItems": false
+		      }
+		  ]
+	      }
           ]
         },
         "no-this-assignment": {
@@ -2501,22 +2077,7 @@
               "additionalItems": {
                 "$ref": "#/definitions/rules/properties/no-this-assignment/definitions/options/items"
               },
-              "maxItems": 2,
-              "properties": {
-                "options": {
-                  "description": "An option value or an array of multiple option values.",
-                  "oneOf": [
-                    {
-                      "$ref": "#/definitions/rules/properties/no-this-assignment/definitions/options"
-                    },
-                    {
-                      "$ref": "#/definitions/rules/properties/no-this-assignment/definitions/options/items"
-                    }
-                  ]
-                },
-                "severity": {}
-              },
-              "additionalProperties": false
+              "maxItems": 2
             }
           ]
         },
@@ -2543,33 +2104,23 @@
             {
               "$ref": "#/definitions/rule"
             },
-            {
-              "items": [
-                {
-                  "type": "boolean"
-                }
-              ],
-              "additionalItems": {
-                "$ref": "#/definitions/rules/properties/no-trailing-whitespace/definitions/options/items"
-              },
-              "maxItems": 5,
-              "uniqueItems": true,
-              "properties": {
-                "options": {
-                  "description": "An option value or an array of multiple option values.",
-                  "oneOf": [
-                    {
-                      "$ref": "#/definitions/rules/properties/no-trailing-whitespace/definitions/options"
-                    },
-                    {
-                      "$ref": "#/definitions/rules/properties/no-trailing-whitespace/definitions/options/items"
-                    }
-                  ]
-                },
-                "severity": {}
-              },
-              "additionalProperties": false
-            }
+	      {
+		  "anyOf": [
+		      { "type": "boolean" },
+		      {
+			  "items": [
+			      {
+				  "type": "boolean"
+			      }
+			  ],
+			  "additionalItems": {
+			      "$ref": "#/definitions/rules/properties/no-trailing-whitespace/definitions/options/items"
+			  },
+			  "maxItems": 5,
+			  "uniqueItems": true
+		      }
+		  ]
+	      }
           ]
         },
         "no-unnecessary-callback-wrapper": {
@@ -2584,11 +2135,7 @@
                   "type": "boolean"
                 }
               ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
+              "additionalItems": false
             }
           ]
         },
@@ -2622,22 +2169,7 @@
               "additionalItems": {
                 "$ref": "#/definitions/rules/properties/no-unnecessary-class/definitions/options/items"
               },
-              "maxItems": 4,
-              "properties": {
-                "options": {
-                  "description": "An option value or an array of multiple option values.",
-                  "oneOf": [
-                    {
-                      "$ref": "#/definitions/rules/properties/no-unnecessary-class/definitions/options"
-                    },
-                    {
-                      "$ref": "#/definitions/rules/properties/no-unnecessary-class/definitions/options/items"
-                    }
-                  ]
-                },
-                "severity": {}
-              },
-              "additionalProperties": false
+              "maxItems": 4
             }
           ]
         },
@@ -2653,11 +2185,7 @@
                   "type": "boolean"
                 }
               ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
+              "additionalItems": false
             }
           ]
         },
@@ -2673,11 +2201,7 @@
                   "type": "boolean"
                 }
               ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
+              "additionalItems": false
             }
           ]
         },
@@ -2703,33 +2227,23 @@
             {
               "$ref": "#/definitions/rule"
             },
-            {
-              "items": [
-                {
-                  "type": "boolean"
-                }
-              ],
-              "additionalItems": {
-                "$ref": "#/definitions/rules/properties/no-unused-expression/definitions/options/items"
-              },
-              "maxItems": 4,
-              "uniqueItems": true,
-              "properties": {
-                "options": {
-                  "description": "An option value or an array of multiple option values.",
-                  "oneOf": [
-                    {
-                      "$ref": "#/definitions/rules/properties/no-unused-expression/definitions/options"
-                    },
-                    {
-                      "$ref": "#/definitions/rules/properties/no-unused-expression/definitions/options/items"
-                    }
-                  ]
-                },
-                "severity": {}
-              },
-              "additionalProperties": false
-            }
+	      {
+		  "anyOf": [
+		      { "type": "boolean" },
+		      {
+			  "items": [
+			      {
+				  "type": "boolean"
+			      }
+			  ],
+			  "additionalItems": {
+			      "$ref": "#/definitions/rules/properties/no-unused-expression/definitions/options/items"
+			  },
+			  "maxItems": 4,
+			  "uniqueItems": true
+		      }
+		  ]
+	      }
           ]
         },
         "no-use-before-declare": {
@@ -2738,18 +2252,19 @@
             {
               "$ref": "#/definitions/rule"
             },
-            {
-              "items": [
-                {
-                  "type": "boolean"
-                }
-              ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
-            }
+	      {
+		  "anyOf": [
+		      { "type": "boolean" },
+		      {
+			  "items": [
+			      {
+				  "type": "boolean"
+			      }
+			  ],
+			  "additionalItems": false
+		      }
+		  ]
+	      }
           ]
         },
         "no-var-keyword": {
@@ -2758,18 +2273,19 @@
             {
               "$ref": "#/definitions/rule"
             },
-            {
-              "items": [
-                {
-                  "type": "boolean"
-                }
-              ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
-            }
+	      {
+		  "anyOf": [
+		      { "type": "boolean" },
+		      {
+			  "items": [
+			      {
+				  "type": "boolean"
+			      }
+			  ],
+			  "additionalItems": false
+		      }
+		  ]
+	      }
           ]
         },
         "no-void-expression": {
@@ -2800,22 +2316,7 @@
               "additionalItems": {
                 "$ref": "#/definitions/rules/properties/no-void-expression/definitions/options/items"
               },
-              "maxItems": 2,
-              "properties": {
-                "options": {
-                  "description": "An option value or an array of multiple option values.",
-                  "oneOf": [
-                    {
-                      "$ref": "#/definitions/rules/properties/no-void-expression/definitions/options"
-                    },
-                    {
-                      "$ref": "#/definitions/rules/properties/no-void-expression/definitions/options/items"
-                    }
-                  ]
-                },
-                "severity": {}
-              },
-              "additionalProperties": false
+              "maxItems": 2
             }
           ]
         },
@@ -2831,11 +2332,7 @@
                   "type": "boolean"
                 }
               ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
+              "additionalItems": false
             }
           ]
         },
@@ -2870,22 +2367,7 @@
               "additionalItems": {
                 "$ref": "#/definitions/rules/properties/object-literal-key-quotes/definitions/options/items"
               },
-              "maxItems": 2,
-              "properties": {
-                "options": {
-                  "description": "An option value or an array of multiple option values.",
-                  "oneOf": [
-                    {
-                      "$ref": "#/definitions/rules/properties/object-literal-key-quotes/definitions/options"
-                    },
-                    {
-                      "$ref": "#/definitions/rules/properties/object-literal-key-quotes/definitions/options/items"
-                    }
-                  ]
-                },
-                "severity": {}
-              },
-              "additionalProperties": false
+              "maxItems": 2
             }
           ]
         },
@@ -2910,31 +2392,21 @@
             {
               "$ref": "#/definitions/rule"
             },
-            {
-              "items": [
-                {
-                  "type": "boolean"
-                }
-              ],
-              "additionalItems": {
-                "$ref": "#/definitions/rules/properties/object-literal-shorthand/definitions/options/items"
-              },
-              "properties": {
-                "options": {
-                  "description": "An option value or an array of multiple option values.",
-                  "oneOf": [
-                    {
-                      "$ref": "#/definitions/rules/properties/object-literal-shorthand/definitions/options"
-                    },
-                    {
-                      "$ref": "#/definitions/rules/properties/object-literal-shorthand/definitions/options/items"
-                    }
-                  ]
-                },
-                "severity": {}
-              },
-              "additionalProperties": false
-            }
+	      {
+		  "anyOf": [
+		      { "type": "boolean" },
+		      {
+			  "items": [
+			      {
+				  "type": "boolean"
+			      }
+			  ],
+			  "additionalItems": {
+			      "$ref": "#/definitions/rules/properties/object-literal-shorthand/definitions/options/items"
+			  }
+		      }
+		  ]
+	      }
           ]
         },
         "object-literal-sort-keys": {
@@ -2970,22 +2442,7 @@
                 "$ref": "#/definitions/rules/properties/object-literal-sort-keys/definitions/options/items"
               },
               "maxItems": 5,
-              "uniqueItems": true,
-              "properties": {
-                "options": {
-                  "description": "An option value or an array of multiple option values.",
-                  "oneOf": [
-                    {
-                      "$ref": "#/definitions/rules/properties/object-literal-sort-keys/definitions/options"
-                    },
-                    {
-                      "$ref": "#/definitions/rules/properties/object-literal-sort-keys/definitions/options/items"
-                    }
-                  ]
-                },
-                "severity": {}
-              },
-              "additionalProperties": false
+              "uniqueItems": true
             }
           ]
         },
@@ -3023,22 +2480,7 @@
                 "$ref": "#/definitions/rules/properties/one-line/definitions/options/items"
               },
               "maxItems": 6,
-              "uniqueItems": true,
-              "properties": {
-                "options": {
-                  "description": "An option value or an array of multiple option values.",
-                  "oneOf": [
-                    {
-                      "$ref": "#/definitions/rules/properties/one-line/definitions/options"
-                    },
-                    {
-                      "$ref": "#/definitions/rules/properties/one-line/definitions/options/items"
-                    }
-                  ]
-                },
-                "severity": {}
-              },
-              "additionalProperties": false
+              "uniqueItems": true
             }
           ]
         },
@@ -3061,32 +2503,22 @@
             {
               "$ref": "#/definitions/rule"
             },
-            {
-              "items": [
-                {
-                  "type": "boolean"
-                }
-              ],
-              "additionalItems": {
-                "$ref": "#/definitions/rules/properties/one-variable-per-declaration/definitions/options/items"
-              },
-              "maxItems": 2,
-              "properties": {
-                "options": {
-                  "description": "An option value or an array of multiple option values.",
-                  "oneOf": [
-                    {
-                      "$ref": "#/definitions/rules/properties/one-variable-per-declaration/definitions/options"
-                    },
-                    {
-                      "$ref": "#/definitions/rules/properties/one-variable-per-declaration/definitions/options/items"
-                    }
-                  ]
-                },
-                "severity": {}
-              },
-              "additionalProperties": false
-            }
+	      {
+		  "anyOf": [
+		      { "type": "boolean" },
+		      {
+			  "items": [
+			      {
+				  "type": "boolean"
+			      }
+			  ],
+			  "additionalItems": {
+			      "$ref": "#/definitions/rules/properties/one-variable-per-declaration/definitions/options/items"
+			  },
+			  "maxItems": 2
+		      }
+		  ]
+	      }
           ]
         },
         "only-arrow-functions": {
@@ -3110,33 +2542,23 @@
             {
               "$ref": "#/definitions/rule"
             },
-            {
-              "items": [
-                {
-                  "type": "boolean"
-                }
-              ],
-              "additionalItems": {
-                "$ref": "#/definitions/rules/properties/only-arrow-functions/definitions/options/items"
-              },
-              "maxItems": 3,
-              "uniqueItems": true,
-              "properties": {
-                "options": {
-                  "description": "An option value or an array of multiple option values.",
-                  "oneOf": [
-                    {
-                      "$ref": "#/definitions/rules/properties/only-arrow-functions/definitions/options"
-                    },
-                    {
-                      "$ref": "#/definitions/rules/properties/only-arrow-functions/definitions/options/items"
-                    }
-                  ]
-                },
-                "severity": {}
-              },
-              "additionalProperties": false
-            }
+	      {
+		  "anyOf": [
+		      { "type": "boolean" },
+		      {
+			  "items": [
+			      {
+				  "type": "boolean"
+			      }
+			  ],
+			  "additionalItems": {
+			      "$ref": "#/definitions/rules/properties/only-arrow-functions/definitions/options/items"
+			  },
+			  "maxItems": 3,
+			  "uniqueItems": true
+		      }
+		  ]
+	      }
           ]
         },
         "ordered-imports": {
@@ -3225,22 +2647,7 @@
               "additionalItems": {
                 "$ref": "#/definitions/rules/properties/ordered-imports/definitions/options/items"
               },
-              "maxItems": 2,
-              "properties": {
-                "options": {
-                  "description": "An option value or an array of multiple option values.",
-                  "oneOf": [
-                    {
-                      "$ref": "#/definitions/rules/properties/ordered-imports/definitions/options"
-                    },
-                    {
-                      "$ref": "#/definitions/rules/properties/ordered-imports/definitions/options/items"
-                    }
-                  ]
-                },
-                "severity": {}
-              },
-              "additionalProperties": false
+              "maxItems": 2
             }
           ]
         },
@@ -3272,22 +2679,7 @@
               "additionalItems": {
                 "$ref": "#/definitions/rules/properties/prefer-conditional-expression/definitions/options/items"
               },
-              "maxItems": 2,
-              "properties": {
-                "options": {
-                  "description": "An option value or an array of multiple option values.",
-                  "oneOf": [
-                    {
-                      "$ref": "#/definitions/rules/properties/prefer-conditional-expression/definitions/options"
-                    },
-                    {
-                      "$ref": "#/definitions/rules/properties/prefer-conditional-expression/definitions/options/items"
-                    }
-                  ]
-                },
-                "severity": {}
-              },
-              "additionalProperties": false
+              "maxItems": 2
             }
           ]
         },
@@ -3326,22 +2718,7 @@
               "additionalItems": {
                 "$ref": "#/definitions/rules/properties/prefer-const/definitions/options/items"
               },
-              "maxItems": 2,
-              "properties": {
-                "options": {
-                  "description": "An option value or an array of multiple option values.",
-                  "oneOf": [
-                    {
-                      "$ref": "#/definitions/rules/properties/prefer-const/definitions/options"
-                    },
-                    {
-                      "$ref": "#/definitions/rules/properties/prefer-const/definitions/options/items"
-                    }
-                  ]
-                },
-                "severity": {}
-              },
-              "additionalProperties": false
+              "maxItems": 2
             }
           ]
         },
@@ -3357,11 +2734,7 @@
                   "type": "boolean"
                 }
               ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
+              "additionalItems": false
             }
           ]
         },
@@ -3396,22 +2769,7 @@
                 "$ref": "#/definitions/rules/properties/prefer-function-over-method/definitions/options/items"
               },
               "maxItems": 3,
-              "uniqueItems": true,
-              "properties": {
-                "options": {
-                  "description": "An option value or an array of multiple option values.",
-                  "oneOf": [
-                    {
-                      "$ref": "#/definitions/rules/properties/prefer-function-over-method/definitions/options"
-                    },
-                    {
-                      "$ref": "#/definitions/rules/properties/prefer-function-over-method/definitions/options/items"
-                    }
-                  ]
-                },
-                "severity": {}
-              },
-              "additionalProperties": false
+              "uniqueItems": true
             }
           ]
         },
@@ -3427,11 +2785,7 @@
                   "type": "boolean"
                 }
               ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
+              "additionalItems": false
             }
           ]
         },
@@ -3447,11 +2801,7 @@
                   "type": "boolean"
                 }
               ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
+              "additionalItems": false
             }
           ]
         },
@@ -3487,22 +2837,7 @@
               "additionalItems": {
                 "$ref": "#/definitions/rules/properties/prefer-switch/definitions/options/items"
               },
-              "maxItems": 2,
-              "properties": {
-                "options": {
-                  "description": "An option value or an array of multiple option values.",
-                  "oneOf": [
-                    {
-                      "$ref": "#/definitions/rules/properties/prefer-switch/definitions/options"
-                    },
-                    {
-                      "$ref": "#/definitions/rules/properties/prefer-switch/definitions/options/items"
-                    }
-                  ]
-                },
-                "severity": {}
-              },
-              "additionalProperties": false
+              "maxItems": 2
             }
           ]
         },
@@ -3534,22 +2869,7 @@
               "additionalItems": {
                 "$ref": "#/definitions/rules/properties/prefer-template/definitions/options/items"
               },
-              "maxItems": 2,
-              "properties": {
-                "options": {
-                  "description": "An option value or an array of multiple option values.",
-                  "oneOf": [
-                    {
-                      "$ref": "#/definitions/rules/properties/prefer-template/definitions/options"
-                    },
-                    {
-                      "$ref": "#/definitions/rules/properties/prefer-template/definitions/options/items"
-                    }
-                  ]
-                },
-                "severity": {}
-              },
-              "additionalProperties": false
+              "maxItems": 2
             }
           ]
         },
@@ -3565,8 +2885,7 @@
                   "type": "boolean"
                 }
               ],
-              "additionalItems": false,
-              "additionalProperties": false
+              "additionalItems": false
             }
           ]
         },
@@ -3582,11 +2901,7 @@
                   "type": "boolean"
                 }
               ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
+              "additionalItems": false
             }
           ]
         },
@@ -3625,22 +2940,7 @@
                 "$ref": "#/definitions/rules/properties/quotemark/definitions/options/items"
               },
               "maxItems": 5,
-              "uniqueItems": true,
-              "properties": {
-                "options": {
-                  "description": "An option value or an array of multiple option values.",
-                  "oneOf": [
-                    {
-                      "$ref": "#/definitions/rules/properties/quotemark/definitions/options"
-                    },
-                    {
-                      "$ref": "#/definitions/rules/properties/quotemark/definitions/options/items"
-                    }
-                  ]
-                },
-                "severity": {}
-              },
-              "additionalProperties": false
+              "uniqueItems": true
             }
           ]
         },
@@ -3650,18 +2950,19 @@
             {
               "$ref": "#/definitions/rule"
             },
-            {
-              "items": [
-                {
-                  "type": "boolean"
-                }
-              ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
-            }
+	      {
+		  "anyOf": [
+		      { "type": "boolean" },
+		      {
+			  "items": [
+			      {
+				  "type": "boolean"
+			      }
+			  ],
+			  "additionalItems": false
+		      }
+		  ]
+	      }
           ]
         },
         "restrict-plus-operands": {
@@ -3676,11 +2977,7 @@
                   "type": "boolean"
                 }
               ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
+              "additionalItems": false
             }
           ]
         },
@@ -3696,11 +2993,7 @@
                   "type": "boolean"
                 }
               ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
+              "additionalItems": false
             }
           ]
         },
@@ -3746,22 +3039,7 @@
                   "$ref": "#/definitions/rules/properties/semicolon/definitions/options/items/1"
                 }
               ],
-              "maxItems": 3,
-              "properties": {
-                "options": {
-                  "description": "An option value or an array of multiple option values.",
-                  "oneOf": [
-                    {
-                      "$ref": "#/definitions/rules/properties/semicolon/definitions/options"
-                    },
-                    {
-                      "$ref": "#/definitions/rules/properties/semicolon/definitions/options/items/0"
-                    }
-                  ]
-                },
-                "severity": {}
-              },
-              "additionalProperties": false
+              "maxItems": 3
             }
           ]
         },
@@ -3828,22 +3106,7 @@
               "additionalItems": {
                 "$ref": "#/definitions/rules/properties/space-before-function-paren/definitions/options/items"
               },
-              "maxItems": 2,
-              "properties": {
-                "options": {
-                  "description": "An option value or an array of multiple option values.",
-                  "oneOf": [
-                    {
-                      "$ref": "#/definitions/rules/properties/space-before-function-paren/definitions/options"
-                    },
-                    {
-                      "$ref": "#/definitions/rules/properties/space-before-function-paren/definitions/options/items"
-                    }
-                  ]
-                },
-                "severity": {}
-              },
-              "additionalProperties": false
+              "maxItems": 2
             }
           ]
         },
@@ -3873,22 +3136,7 @@
               "additionalItems": {
                 "$ref": "#/definitions/rules/properties/space-within-parens/definitions/options/items"
               },
-              "maxItems": 2,
-              "properties": {
-                "options": {
-                  "description": "An option value or an array of multiple option values.",
-                  "oneOf": [
-                    {
-                      "$ref": "#/definitions/rules/properties/space-within-parens/definitions/options"
-                    },
-                    {
-                      "$ref": "#/definitions/rules/properties/space-within-parens/definitions/options/items"
-                    }
-                  ]
-                },
-                "severity": {}
-              },
-              "additionalProperties": false
+              "maxItems": 2
             }
           ]
         },
@@ -3898,18 +3146,19 @@
             {
               "$ref": "#/definitions/rule"
             },
-            {
-              "items": [
-                {
-                  "type": "boolean"
-                }
-              ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
-            }
+	      {
+		  "anyOf": [
+		      { "type": "boolean" },
+		      {
+			  "items": [
+			      {
+				  "type": "boolean"
+			      }
+			  ],
+			  "additionalItems": false
+		      }
+		  ]
+	      }
           ]
         },
         "switch-final-break": {
@@ -3940,22 +3189,7 @@
               "additionalItems": {
                 "$ref": "#/definitions/rules/properties/switch-final-break/definitions/options/items"
               },
-              "maxItems": 2,
-              "properties": {
-                "options": {
-                  "description": "An option value or an array of multiple option values.",
-                  "oneOf": [
-                    {
-                      "$ref": "#/definitions/rules/properties/switch-final-break/definitions/options"
-                    },
-                    {
-                      "$ref": "#/definitions/rules/properties/switch-final-break/definitions/options/items"
-                    }
-                  ]
-                },
-                "severity": {}
-              },
-              "additionalProperties": false
+              "maxItems": 2
             }
           ]
         },
@@ -4112,32 +3346,22 @@
             {
               "$ref": "#/definitions/rule"
             },
-            {
-              "items": [
-                {
-                  "type": "boolean"
-                }
-              ],
-              "additionalItems": {
-                "$ref": "#/definitions/rules/properties/trailing-comma/definitions/options/items"
-              },
-              "maxItems": 2,
-              "properties": {
-                "options": {
-                  "description": "An option value or an array of multiple option values.",
-                  "oneOf": [
-                    {
-                      "$ref": "#/definitions/rules/properties/trailing-comma/definitions/options"
-                    },
-                    {
-                      "$ref": "#/definitions/rules/properties/trailing-comma/definitions/options/items"
-                    }
-                  ]
-                },
-                "severity": {}
-              },
-              "additionalProperties": false
-            }
+	      {
+		  "anyOf": [
+		      { "type": "boolean" },
+		      {
+			  "items": [
+			      {
+				  "type": "boolean"
+			      }
+			  ],
+			  "additionalItems": {
+			      "$ref": "#/definitions/rules/properties/trailing-comma/definitions/options/items"
+			  },
+			  "maxItems": 2
+		      }
+		  ]
+	      }
           ]
         },
         "triple-equals": {
@@ -4171,22 +3395,7 @@
                 "$ref": "#/definitions/rules/properties/triple-equals/definitions/options/items"
               },
               "maxItems": 3,
-              "uniqueItems": true,
-              "properties": {
-                "options": {
-                  "description": "An option value or an array of multiple option values.",
-                  "oneOf": [
-                    {
-                      "$ref": "#/definitions/rules/properties/triple-equals/definitions/options"
-                    },
-                    {
-                      "$ref": "#/definitions/rules/properties/triple-equals/definitions/options/items"
-                    }
-                  ]
-                },
-                "severity": {}
-              },
-              "additionalProperties": false
+              "uniqueItems": true
             }
           ]
         },
@@ -4202,11 +3411,7 @@
                   "type": "boolean"
                 }
               ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
+              "additionalItems": false
             }
           ]
         },
@@ -4222,11 +3427,7 @@
                   "type": "boolean"
                 }
               ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
+              "additionalItems": false
             }
           ]
         },
@@ -4256,33 +3457,23 @@
             {
               "$ref": "#/definitions/rule"
             },
-            {
-              "items": [
-                {
-                  "type": "boolean"
-                }
-              ],
-              "additionalItems": {
-                "$ref": "#/definitions/rules/properties/variable-name/definitions/options/items"
-              },
-              "maxItems": 7,
-              "uniqueItems": true,
-              "properties": {
-                "options": {
-                  "description": "An option value or an array of multiple option values.",
-                  "oneOf": [
-                    {
-                      "$ref": "#/definitions/rules/properties/variable-name/definitions/options"
-                    },
-                    {
-                      "$ref": "#/definitions/rules/properties/variable-name/definitions/options/items"
-                    }
-                  ]
-                },
-                "severity": {}
-              },
-              "additionalProperties": false
-            }
+	      {
+		  "anyOf": [
+		      { "type": "boolean" },
+		      {
+			  "items": [
+			      {
+				  "type": "boolean"
+			      }
+			  ],
+			  "additionalItems": {
+			      "$ref": "#/definitions/rules/properties/variable-name/definitions/options/items"
+			  },
+			  "maxItems": 7,
+			  "uniqueItems": true
+		      }
+		  ]
+	      }
           ]
         },
         "whitespace": {
@@ -4304,11 +3495,11 @@
                   "check-type-operator",
                   "check-preblock",
                   "check-postbrace"
-                ],
+                ]
+              },
                 "minItems": 1,
                 "maxItems": 10,
                 "uniqueItems": true
-              }
             }
           },
           "allOf": [
@@ -4323,22 +3514,7 @@
               ],
               "additionalItems": {
                 "$ref": "#/definitions/rules/properties/whitespace/definitions/options/items"
-              },
-              "properties": {
-                "options": {
-                  "description": "An option value or an array of multiple option values.",
-                  "oneOf": [
-                    {
-                      "$ref": "#/definitions/rules/properties/whitespace/definitions/options"
-                    },
-                    {
-                      "$ref": "#/definitions/rules/properties/whitespace/definitions/options/items"
-                    }
-                  ]
-                },
-                "severity": {}
-              },
-              "additionalProperties": false
+              }
             }
           ]
         }
@@ -4358,11 +3534,11 @@
                   "type": "boolean"
                 }
               ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
+              "additionalItems": {
+		  "properties": {
+                      "severity": {}
+		  }
+              }
             }
           ]
         },
@@ -4387,32 +3563,22 @@
             {
               "$ref": "#/definitions/rule"
             },
-            {
-              "items": [
-                {
-                  "type": "boolean"
-                }
-              ],
-              "additionalItems": {
-                "$ref": "#/definitions/tsRules/properties/array-type/definitions/options/items"
-              },
-              "maxItems": 2,
-              "properties": {
-                "options": {
-                  "description": "An option value or an array of multiple option values.",
-                  "oneOf": [
-                    {
-                      "$ref": "#/definitions/tsRules/properties/array-type/definitions/options"
-                    },
-                    {
-                      "$ref": "#/definitions/tsRules/properties/array-type/definitions/options/items"
-                    }
-                  ]
-                },
-                "severity": {}
-              },
-              "additionalProperties": false
-            }
+	      {
+		  "anyOf": [
+		      { "type": "boolean" },
+		      {
+			  "items": [
+			      {
+				  "type": "boolean"
+			      }
+			  ],
+			  "additionalItems": {
+			      "$ref": "#/definitions/tsRules/properties/array-type/definitions/options/items"
+			  },
+			  "maxItems": 2
+		      }
+		  ]
+	      }
           ]
         },
         "await-promise": {
@@ -4440,22 +3606,7 @@
               "additionalItems": {
                 "$ref": "#/definitions/tsRules/properties/await-promise/definitions/options/items"
               },
-              "uniqueItems": true,
-              "properties": {
-                "options": {
-                  "description": "An option value or an array of multiple option values.",
-                  "oneOf": [
-                    {
-                      "$ref": "#/definitions/tsRules/properties/await-promise/definitions/options"
-                    },
-                    {
-                      "$ref": "#/definitions/tsRules/properties/await-promise/definitions/options/items"
-                    }
-                  ]
-                },
-                "severity": {}
-              },
-              "additionalProperties": false
+              "uniqueItems": true
             }
           ]
         },
@@ -4489,22 +3640,7 @@
               "additionalItems": {
                 "$ref": "#/definitions/tsRules/properties/ban-types/definitions/options/items"
               },
-              "uniqueItems": true,
-              "properties": {
-                "options": {
-                  "description": "An option value or an array of multiple option values.",
-                  "oneOf": [
-                    {
-                      "$ref": "#/definitions/tsRules/properties/ban-types/definitions/options"
-                    },
-                    {
-                      "$ref": "#/definitions/tsRules/properties/ban-types/definitions/options/items"
-                    }
-                  ]
-                },
-                "severity": {}
-              },
-              "additionalProperties": false
+              "uniqueItems": true
             }
           ]
         },
@@ -4520,11 +3656,7 @@
                   "type": "boolean"
                 }
               ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
+              "additionalItems": false
             }
           ]
         },
@@ -4548,32 +3680,22 @@
             {
               "$ref": "#/definitions/rule"
             },
-            {
-              "items": [
-                {
-                  "type": "boolean"
-                }
-              ],
-              "additionalItems": {
-                "$ref": "#/definitions/tsRules/properties/interface-name/definitions/options/items"
-              },
-              "maxItems": 2,
-              "properties": {
-                "options": {
-                  "description": "An option value or an array of multiple option values.",
-                  "oneOf": [
-                    {
-                      "$ref": "#/definitions/tsRules/properties/interface-name/definitions/options"
-                    },
-                    {
-                      "$ref": "#/definitions/tsRules/properties/interface-name/definitions/options/items"
-                    }
-                  ]
-                },
-                "severity": {}
-              },
-              "additionalProperties": false
-            }
+	      {
+		  "anyOf": [
+		      { "type": "boolean" },
+		      {
+			  "items": [
+			      {
+				  "type": "boolean"
+			      }
+			  ],
+			  "additionalItems": {
+			      "$ref": "#/definitions/tsRules/properties/interface-name/definitions/options/items"
+			  },
+			  "maxItems": 2
+		      }
+		  ]
+	      }
           ]
         },
         "interface-over-type-literal": {
@@ -4588,11 +3710,7 @@
                   "type": "boolean"
                 }
               ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
+              "additionalItems": false
             }
           ]
         },
@@ -4608,11 +3726,7 @@
                   "type": "boolean"
                 }
               ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
+              "additionalItems": false
             }
           ]
         },
@@ -4636,36 +3750,26 @@
             }
           },
           "allOf": [
-            {
-              "$ref": "#/definitions/rule"
-            },
-            {
-              "items": [
-                {
-                  "type": "boolean"
-                }
-              ],
-              "additionalItems": {
-                "$ref": "#/definitions/tsRules/properties/member-access/definitions/options/items"
+              {
+		  "$ref": "#/definitions/rule"
               },
-              "maxItems": 4,
-              "uniqueItems": true,
-              "properties": {
-                "options": {
-                  "description": "An option value or an array of multiple option values.",
-                  "oneOf": [
-                    {
-                      "$ref": "#/definitions/tsRules/properties/member-access/definitions/options"
-                    },
-                    {
-                      "$ref": "#/definitions/tsRules/properties/member-access/definitions/options/items"
-                    }
-                  ]
-                },
-                "severity": {}
-              },
-              "additionalProperties": false
-            }
+              {
+		  "anyOf": [
+		      { "type": "boolean" },
+		      {
+			  "items": [
+			      {
+			      "type": "boolean"
+			  }
+			  ],
+			  "additionalItems": {
+			      "$ref": "#/definitions/tsRules/properties/member-access/definitions/options/items"
+			  },
+			  "maxItems": 4,
+			  "uniqueItems": true
+		      }
+		  ]
+	      }
           ]
         },
         "no-angle-bracket-type-assertion": {
@@ -4680,11 +3784,7 @@
                   "type": "boolean"
                 }
               ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
+              "additionalItems": false
             }
           ]
         },
@@ -4694,26 +3794,27 @@
             {
               "$ref": "#/definitions/rule"
             },
-            {
-              "items": [
-                {
-                  "type": "boolean"
-                },
-                {
-                  "type": "object",
-                  "properties": {
-                    "ignore-rest-args": {
-                      "type": "boolean"
-                    }
-                  }
-                }
-              ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
-            }
+              {
+		  "anyOf": [
+		      { "type": "boolean" },
+		      {
+			  "items": [
+			      {
+				  "type": "boolean"
+			      },
+			      {
+				  "type": "object",
+				  "properties": {
+				      "ignore-rest-args": {
+					  "type": "boolean"
+				      }
+				  }
+			      }
+			  ],
+			  "additionalItems": false
+		      }
+		  ]
+	      }
           ]
         },
         "no-boolean-literal-compare": {
@@ -4728,11 +3829,7 @@
                   "type": "boolean"
                 }
               ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
+              "additionalItems": false
             }
           ]
         },
@@ -4748,11 +3845,7 @@
                   "type": "boolean"
                 }
               ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
+              "additionalItems": false
             }
           ]
         },
@@ -4781,22 +3874,7 @@
               "additionalItems": {
                 "$ref": "#/definitions/tsRules/properties/no-floating-promises/definitions/options/items"
               },
-              "uniqueItems": true,
-              "properties": {
-                "options": {
-                  "description": "An option value or an array of multiple option values.",
-                  "oneOf": [
-                    {
-                      "$ref": "#/definitions/tsRules/properties/no-floating-promises/definitions/options"
-                    },
-                    {
-                      "$ref": "#/definitions/tsRules/properties/no-floating-promises/definitions/options/items"
-                    }
-                  ]
-                },
-                "severity": {}
-              },
-              "additionalProperties": false
+              "uniqueItems": true
             }
           ]
         },
@@ -4831,22 +3909,7 @@
                 "$ref": "#/definitions/tsRules/properties/no-inferrable-types/definitions/options/items"
               },
               "maxItems": 3,
-              "uniqueItems": true,
-              "properties": {
-                "options": {
-                  "description": "An option value or an array of multiple option values.",
-                  "oneOf": [
-                    {
-                      "$ref": "#/definitions/tsRules/properties/no-inferrable-types/definitions/options"
-                    },
-                    {
-                      "$ref": "#/definitions/tsRules/properties/no-inferrable-types/definitions/options/items"
-                    }
-                  ]
-                },
-                "severity": {}
-              },
-              "additionalProperties": false
+              "uniqueItems": true
             }
           ]
         },
@@ -4862,11 +3925,7 @@
                   "type": "boolean"
                 }
               ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
+              "additionalItems": false
             }
           ]
         },
@@ -4876,18 +3935,19 @@
             {
               "$ref": "#/definitions/rule"
             },
-            {
-              "items": [
-                {
-                  "type": "boolean"
-                }
-              ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
-            }
+              {
+		  "anyOf": [
+		      { "type": "boolean" },
+		      {
+			  "items": [
+			      {
+				  "type": "boolean"
+			      }
+			  ],
+			  "additionalItems": false
+		      }
+		  ]
+	      }
           ]
         },
         "no-mergeable-namespace": {
@@ -4902,11 +3962,7 @@
                   "type": "boolean"
                 }
               ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
+              "additionalItems": false
             }
           ]
         },
@@ -4922,11 +3978,7 @@
                   "type": "boolean"
                 }
               ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
+              "additionalItems": false
             }
           ]
         },
@@ -4958,22 +4010,7 @@
               "additionalItems": {
                 "$ref": "#/definitions/tsRules/properties/no-namespace/definitions/options/items"
               },
-              "maxItems": 2,
-              "properties": {
-                "options": {
-                  "description": "An option value or an array of multiple option values.",
-                  "oneOf": [
-                    {
-                      "$ref": "#/definitions/tsRules/properties/no-namespace/definitions/options"
-                    },
-                    {
-                      "$ref": "#/definitions/tsRules/properties/no-namespace/definitions/options/items"
-                    }
-                  ]
-                },
-                "severity": {}
-              },
-              "additionalProperties": false
+              "maxItems": 2
             }
           ]
         },
@@ -4989,11 +4026,7 @@
                   "type": "boolean"
                 }
               ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
+              "additionalItems": false
             }
           ]
         },
@@ -5009,11 +4042,7 @@
                   "type": "boolean"
                 }
               ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
+              "additionalItems": false
             }
           ]
         },
@@ -5029,11 +4058,7 @@
                   "type": "boolean"
                 }
               ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
+              "additionalItems": false
             }
           ]
         },
@@ -5049,11 +4074,7 @@
                   "type": "boolean"
                 }
               ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
+              "additionalItems": false
             }
           ]
         },
@@ -5069,11 +4090,7 @@
                   "type": "boolean"
                 }
               ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
+              "additionalItems": false
             }
           ]
         },
@@ -5105,22 +4122,7 @@
               "additionalItems": {
                 "$ref": "#/definitions/tsRules/properties/no-unbound-method/definitions/options/items"
               },
-              "maxItems": 2,
-              "properties": {
-                "options": {
-                  "description": "An option value or an array of multiple option values.",
-                  "oneOf": [
-                    {
-                      "$ref": "#/definitions/tsRules/properties/no-unbound-method/definitions/options"
-                    },
-                    {
-                      "$ref": "#/definitions/tsRules/properties/no-unbound-method/definitions/options/items"
-                    }
-                  ]
-                },
-                "severity": {}
-              },
-              "additionalProperties": false
+              "maxItems": 2
             }
           ]
         },
@@ -5136,11 +4138,7 @@
                   "type": "boolean"
                 }
               ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
+              "additionalItems": false
             }
           ]
         },
@@ -5169,22 +4167,7 @@
               "additionalItems": {
                 "$ref": "#/definitions/tsRules/properties/no-unnecessary-type-assertion/definitions/options/items"
               },
-              "uniqueItems": true,
-              "properties": {
-                "options": {
-                  "description": "An option value or an array of multiple option values.",
-                  "oneOf": [
-                    {
-                      "$ref": "#/definitions/tsRules/properties/no-unnecessary-type-assertion/definitions/options"
-                    },
-                    {
-                      "$ref": "#/definitions/tsRules/properties/no-unnecessary-type-assertion/definitions/options/items"
-                    }
-                  ]
-                },
-                "severity": {}
-              },
-              "additionalProperties": false
+              "uniqueItems": true
             }
           ]
         },
@@ -5200,11 +4183,7 @@
                   "type": "boolean"
                 }
               ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
+              "additionalItems": false
             }
           ]
         },
@@ -5241,33 +4220,23 @@
             {
               "$ref": "#/definitions/rule"
             },
-            {
-              "items": [
-                {
-                  "type": "boolean"
-                }
-              ],
-              "additionalItems": {
-                "$ref": "#/definitions/tsRules/properties/no-unused-variable/definitions/options/items"
-              },
-              "maxItems": 3,
-              "uniqueItems": true,
-              "properties": {
-                "options": {
-                  "description": "An option value or an array of multiple option values.",
-                  "oneOf": [
-                    {
-                      "$ref": "#/definitions/tsRules/properties/no-unused-variable/definitions/options"
-                    },
-                    {
-                      "$ref": "#/definitions/tsRules/properties/no-unused-variable/definitions/options/items"
-                    }
-                  ]
-                },
-                "severity": {}
-              },
-              "additionalProperties": false
-            }
+              {
+		  "anyOf": [
+		      { "type": "boolean" },
+		      {
+			  "items": [
+			      {
+				  "type": "boolean"
+			      }
+			  ],
+			  "additionalItems": {
+			      "$ref": "#/definitions/tsRules/properties/no-unused-variable/definitions/options/items"
+			  },
+			  "maxItems": 3,
+			  "uniqueItems": true
+		      }
+		  ]
+	      }
           ]
         },
         "no-var-requires": {
@@ -5276,18 +4245,19 @@
             {
               "$ref": "#/definitions/rule"
             },
-            {
-              "items": [
-                {
-                  "type": "boolean"
-                }
-              ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
-            }
+	      {
+		  "anyOf": [
+		      { "type": "boolean" },
+		      {
+			  "items": [
+			      {
+				  "type": "boolean"
+			      }
+			  ],
+			  "additionalItems": false
+		      }
+		  ]
+	      }
           ]
         },
         "prefer-readonly": {
@@ -5316,22 +4286,7 @@
               "additionalItems": {
                 "$ref": "#/definitions/tsRules/properties/prefer-readonly/definitions/options/items"
               },
-              "maxItems": 2,
-              "properties": {
-                "options": {
-                  "description": "An option value or an array of multiple option values.",
-                  "oneOf": [
-                    {
-                      "$ref": "#/definitions/tsRules/properties/prefer-readonly/definitions/options"
-                    },
-                    {
-                      "$ref": "#/definitions/tsRules/properties/prefer-readonly/definitions/options/items"
-                    }
-                  ]
-                },
-                "severity": {}
-              },
-              "additionalProperties": false
+              "maxItems": 2
             }
           ]
         },
@@ -5372,22 +4327,7 @@
                 "$ref": "#/definitions/tsRules/properties/strict-boolean-expressions/definitions/options/items"
               },
               "maxItems": 6,
-              "uniqueItems": true,
-              "properties": {
-                "options": {
-                  "description": "An option value or an array of multiple option values.",
-                  "oneOf": [
-                    {
-                      "$ref": "#/definitions/tsRules/properties/strict-boolean-expressions/definitions/options"
-                    },
-                    {
-                      "$ref": "#/definitions/tsRules/properties/strict-boolean-expressions/definitions/options/items"
-                    }
-                  ]
-                },
-                "severity": {}
-              },
-              "additionalProperties": false
+              "uniqueItems": true
             }
           ]
         },
@@ -5403,11 +4343,7 @@
                   "type": "boolean"
                 }
               ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
+              "additionalItems": false
             }
           ]
         },
@@ -5449,22 +4385,7 @@
                 "$ref": "#/definitions/tsRules/properties/typedef/definitions/options/items"
               },
               "maxItems": 10,
-              "uniqueItems": true,
-              "properties": {
-                "options": {
-                  "description": "An option value or an array of multiple option values.",
-                  "oneOf": [
-                    {
-                      "$ref": "#/definitions/tsRules/properties/typedef/definitions/options"
-                    },
-                    {
-                      "$ref": "#/definitions/tsRules/properties/typedef/definitions/options/items"
-                    }
-                  ]
-                },
-                "severity": {}
-              },
-              "additionalProperties": false
+              "uniqueItems": true
             }
           ]
         },
@@ -5587,22 +4508,7 @@
                   "$ref": "#/definitions/tsRules/properties/typedef-whitespace/definitions/options/items/1"
                 }
               ],
-              "maxItems": 3,
-              "properties": {
-                "options": {
-                  "description": "An option value or an array of multiple option values.",
-                  "oneOf": [
-                    {
-                      "$ref": "#/definitions/tsRules/properties/typedef-whitespace/definitions/options"
-                    },
-                    {
-                      "$ref": "#/definitions/tsRules/properties/typedef-whitespace/definitions/options/items/0"
-                    }
-                  ]
-                },
-                "severity": {}
-              },
-              "additionalProperties": false
+              "maxItems": 3
             }
           ]
         },
@@ -5630,11 +4536,7 @@
                   }
                 }
               ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
+              "additionalItems": false
             }
           ]
         },
@@ -5650,11 +4552,7 @@
                   "type": "boolean"
                 }
               ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
+              "additionalItems": false
             }
           ]
         },
@@ -5670,11 +4568,7 @@
                   "type": "boolean"
                 }
               ],
-              "additionalItems": false,
-              "properties": {
-                "severity": {}
-              },
-              "additionalProperties": false
+              "additionalItems": false
             }
           ]
         }
@@ -5682,16 +4576,21 @@
     }
   },
   "properties": {
-    "extends": {
-      "description": "The name of a built-in configuration preset, or a path or array of paths to other configuration files which are extended by this configuration. These values are handled using node module resolution semantics.",
-      "type": [
-        "string",
-        "array"
-      ],
-      "items": {
-        "type": "string"
-      }
-    },
+      "extends": {
+	  "description": "The name of a built-in configuration preset, or a path or array of paths to other configuration files which are extended by this configuration. These values are handled using node module resolution semantics.",
+	  "anyOf": [
+	      {
+		  "type": "string"
+	      },
+	      {
+		  "description": "The name of a built-in configuration preset, or a path or array of paths to other configuration files which are extended by this configuration. These values are handled using node module resolution semantics.",
+		  "type": "array",
+		  "items": {
+		      "type": "string"
+		  }
+	      }
+	  ]
+      },
     "rulesDirectory": {
       "description": "A path to a directory or an array of paths to directories of custom rules. These values are handled using node module resolution semantics, if an `index.js` is placed in your rules directory.",
       "type": [

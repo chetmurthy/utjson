@@ -4,6 +4,7 @@
 
   "definitions": {
     "logical": {
+	"utj:annotation": "[sealed,string, boolean,number,object]",
       "description": "https://circleci.com/docs/2.0/configuration-reference/#logic-statements \n\nA logical statement to be used in dynamic configuration",
       "oneOf": [
         {
@@ -83,6 +84,7 @@
     },
     "orbs": {
       "description": "https://circleci.com/docs/2.0/configuration-reference/#orbs-requires-version-21\n\nOrbs are reusable packages of CircleCI configuration that you may share across projects, enabling you to create encapsulated, parameterized commands, jobs, and executors that can be used across multiple projects.",
+	"utj:annotation": "[sealed,object]",
       "type": "object",
       "additionalProperties": {
         "oneOf": [
@@ -805,6 +807,7 @@
           }
         },
         "when": {
+	"utj:annotation": "[sealed,object]",
           "allOf": [
             {
               "$ref": "#/definitions/builtinSteps/documentation/when"
@@ -827,6 +830,7 @@
           "required": ["condition", "steps"]
         },
         "unless": {
+	"utj:annotation": "[sealed,object]",
           "allOf": [
             {
               "$ref": "#/definitions/builtinSteps/documentation/unless"
@@ -851,6 +855,7 @@
       }
     },
     "step": {
+	"utj:annotation": "[sealed,string,object]",
       "anyOf": [
         {
           "$ref": "#/definitions/builtinSteps/documentation/checkout",

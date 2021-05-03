@@ -3,6 +3,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "id": "https://json.schemastore.org/vim-addon-info",
   "$id": "#TheType",
+    "utj:annotation": "[object]",
   "type": "object",
 
   "properties": {
@@ -71,6 +72,7 @@
       }
     },
     "otherRepository": {
+    "utj:annotation": "[object]",
       "description": "Info about a plugin/repository outside this one.",
       "type": "object",
       "anyOf": [
@@ -79,6 +81,7 @@
           "additionalProperties": false
         },
         {
+            "additionalProperties": true,
           "$comment": "Repository with empty type and url pointing to local path.",
           "properties": {
             "type": { "enum": ["", "archive"] },
@@ -94,6 +97,7 @@
           }
         },
         {
+            "additionalProperties": true,
           "$comment": "Explicit remote repository.",
           "properties": {
             "type": { "$ref": "#/definitions/repoType" },

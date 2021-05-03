@@ -113,6 +113,7 @@
                 "type": "string"
               },
               {
+		  "additionalItems": false,
                 "type": "array",
                 "items": {
                   "oneOf": [
@@ -281,6 +282,7 @@
         "additionalProperties": false
       },
       "task_call": {
+        "additionalProperties": true,
         "type": "object",
         "properties": {
           "task": {

@@ -900,7 +900,7 @@ and extract_st mpopt acc = function
   | st -> Fmt.(failwithf "FinalExtract: st should have been erased@.%s@." (Normal.struct_item_printer st))
 
 let exec stl =
-  let l = List.rev (extract_stl None [] stl) in
+  let (l : top_bindings) = List.rev (extract_stl None [] stl) in
   check_closed l ;
   l
 

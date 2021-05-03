@@ -355,6 +355,7 @@ and utype path (j : Yojson.Basic.t) (ctxt : Ctxt.t) t = match t with
           end
         | exception Not_found -> Ok ctxt
       end
+
     | (`Assoc l, FieldRequired (loc, fl)) ->
       if fl |> List.for_all (fun fname -> List.mem_assoc fname l) then
         Ok ctxt
@@ -390,9 +391,11 @@ and utype path (j : Yojson.Basic.t) (ctxt : Ctxt.t) t = match t with
         Ok () ->
         Ctxt.set_tuple ctxt utlen
       | Error l -> Error l
-      end
+      end 
 
-    | (`List l, ArrayUnique loc) ->
+  | (_, ArrayTuple (loc, utl)) -> Error [path, Atomic(loc,[t])]
+
+   | (`List l, ArrayUnique loc) ->
       if List.length (List.sort_uniq Stdlib.compare l) = List.length l then
         Ok ctxt else Error [path,Atomic(loc, [t])]
 
@@ -438,9 +441,15 @@ and utype path (j : Yojson.Basic.t) (ctxt : Ctxt.t) t = match t with
   | ContentEncoding of string
 *)
 
-    | _ -> Fmt.(failwithf "atomic_type: unhandled %a at %s" pp_atomic_utype_t t
-                  (String.concat "/" (List.rev path))
-               )
+  | (_, _) ->
+    let loc = loc_of_atomic_utype t in
+    Error [path, Atomic(loc,[t])]
+
+  | (_, t) ->
+    let loc = loc_of_atomic_utype t in
+    Fmt.(raise_failwithf loc "atomic_type: unhandled %s at %s" (Normal.printer (Atomic (loc,[t])))
+           (String.concat "/" (List.rev path))
+        )
 
 let validate new_tdl j ut =
   tdl := new_tdl ;

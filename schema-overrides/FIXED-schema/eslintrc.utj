@@ -405,7 +405,7 @@ import "lib/predefined.utj" as Predefined;
           "webextensions": boolean;
           "worker": boolean;
 ];
-      "extends": (string || array) && [ of string; ];
+      "extends": (string || array && [ of string; ]);
       "globals": seal object with (string && [ enum "readonly", "writable", "off"; ] xor boolean);
       "noInlineConfig": boolean;
       "parser": string;
@@ -419,13 +419,13 @@ import "lib/predefined.utj" as Predefined;
 ];
       "plugins": array && [ of string; ];
       "root": boolean;
-      "ignorePatterns": (string || array) && [ of string; ];
+      "ignorePatterns": (string || array && [ of string; ]);
       "rules": object && possibleErrors && bestPractices && strictMode && variables && nodeAndCommonJs && stylisticIssues && ecmaScript6 && legacy;
       "settings": object;
       "overrides": array && [
           of seal (object && [
               "files": string xor array && [ of string; ] && [ size [1,max]; ];
-              "extends": (string || array) && [ of string; ];
+              "extends": (string || array && [ of string; ]);
               "excludedFiles": string xor array && [ of string; ];
               "ecmaFeatures": __properties_ecmaFeatures;
               "env": __properties_env;

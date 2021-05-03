@@ -1,3 +1,4 @@
+open Pa_ppx_utils.Std
 
 (* borrowed from ounit *)
 let failwithf fmt =
@@ -69,3 +70,22 @@ let canon l =
   l
   |> List.sort_uniq Stdlib.compare
   |> List.stable_sort Stdlib.compare
+
+let slice n m l =
+  let alen = List.length l in
+  let n = match n with
+      None -> 0
+    | Some n ->
+      if n < 0 then
+        if -n > alen then 0 else alen - n
+      else
+        if n > alen then alen else n in
+  let m = match m with
+      None -> alen
+    | Some m ->
+      if m < 0 then
+        if -m > alen then alen else alen - m
+      else
+      if m > alen then alen else m in
+  let l = nthtail l n in
+  firstn (m-n) l

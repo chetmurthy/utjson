@@ -83,6 +83,9 @@ let top_module_expr x = top Normal.module_expr_printer x ;;
 let top_module_path x = top Normal.module_path_printer x ;;
 #install_printer top_module_path ;;
 
+let top_top_bindings x = top Normal.top_bindings_printer x ;;
+#install_printer top_top_bindings ;;
+
 let top_yojson j = Fmt.(pf stdout "%s" (Yojson.Basic.pretty_to_string j)) ;;
 #install_printer top_yojson ;;
 let top_json (j : Yojson.Basic.t) = top_yojson j ;;

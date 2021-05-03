@@ -489,9 +489,7 @@
       }
     },
     "vendorExtension": {
-      "description": "Any property starting with x- is valid.",
-      "additionalProperties": true,
-      "additionalItems": true
+      "description": "Any property starting with x- is valid."
     },
     "bodyParameter": {
       "type": "object",
@@ -933,6 +931,7 @@
       ]
     },
     "schema": {
+	"utj:annotation": "[sealed,object]",
       "type": "object",
       "description": "A deterministic version of a JSON Schema object.",
       "patternProperties": {
@@ -1021,6 +1020,7 @@
               "$ref": "#/definitions/schema"
             },
             {
+		"additionalItems": true,
               "type": "array",
               "minItems": 1,
               "items": {
@@ -1106,6 +1106,7 @@
       "additionalProperties": false
     },
     "primitivesItems": {
+	"utj:annotation": "[sealed,object]",
       "type": "object",
       "additionalProperties": false,
       "properties": {

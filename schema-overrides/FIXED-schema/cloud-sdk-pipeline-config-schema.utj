@@ -1,70 +1,64 @@
 import "lib/predefined.utj" as Predefined;
   module DEFINITIONS = struct
-    type rec account = string
-    and apiEndpoint = string && [ default "https://api.cf.eu10.hana.ondemand.com"; ]
-    and appName = string
-    and appUrls = array && [
-        of object && [
-            "url": string;
-            "credentialId": string;
-            "parameters": array;
-] && (object && [ sealed; ]) && [ required "url"; ];
-]
-    and application = string
-    and cfTargets = array && [
-        of object && [
-            "org": org;
-            "space": space;
-            "appName": appName;
-            "manifest": manifest;
-            "credentialsId": credentialsId;
-            "apiEndpoint": apiEndpoint;
-            "mtaExtensionDescriptor": mtaExtensionDescriptor;
-            "mtaExtensionCredentials": mtaExtensionCredentials;
-] && object && [ sealed; ];
-]
-    and cloudFoundry = object && [
-        "org": org;
-        "space": space;
-        "appName": appName;
-        "manifest": manifest;
-        "credentialsId": credentialsId;
-        "apiEndpoint": apiEndpoint;
-        "mtaExtensionDescriptor": mtaExtensionDescriptor;
-        "mtaExtensionCredentials": mtaExtensionCredentials;
-] && object && [ sealed; ]
-    and credentialsId = string
-    and dockerImage = string
-    and environment = object
-    and host = string
-    and manifest = string
-    and mtaExtensionCredentials = string
-    and mtaExtensionDescriptor = string
-    and neoTargets = array && [
-        of object && [
-            "host": host;
-            "account": account;
-            "application": application;
-            "credentialsId": credentialsId;
-            "environment": environment;
-            "vmArguments": vmArguments;
-            "size": size_;
-            "runtime": runtime;
-            "runtimeVersion": runtimeVersion;
-] && (object && [ sealed; ]) && [ required "host",  "account",  "application",  "runtime",  "runtimeVersion";
+    type nonrec account = string;
+      type nonrec apiEndpoint = string && [ default "https://api.cf.eu10.hana.ondemand.com"; ];
+      type nonrec appName = string;
+      type nonrec appUrls = array && [
+          of seal (object && [
+              "url": string;
+              "credentialId": string;
+              "parameters": array;
+] && [ required "url"; ]);
 ];
-]
-    and org = string
-    and runtime = string
-    and runtimeVersion = string
-    and size_ = string && [ default "lite"; ]
-    and space = string
-    and vmArguments = string;
+      type nonrec application = string; type nonrec space = string;
+      type nonrec org = string; type nonrec mtaExtensionDescriptor = string;
+      type nonrec mtaExtensionCredentials = string;
+      type nonrec manifest = string; type nonrec credentialsId = string;
+      type nonrec cfTargets = array && [
+          of seal (object && [
+              "org": org;
+              "space": space;
+              "appName": appName;
+              "manifest": manifest;
+              "credentialsId": credentialsId;
+              "apiEndpoint": apiEndpoint;
+              "mtaExtensionDescriptor": mtaExtensionDescriptor;
+              "mtaExtensionCredentials": mtaExtensionCredentials;
+]);
+];
+      type nonrec cloudFoundry = seal (object && [
+          "org": org;
+          "space": space;
+          "appName": appName;
+          "manifest": manifest;
+          "credentialsId": credentialsId;
+          "apiEndpoint": apiEndpoint;
+          "mtaExtensionDescriptor": mtaExtensionDescriptor;
+          "mtaExtensionCredentials": mtaExtensionCredentials;
+]);
+      type nonrec dockerImage = string; type nonrec environment = object;
+      type nonrec host = string; type nonrec vmArguments = string;
+      type nonrec size_ = string && [ default "lite"; ];
+      type nonrec runtimeVersion = string; type nonrec runtime = string;
+      type nonrec neoTargets = array && [
+          of seal (object && [
+              "host": host;
+              "account": account;
+              "application": application;
+              "credentialsId": credentialsId;
+              "environment": environment;
+              "vmArguments": vmArguments;
+              "size": size_;
+              "runtime": runtime;
+              "runtimeVersion": runtimeVersion;
+] && [ required "host",  "account",  "application",  "runtime",  "runtimeVersion";
+]);
+];
     end;
   open DEFINITIONS;
   type nonrec t = object && [
       "customDefaults": array && [ of string; ];
-      "general": null || (object && [
+      "general": seal ((object && [
           "productiveBranch": string && [ default "master"; ];
           "projectName": string;
           "globalExtensionsRepository": string;
@@ -72,48 +66,48 @@ import "lib/predefined.utj" as Predefined;
           "globalExtensionsRepositoryCredentialsId": string;
           "collectTelemetryData": boolean && [ default true; ];
           "unsafeMode": boolean && [ default false; ];
-          "features": object && [
+          "features": seal (object && [
               "parallelTestExecution": string && [ enum "on", "off"; ] && [ default "off"; ];
-] && object;
-          "jenkinsKubernetes": object && [ "jnlpAgent": string && [ default "jenkins/jnlp-slave:latest"; ]; ] && object;
-] && object && [ sealed; ]);
-      "stages": null || (object && [
-          "backendIntegrationTests": object && [
+]) with true;
+          "jenkinsKubernetes": seal (object && [ "jnlpAgent": string && [ default "jenkins/jnlp-slave:latest"; ]; ]) with true;
+] || null));
+      "stages": (object && [
+          "backendIntegrationTests": seal (object && [
               "retry": Predefined.integer && [ default 1; ];
               "forkCount": string && [ default "1C"; ];
               "credentials": array && [
-                  of object && [
+                  of seal (object && [
                       "alias": string;
                       "credentialId": string;
-] && (object && [ sealed; ]) && [ required "alias",  "credentialId"; ];
+] && [ required "alias",  "credentialId"; ]);
 ];
               "sidecarImage": string;
               "sidecarName": string;
               "sidecarReadyCommand": string;
               "sidecarEnvVars": object;
-] && object && [ sealed; ];
-          "frontEndIntegrationTests": object && [ "dockerImage": dockerImage; ] && object && [ sealed; ];
-          "frontEndUnitTests": object && [ "dockerImage": dockerImage; ] && object && [ sealed; ];
+]);
+          "frontEndIntegrationTests": seal (object && [ "dockerImage": dockerImage; ]);
+          "frontEndUnitTests": seal (object && [ "dockerImage": dockerImage; ]);
           "endToEndTests": object && [
               "enableZeroDowntimeDeployment": boolean;
               "onlyRunInProductiveBranch": boolean;
               "appUrls": appUrls;
 ];
-          "npmAudit": object && [ "auditedAdvisories": array && [ of Predefined.integer || string; ]; ] && object && [ sealed; ];
+          "npmAudit": seal (object && [ "auditedAdvisories": array && [ of Predefined.integer || string; ]; ]);
           "performanceTests": object && [
               "neoTargets": neoTargets;
               "cfTargets": cfTargets;
 ];
-          "s4SdkQualityChecks": object && [
+          "s4SdkQualityChecks": seal (object && [
               "jacocoExcludes": array && [ of string; ];
               "customOdataServices": array && [ of string; ];
               "nonErpDestinations": array && [ of string; ];
               "nonErpUrls": array && [ of string; ];
               "codeCoverageFrontend": object;
-              "threshold": object && [
+              "threshold": seal (object && [
                   "successCoverage": Predefined.integer && [ bounds [70.0,max]; ];
                   "unstableCoverage": Predefined.integer && [ bounds [65.0,max]; ];
-] && (object && [ sealed; ]) && [ required "successCoverage",  "unstableCoverage"; ];
+] && [ required "successCoverage",  "unstableCoverage"; ]);
               "disabledChecks": array && [
                   of string && [
                       enum "checkDeploymentDescriptors", "checkResilience",
@@ -121,8 +115,8 @@ import "lib/predefined.utj" as Predefined;
                       "checkBackendCodeCoverage";
 ];
 ] && [ default []; ];
-] && object && [ sealed; ];
-          "checkmarxScan": object && [
+]);
+          "checkmarxScan": seal (object && [
               "groupId": string;
               "checkMarxProjectName": string;
               "filterPattern": string && [
@@ -132,17 +126,17 @@ import "lib/predefined.utj" as Predefined;
               "incremental": boolean && [ default true; ];
               "vulnerabilityThresholdMedium": Predefined.integer && [ default 0; ];
               "vulnerabilityThresholdLow": Predefined.integer && [ default 99999; ];
-              "preset": (Predefined.integer || string) && [ default 36; ];
+              "preset": (Predefined.integer && [ default 36; ] || string);
               "checkmarxCredentialsId": string;
               "checkmarxServerUrl": string;
               "generatePdfReport": boolean;
-] && (object && [ sealed; ]) && [ required "groupId"; ];
+] && [ required "groupId"; ]);
           "productionDeployment": object && [
               "appUrls": appUrls;
               "neoTargets": neoTargets;
               "cfTargets": cfTargets;
 ];
-          "artifactDeployment": object && [
+          "artifactDeployment": seal (object && [
               "nexus": object && [
                   "version": string && [ enum "nexus2", "nexus3"; ] && [ default "nexus3"; ];
                   "url": string;
@@ -150,23 +144,23 @@ import "lib/predefined.utj" as Predefined;
                   "npmRepository": string;
                   "credentialsId": credentialsId;
 ] && [ required "url",  "repository"; ];
-] && object;
-          "whitesourceScan": object && [
+]) with true;
+          "whitesourceScan": seal (object && [
               "product": string;
               "staticVersion": string;
               "credentialsId": credentialsId;
               "whitesourceUserTokenCredentialsId": string;
-] && object && [ required "product",  "credentialsId"; ];
-          "sourceClearScan": object && [
+] && [ required "product",  "credentialsId"; ]) with true;
+          "sourceClearScan": seal (object && [
               "credentialsId": credentialsId;
               "config": object && [
                   "vuln_methods_extra_ignored_directories": string;
                   "scope": string;
 ];
-] && (object && [ sealed; ]) && [ required "credentialsId"; ];
-          "compliance": object && [ "runInAllBranches": boolean && [ default false; ]; ] && object && [ sealed; ];
-]);
-      "steps": null || (object && [
+] && [ required "credentialsId"; ]);
+          "compliance": seal (object && [ "runInAllBranches": boolean && [ default false; ]; ]);
+] || null);
+      "steps": (object && [
           "mavenExecute": object && [
               "dockerImage": dockerImage && [ default "maven:3.6.3-jdk-8-slim"; ];
               "projectSettingsFile": string;
@@ -193,7 +187,7 @@ import "lib/predefined.utj" as Predefined;
 ];
           "neoDeploy": object && [
               "dockerImage": dockerImage && [ default "ppiper/neo-cli:v2"; ];
-              "neo": object && [
+              "neo": seal (object && [
                   "host": host;
                   "account": account;
                   "application": application;
@@ -203,8 +197,8 @@ import "lib/predefined.utj" as Predefined;
                   "size": size_;
                   "runtime": runtime;
                   "runtimeVersion": runtimeVersion;
-] && (object && [ sealed; ]) && [ required "host",  "account",  "application",  "runtime",  "runtimeVersion";
-];
+] && [ required "host",  "account",  "application",  "runtime",  "runtimeVersion";
+]);
 ];
           "checkGatling": object && [ "enabled": boolean && [ default false; ]; ];
           "checkJMeter": object && [
@@ -229,12 +223,12 @@ import "lib/predefined.utj" as Predefined;
               "src": array && [ of string; ];
               "exclude": array && [ of string; ];
 ] && [ required "fortifyCredentialsId"; ];
-          "whitesourceExecuteScan": object && [
+          "whitesourceExecuteScan": seal (object && [
               "productName": string;
               "productVersion": string;
               "orgAdminUserTokenCredentialsId": credentialsId;
               "userTokenCredentialsId": string;
-] && object && [ required "productName",  "orgAdminUserTokenCredentialsId"; ];
+] && [ required "productName",  "orgAdminUserTokenCredentialsId"; ]) with true;
           "mtaBuild": object && [
               "dockerImage": dockerImage && [ default "ppiper/mta-archive-builder"; ];
               "buildTarget": string && [ default "NEO"; ];
@@ -248,23 +242,23 @@ import "lib/predefined.utj" as Predefined;
               "mtaJarLocation": string && [ default "/opt/sap/mta/lib/mta.jar"; ];
 ];
           "debugReportArchive": object && [ "shareConfidentialInformation": boolean && [ default false; ]; ];
-          "sonarExecuteScan": object && [
+          "sonarExecuteScan": seal (object && [
               "projectKey": string;
               "instance": string;
               "options": array || string;
               "dockerImage": dockerImage && [ default "ppiper/node-browsers:v3"; ];
-] && object && [ required "projectKey",  "instance"; ];
+] && [ required "projectKey",  "instance"; ]) with true;
           "tmsUpload": object && [
               "nodeName": string;
               "credentialsId": string;
               "customDescription": string && [ default "<Corresponding Git Commit-ID>"; ];
 ];
-]);
+] || null);
       "postActions": object && [
-          "sendNotification": null || (object && [
+          "sendNotification": (object && [
               "enabled": boolean && [ default false; ];
               "skipFeatureBranches": boolean && [ default false; ];
               "recipients": array && [ of string; ];
-]);
+] || null);
 ];
 ];

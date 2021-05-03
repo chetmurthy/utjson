@@ -202,7 +202,7 @@ let disjoin loc a1 a2 =
   | true, _ when unsealable a2 -> true
   | _, true when unsealable a1 -> true
   | _ ->
-    Fmt.(raise_failwithf loc "AnnotationOps.disjion: cannot disjoin (||) %a, %a"
+    Fmt.(raise_failwithf loc "AnnotationOps.disjoin: cannot disjoin (||) %a, %a"
            pp a1 pp a2) in
   mk loc base_types sealed
 
@@ -359,7 +359,10 @@ let rec tc_utype env ut = match ut with
   | And(loc, ut1, ut2) ->
     let (ut1, anno1) = tc_utype env ut1 in
     let (ut2, anno2) = tc_utype env ut2 in
-    (And(loc, ut1, ut2), ANO.conjoin loc anno1 anno2)
+    if [] = AN.(intersect (base_types anno1) (base_types anno2)) then
+      (UtFalse loc, AN.mk loc all_base_types false)
+    else
+      (And(loc, ut1, ut2), ANO.conjoin loc anno1 anno2)
            
   | Or(loc, ut1, ut2) ->
     let (ut1, anno1) = tc_utype env ut1 in
@@ -380,7 +383,7 @@ let rec tc_utype env ut = match ut with
     let (anno, delta) = ANO.impl loc anno1 anno2 in
     let ut1 = if List.mem `Left delta then Seal(loc, ut1, [], UtTrue loc) else ut1 in
     let ut2 = if List.mem `Right delta then Seal(loc, ut2, [], UtTrue loc) else ut2 in
-    (Xor(loc, ut1, ut2), anno)
+    (Impl(loc, ut1, ut2), anno)
            
   | Not (loc, ut1) ->
     let (ut1, anno1) = tc_utype env ut1 in

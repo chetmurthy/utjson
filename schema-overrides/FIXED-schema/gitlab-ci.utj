@@ -1,0 +1,215 @@
+import "lib/predefined.utj" as Predefined;
+  module DEFINITIONS = struct
+    type nonrec after_script = array && [ of string || array && [ of string; ]; ];
+      type nonrec string_file_list = string xor array && [ of string; ];
+      type nonrec artifacts = seal (object && [
+          "paths": array && [ of string; ] && [ size [1,max]; ];
+          "exclude": array && [ of string; ] && [ size [1,max]; ];
+          "expose_as": string;
+          "name": string;
+          "untracked": boolean && [ default false; ];
+          "when": ([ enum "on_success"; ] xor [ enum "on_failure"; ] xor [ enum "always"; ]) && [ default "on_success"; ];
+          "expire_in": string && [ default "30 days"; ];
+          "reports": seal (object && [
+              "junit": string xor array && [ of string; ] && [ size [1,max]; ];
+              "cobertura": string xor array && [ of string; ] && [ size [1,max]; ];
+              "codequality": string_file_list;
+              "dotenv": string_file_list;
+              "lsif": string_file_list;
+              "sast": string_file_list;
+              "dependency_scanning": string_file_list;
+              "container_scanning": string_file_list;
+              "dast": string_file_list;
+              "license_management": string_file_list;
+              "license_scanning": string_file_list;
+              "performance": string_file_list;
+              "requirements": string_file_list;
+              "secret_detection": string_file_list;
+              "metrics": string_file_list;
+              "terraform": string_file_list;
+]);
+]);
+      type nonrec before_script = array && [ of string || array && [ of string; ]; ];
+      type nonrec cache = seal (object && [
+          "paths": array && [ of string; ];
+          "key": string xor object && [ "files": array && [ of string; ] && [ size [1,2]; ]; ];
+          "untracked": boolean && [ default false; ];
+          "policy": string && ([ enum "pull"; ] xor [ enum "push"; ] xor [ enum "pull-push"; ]) && [ default "pull-push"; ];
+]);
+      type nonrec filter_refs = array && [
+          of [ enum "branches"; ] xor [ enum "tags"; ] xor [ enum "api"; ] xor [ enum "external"; ] xor [ enum "pipelines"; ] xor [ enum "pushes"; ] xor [ enum "schedules"; ] xor [ enum "triggers"; ] xor [ enum "web"; ] || string;
+];
+      type nonrec filter = filter_refs xor seal (object && [
+          "refs": filter_refs;
+          "kubernetes": [ enum "active"; ];
+          "variables": array && [ of string; ];
+          "changes": array && [ of string; ];
+]);
+      type nonrec variables = seal object with (string || Predefined.integer);
+      type nonrec globalVariables = variables || seal object with (object && [
+          "value": string;
+          "description": string;
+]);
+      type nonrec image = string && [ size [1,max]; ] xor seal (object && [
+          "name": string && [ size [1,max]; ];
+          "entrypoint": array && [ size [1,max]; ];
+] && [ required "name"; ]);
+      type nonrec include_item = string && [ /^(https?:\/\/|\/).+\.ya?ml$/ ] && [ format "uri-reference"; ] xor seal (object && [ "local": string && [ /\.ya?ml$/ ] && [ format "uri-reference"; ]; ] && [ required "local"; ]) xor seal (object && [
+          "project": string && [ /\S\/\S/ ];
+          "ref": string;
+          "file": string && [ /\.ya?ml$/ ] xor array && [ of string && [ /\.ya?ml$/ ]; ];
+] && [ required "project",  "file"; ]) xor seal (object && [ "template": string && [ /\.ya?ml$/ ] && [ format "uri-reference"; ]; ] && [ required "template"; ]) xor seal (object && [
+          "remote": string && [ /^https?:\/\/.+\.ya?ml$/ ] && [ format "uri-reference"; ];
+] && [ required "remote"; ]);
+      type nonrec interruptible = boolean && [ default false; ];
+      type nonrec when = ([ enum "on_success"; ] xor [ enum "on_failure"; ] xor [ enum "always"; ] xor [ enum "manual"; ] xor [ enum "delayed"; ] xor [ enum "never"; ]) && [ default "on_success"; ];
+      type nonrec timeout = string && [ size [1,max]; ];
+      type nonrec tags = array && [ of string; ];
+      type nonrec start_in = string && [ size [1,max]; ];
+      type nonrec services = array && [
+          of string && [ size [1,max]; ] xor seal (object && [
+              "name": string && [ size [1,max]; ];
+              "entrypoint": array && [ of string; ] && [ size [1,max]; ];
+              "command": array && [ of string; ] && [ size [1,max]; ];
+              "alias": string && [ size [1,max]; ];
+] && [ required "name"; ]);
+];
+      type nonrec secrets = seal object with (seal object with (object && [
+          "vault": string xor object && [
+              "engine": object && [
+                  "name": string;
+                  "path": string;
+] && [ required "name",  "path"; ];
+              "path": string;
+              "field": string;
+] && [ required "engine",  "path",  "field"; ];
+] && [ required "vault"; ]));
+      type nonrec rules = array && [
+          of seal (object && [
+              "if": string;
+              "changes": array && [ of string; ];
+              "exists": array && [ of string; ];
+              "variables": variables;
+              "when": when;
+              "start_in": start_in;
+              "allow_failure": boolean && [ default false; ];
+]);
+];
+      type nonrec retry_max = Predefined.integer && [ bounds [0.0,2.0]; ] && [ default 0; ];
+      type nonrec retry_errors = [ enum "always"; ] xor [ enum "unknown_failure"; ] xor [ enum "script_failure"; ] xor [ enum "api_failure"; ] xor [ enum "stuck_or_timeout_failure"; ] xor [ enum "runner_system_failure"; ] xor [ enum "missing_dependency_failure"; ] xor [ enum "runner_unsupported"; ];
+      type nonrec retry = retry_max xor seal (object && [
+          "max": retry_max;
+          "when": retry_errors xor array && [ of retry_errors; ];
+]);
+      type nonrec job_template = seal (object && [
+          "image": image;
+          "services": services;
+          "before_script": before_script;
+          "after_script": after_script;
+          "rules": rules;
+          "variables": variables;
+          "cache": cache;
+          "secrets": secrets;
+          "script": string && [ size [1,max]; ] xor array && [ of string || array && [ of string; ]; ] && [ size [1,max]; ];
+          "stage": string && [ default "test"; ];
+          "only": filter;
+          "extends": string xor array && [ of string; ] && [ size [1,max]; ];
+          "needs": array && [
+              of string xor seal (object && [
+                  "job": string;
+                  "artifacts": boolean;
+] && [ required "job"; ]);
+];
+          "except": filter;
+          "tags": tags;
+          "allow_failure": boolean && [ default false; ];
+          "timeout": timeout;
+          "when": when;
+          "start_in": start_in;
+          "dependencies": array && [ of string; ];
+          "artifacts": artifacts;
+          "environment": string xor seal (object && [
+              "name": string && [ size [1,max]; ];
+              "url": string && [ /^(https?:\/\/.+|\$[A-Za-z]+)/ ] && [ format "uri"; ];
+              "on_stop": string;
+              "action": [ enum "start", "prepare", "stop"; ] && [ default "start"; ];
+              "auto_stop_in": string;
+              "kubernetes": object && [ "namespace": string && [ size [1,max]; ]; ];
+              "deployment_tier": string && [ enum "production", "staging", "testing", "development", "other"; ];
+] && [ required "name"; ]);
+          "release": seal (object && [
+              "tag_name": string && [ size [1,max]; ];
+              "description": string && [ size [1,max]; ];
+              "name": string;
+              "ref": string;
+              "milestones": array && [ of string; ];
+              "released_at": string && [
+                  /^(?:[1-9]\d{3}-(?:(?:0[1-9]|1[0-2])-(?:0[1-9]|1\d|2[0-8])|(?:0[13-9]|1[0-2])-(?:29|30)|(?:0[13578]|1[02])-31)|(?:[1-9]\d(?:0[48]|[2468][048]|[13579][26])|(?:[2468][048]|[13579][26])00)-02-29)T(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:Z|[+-][01]\d:[0-5]\d)$/
+] && [ format "date-time"; ];
+] && [ required "tag_name",  "description"; ]);
+          "coverage": string && [ /^\/.+\/$/ ] && [ format "regex"; ];
+          "retry": retry;
+          "parallel": Predefined.integer && [ bounds [2.0,50.0]; ] && [ default 0; ] xor seal (object && [
+              "matrix": array && [ of seal object with (string || number || array); ] && [ size [0,50]; ];
+] && [ required "matrix"; ]);
+          "interruptible": interruptible;
+          "resource_group": string;
+          "trigger": seal (object && [
+              "project": string && [ /\S\/\S/ ];
+              "branch": string;
+              "strategy": string && [ enum "depend"; ];
+] && [ required "project"; ] && [ required "branch"; ] => [ required "project"; ]) xor seal (object && [
+              "include": string && [ /\.ya?ml$/ ] && [ format "uri-reference"; ] xor array && [
+                  of seal (object && [ "local": string && [ /\.ya?ml$/ ] && [ format "uri-reference"; ]; ]) xor seal (object && [ "template": string && [ /\.ya?ml$/ ] && [ format "uri-reference"; ]; ]) xor seal (object && [
+                      "artifact": string && [ /\.ya?ml$/ ] && [ format "uri-reference"; ];
+                      "job": string;
+] && [ required "artifact",  "job"; ]);
+] && [ size [0,3]; ];
+              "strategy": string && [ enum "depend"; ];
+]) xor string && [ /\S\/\S/ ];
+          "inherit": seal (object && [
+              "default": boolean xor array && [
+                  of string && [
+                      enum "after_script", "artifacts", "before_script",
+                      "cache", "image", "interruptible", "retry", "services",
+                      "tags", "timeout";
+];
+];
+              "variables": boolean xor array && [ of string; ];
+]);
+] && ([ "when": [ enum "delayed"; ]; ] && [ required "when",  "start_in"; ] xor [ "when": not [ enum "delayed"; ]; ]));
+      type nonrec job = job_template && ([ required "script"; ] || [ required "extends"; ] || [ required "trigger"; ]);
+    end;
+  open DEFINITIONS;
+  type nonrec t = seal (object && [
+      "$schema": string && [ format "uri"; ];
+      "image": image;
+      "services": services;
+      "before_script": before_script;
+      "after_script": after_script;
+      "variables": globalVariables;
+      "cache": cache;
+      "default": seal (object && [
+          "after_script": after_script;
+          "artifacts": artifacts;
+          "before_script": before_script;
+          "cache": cache;
+          "image": image;
+          "interruptible": interruptible;
+          "retry": retry;
+          "services": services;
+          "tags": tags;
+          "timeout": timeout;
+]);
+      "stages": array && [ of string; ] && [ unique; ] && [ size [1,max]; ] && [ default ["build","test","deploy"]; ];
+      "include": include_item xor array && [ of include_item; ];
+      "pages": job;
+      "workflow": object && [
+          "rules": array && [
+              of seal (object && [
+                  "if": string;
+                  "when": string && [ enum "always", "never"; ];
+]);
+];
+];
+]) with /^[.]/ : (job_template || seal Predefined.json with true), job;
